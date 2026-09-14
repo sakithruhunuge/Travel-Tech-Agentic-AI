@@ -183,7 +183,7 @@ export async function resolveTenant(options: {
     } catch (fetchErr) {
       if (parsed.slug === "default-tenant") {
         resolvedData = {
-          id: "default-tenant-id",
+          id: "6a9e5d42194e61198a6d9cf9",
           slug: "default-tenant",
           name: "Ceylon Travel Platform",
           status: "active",

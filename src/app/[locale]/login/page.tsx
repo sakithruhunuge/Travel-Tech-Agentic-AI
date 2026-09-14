@@ -14,21 +14,45 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const restoreForm = searchParams.get("restoreForm") === "true";
   const triggerGoogle = searchParams.get("triggerGoogle") === "true";
+  const authError = searchParams.get("error");
 
   let callbackUrl = searchParams.get("callbackUrl") || (restoreForm ? "/plan-trip" : "/dashboard");
   if (restoreForm && (callbackUrl === "/dashboard" || callbackUrl === "/login" || callbackUrl === "/signup")) {
     callbackUrl = "/plan-trip";
   }
 
+  const getErrorMessage = (err: string | null) => {
+    if (!err) return null;
+    switch (err) {
+      case "Configuration":
+      case "google":
+        return "Google Sign-In is not configured properly or credentials (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET) are missing or invalid.";
+      case "AccessDenied":
+        return "Access denied. You do not have permission to sign in.";
+      case "OAuthSignin":
+      case "OAuthCallback":
+        return "Failed to communicate with Google. Please check your Google OAuth credentials and redirect URI in Google Cloud Console.";
+      case "OAuthAccountNotLinked":
+        return "An account with this email already exists using a different sign-in method.";
+      case "SessionTransferFailed":
+      case "NoSyncToken":
+        return "Session synchronization between domains failed. Please try signing in directly.";
+      default:
+        return `Authentication error: ${err}`;
+    }
+  };
+
+  const errorMessage = getErrorMessage(authError);
+
   useEffect(() => {
     if (status === "authenticated") {
       router.push(callbackUrl);
-    } else if (triggerGoogle && status === "unauthenticated") {
+    } else if (triggerGoogle && status === "unauthenticated" && !authError) {
       signIn("google", { callbackUrl });
     }
-  }, [status, router, callbackUrl, triggerGoogle]);
+  }, [status, router, callbackUrl, triggerGoogle, authError]);
 
-  if (status === "loading" || (triggerGoogle && status !== "authenticated")) {
+  if (status === "loading" || (triggerGoogle && status !== "authenticated" && !authError)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-sky-100 via-slate-50 to-indigo-50">
         <div className="text-center space-y-4">
@@ -118,6 +142,18 @@ function LoginContent() {
                   <h1 className="text-3xl font-bold text-slate-900">Welcome Back</h1>
                   <p className="text-slate-500">Sign in to continue your journey</p>
                 </div>
+
+                {errorMessage && (
+                  <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-700 flex items-start gap-2.5">
+                    <svg className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="flex-1">
+                      <p className="font-semibold text-rose-800">Sign-In Notice</p>
+                      <p className="mt-0.5 text-xs text-rose-600 leading-relaxed">{errorMessage}</p>
+                    </div>
+                  </div>
+                )}
 
                 <LoginForm />
 
