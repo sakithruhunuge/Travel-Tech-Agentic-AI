@@ -33,7 +33,7 @@ async function run() {
 
     if (existingTenant) {
       console.log(`✓ Tenant "ceylon" already exists (ID: ${existingTenant._id}). Updating status to active...`);
-      await tenantsCollection.updateOne({ slug }, { $set: { status: "active", name: "Ceylon Travel" } });
+      await tenantsCollection.updateOne({ slug }, { $set: { status: "active", name: "Ceylon Travels" } });
       console.log(`✓ Tenant "ceylon" activated successfully.`);
     } else {
       console.log("Tenant not found.");

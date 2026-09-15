@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           id: "6a9e5d42194e61198a6d9cf9",
           slug: "default-tenant",
-          name: "Ceylon Travel Platform",
+          name: "Ceylon Travels",
           status: "active",
           isolation: "shared",
           branding: {
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           id: "6a9e5d42194e61198a6d9cf9",
           slug: "default-tenant",
-          name: "Ceylon Travel Platform",
+          name: "Ceylon Travels",
           status: "active",
           isolation: "shared",
           branding: {
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         id: "6a9e5d42194e61198a6d9cf9",
         slug: "default-tenant",
-        name: "Ceylon Travel Platform",
+        name: "Ceylon Travels",
         status: "active",
         isolation: "shared",
         branding: {

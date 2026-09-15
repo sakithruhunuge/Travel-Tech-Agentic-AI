@@ -33,12 +33,12 @@ async function run() {
     if (existingTenant) {
       console.log(`✓ Tenant "ceylon" already exists (ID: ${existingTenant._id}). Updating status to active...`);
       existingTenant.status = "active";
-      existingTenant.name = "Ceylon Travel";
+      existingTenant.name = "Ceylon Travels";
       await existingTenant.save();
       console.log(`✓ Tenant "ceylon" activated successfully.`);
     } else {
       const tenant = await Tenant.create({
-        name: "Ceylon Travel",
+        name: "Ceylon Travels",
         slug: slug,
         plan: "premium",
         status: "active",

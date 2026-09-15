@@ -101,7 +101,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-16 pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs">
-          <p>&copy; {currentYear} {tenant.name || "Ceylon Travel"}. {t("rights")}</p>
+          <p>&copy; {currentYear} {tenant.name || "Ceylon Travels"}. {t("rights")}</p>
           <div className="flex space-x-6">
             <a href="#" className="hover:text-brand-primary transition-all duration-300 ease-in-out">{t("privacy")}</a>
             <a href="#" className="hover:text-brand-primary transition-all duration-300 ease-in-out">{t("terms")}</a>

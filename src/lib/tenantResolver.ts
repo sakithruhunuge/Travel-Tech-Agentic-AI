@@ -111,7 +111,7 @@ export async function resolveTenant(options: {
     return {
       id: "6a9e5d42194e61198a6d9cf9",
       slug: "default-tenant",
-      name: "Ceylon Travel Platform",
+      name: "Ceylon Travels",
       status: "active",
       isolation: "shared",
       plan: "free",
@@ -154,7 +154,7 @@ export async function resolveTenant(options: {
           resolvedData = {
             id: "6a9e5d42194e61198a6d9cf9",
             slug: "default-tenant",
-            name: "Ceylon Travel Platform",
+            name: "Ceylon Travels",
             status: "active",
             isolation: "shared",
             plan: "free",
@@ -168,7 +168,7 @@ export async function resolveTenant(options: {
           resolvedData = {
             id: "6a9e5d42194e61198a6d9cf9",
             slug: "default-tenant",
-            name: "Ceylon Travel Platform",
+            name: "Ceylon Travels",
             status: "active",
             isolation: "shared",
             plan: "free",
@@ -185,7 +185,7 @@ export async function resolveTenant(options: {
         resolvedData = {
           id: "6a9e5d42194e61198a6d9cf9",
           slug: "default-tenant",
-          name: "Ceylon Travel Platform",
+          name: "Ceylon Travels",
           status: "active",
           isolation: "shared",
           plan: "free",
