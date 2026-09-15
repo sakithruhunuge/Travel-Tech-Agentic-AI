@@ -10,5 +10,9 @@ export default async function DashboardRootLayout({ children, params: { locale }
         redirect(`/${locale}/login`);
     }
 
+    if ((session.user as any).role === "super_admin") {
+        redirect(`/${locale}/admin`);
+    }
+
     return <DashboardLayout>{children}</DashboardLayout>;
 }

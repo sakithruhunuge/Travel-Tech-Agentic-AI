@@ -37,8 +37,7 @@ export default function Sidebar({ onNavigate, onLogout, isCollapsed = false, onT
     const tenant = useTenant();
     const userRole = (session?.user as any)?.role;
 
-    const rawSlug = (session?.user?.slug || tenant?.slug || "ceylon").toUpperCase();
-    const tenantSlug = rawSlug.endsWith("TRAVEL") ? rawSlug.slice(0, -6) : rawSlug;
+    const tenantSlug = (session?.user?.slug || tenant?.slug || "ceylon").toUpperCase();
     const initial = tenantSlug.charAt(0) || "C";
 
     const menuItems = [
@@ -53,6 +52,10 @@ export default function Sidebar({ onNavigate, onLogout, isCollapsed = false, onT
             { href: `/${locale}/dashboard/branding`, label: "Customizer", icon: BgColorsOutlined },
             { href: `/${locale}/dashboard/users`, label: "Manage Users", icon: TeamOutlined },
             { href: `/${locale}/dashboard/analytics`, label: "Analytics", icon: LineChartOutlined }
+        );
+    } else if (userRole === "super_admin") {
+        menuItems.push(
+            { href: `/${locale}/admin`, label: "SuperAdmin Console", icon: SettingOutlined }
         );
     } else {
         menuItems.push(
@@ -76,7 +79,7 @@ export default function Sidebar({ onNavigate, onLogout, isCollapsed = false, onT
                 ) : (
                     <Link href={`/${locale}`} className="flex items-center gap-2 group transition-all duration-300 ease-in-out">
                         <span className="text-base font-black tracking-wider text-slate-900 group-hover:text-brand-primary transition-all duration-300 ease-in-out">
-                            {tenantSlug}<span className="text-brand-primary group-hover:text-brand-secondary transition-all duration-300 ease-in-out font-medium">TRAVEL</span>
+                            {tenantSlug}
                         </span>
                     </Link>
                 )}

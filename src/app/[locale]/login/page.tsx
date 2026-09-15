@@ -7,17 +7,22 @@ import Image from "next/image";
 import LoginForm from "@/components/LoginForm";
 import GoogleButton from "@/components/GoogleButton";
 import Link from "next/link";
+import { useLocale } from "next-intl";
 
 function LoginContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const locale = useLocale();
   const searchParams = useSearchParams();
   const restoreForm = searchParams.get("restoreForm") === "true";
   const triggerGoogle = searchParams.get("triggerGoogle") === "true";
   const authError = searchParams.get("error");
 
+  const isSuperAdmin = (session?.user as any)?.role === "super_admin";
   let callbackUrl = searchParams.get("callbackUrl") || (restoreForm ? "/plan-trip" : "/dashboard");
-  if (restoreForm && (callbackUrl === "/dashboard" || callbackUrl === "/login" || callbackUrl === "/signup")) {
+  if (isSuperAdmin) {
+    callbackUrl = `/${locale}/admin`;
+  } else if (restoreForm && (callbackUrl === "/dashboard" || callbackUrl === "/login" || callbackUrl === "/signup")) {
     callbackUrl = "/plan-trip";
   }
 
@@ -46,11 +51,15 @@ function LoginContent() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push(callbackUrl);
+      if ((session?.user as any)?.role === "super_admin") {
+        window.location.href = `/${locale}/admin`;
+      } else {
+        router.push(callbackUrl);
+      }
     } else if (triggerGoogle && status === "unauthenticated" && !authError) {
       signIn("google", { callbackUrl });
     }
-  }, [status, router, callbackUrl, triggerGoogle, authError]);
+  }, [status, session, router, locale, callbackUrl, triggerGoogle, authError]);
 
   if (status === "loading" || (triggerGoogle && status !== "authenticated" && !authError)) {
     return (

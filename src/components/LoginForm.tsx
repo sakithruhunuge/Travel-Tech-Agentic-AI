@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { signIn, SignInResponse } from "next-auth/react";
+import { signIn, getSession, SignInResponse } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/context/ToastContext";
+import { useLocale } from "next-intl";
 
 /**
  * LoginForm
@@ -29,6 +30,7 @@ export default function LoginForm(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const router = useRouter();
+  const locale = useLocale();
   const searchParams = useSearchParams();
 
   // Raw values from URL. Don't default early — we need to decide fallbacks based on restoreForm.
@@ -88,8 +90,13 @@ export default function LoginForm(): JSX.Element {
         return;
       }
 
+      // Check if authenticated user is a SuperAdmin
+      const session = await getSession();
+      const isSuperAdmin =
+        (session?.user as any)?.role === "super_admin" ||
+        email.toLowerCase().trim() === "admin@travelcompany.com";
+
       // Determine any preserved form state (from URL param or sessionStorage).
-      // Integrations should write pending form state to sessionStorage under `pendingFormState`.
       const preservedFormState = rawFormState || sessionStorage.getItem("pendingFormState");
 
       // Decide redirect target according to restoreForm flag and callback validity.
@@ -99,21 +106,23 @@ export default function LoginForm(): JSX.Element {
       }
 
       let targetUrl: string;
-      if (email.toLowerCase().trim() === "admin@travelcompany.com" && !rawCallback) {
-        targetUrl = "/en/admin";
+      if (isSuperAdmin) {
+        targetUrl = `/${locale}/admin`;
       } else if (restoreForm) {
-        // When restoring a form, prefer the provided callbackUrl, else fall back to DEFAULT_FORM_URL
         targetUrl = buildRedirectUrl(callbackUrl || DEFAULT_FORM_URL, preservedFormState);
       } else {
-        // Not restoring: go to callback if valid, otherwise dashboard
         targetUrl = callbackUrl ? buildRedirectUrl(callbackUrl, null) : DEFAULT_FALLBACK;
       }
 
       // Clean up any saved pending state after consuming it.
       if (sessionStorage.getItem("pendingFormState")) sessionStorage.removeItem("pendingFormState");
 
-      router.push(targetUrl);
-      router.refresh();
+      if (isSuperAdmin) {
+        window.location.href = targetUrl;
+      } else {
+        router.push(targetUrl);
+        router.refresh();
+      }
     } catch {
       addToast("error", "An unexpected error occurred. Please try again.");
       setError("An unexpected error occurred. Please try again.");

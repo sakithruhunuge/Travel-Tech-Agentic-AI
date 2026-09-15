@@ -7,10 +7,12 @@ import Image from "next/image";
 import Link from "next/link";
 import SignupForm from "@/components/SignupForm";
 import GoogleButton from "@/components/GoogleButton";
+import { useLocale } from "next-intl";
 
 function SignupContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const locale = useLocale();
   const searchParams = useSearchParams();
   const restoreForm = searchParams.get("restoreForm") === "true";
 
@@ -21,9 +23,13 @@ function SignupContent() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push(callbackUrl);
+      if ((session?.user as any)?.role === "super_admin") {
+        window.location.href = `/${locale}/admin`;
+      } else {
+        router.push(callbackUrl);
+      }
     }
-  }, [status, router, callbackUrl]);
+  }, [status, session, locale, router, callbackUrl]);
 
   if (status === "loading") {
     return (

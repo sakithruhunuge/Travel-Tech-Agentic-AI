@@ -82,7 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 </>
                             )}
                         </button>
-                        <span className="text-sm font-semibold text-slate-800">{tenant?.name || "Ceylon Travel"}</span>
+                        <span className="text-sm font-semibold text-slate-800">{tenant?.name || "Ceylon Travels"}</span>
                     </div>
 
                     {/* Mobile sidebar overlay */}

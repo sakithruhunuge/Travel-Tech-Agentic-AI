@@ -373,7 +373,7 @@ export default function DashboardHomePage() {
             <p className="text-sm font-medium text-brand-muted">
               {session?.user?.name
                 ? t("signedInAs", { name: session.user.name })
-                : `Signed in to your ${tenant?.name || "Ceylon Travel"} account.`}
+                : `Signed in to your ${tenant?.name || "Ceylon Travels"} account.`}
             </p>
             <div className="flex flex-wrap gap-3 pt-1">
               <Link

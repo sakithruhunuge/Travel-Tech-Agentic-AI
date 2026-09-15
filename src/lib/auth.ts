@@ -102,7 +102,9 @@ export const authOptions: NextAuthOptions = {
         const tenant = await resolveTenant({ hostname });
 
         // 1. Resolve SuperAdmin context if authenticated under the Admin portal or superadmin email
-        const isSuperAdmin = tenant.isAdmin || credentials.email.toLowerCase().trim() === "admin@travelcompany.com";
+        const normalizedEmail = credentials.email.toLowerCase().trim();
+        const superAdminRecord = await SuperAdmin.findOne({ email: normalizedEmail });
+        const isSuperAdmin = tenant.isAdmin || !!superAdminRecord || normalizedEmail === "admin@travelcompany.com";
         if (isSuperAdmin) {
           if (process.env.NODE_ENV === "development") {
             const adminCount = await SuperAdmin.countDocuments();
@@ -116,8 +118,8 @@ export const authOptions: NextAuthOptions = {
               });
             }
           }
-          const superAdmin = await SuperAdmin.findOne({
-            email: credentials.email.toLowerCase().trim(),
+          const superAdmin = superAdminRecord || await SuperAdmin.findOne({
+            email: normalizedEmail,
           });
 
           if (!superAdmin) {
