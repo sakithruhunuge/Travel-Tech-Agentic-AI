@@ -46,21 +46,21 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-md border-b border-white/20 transition-all duration-300 ease-in-out shadow-sm shadow-black/[0.03]">
+    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/70 transition-all duration-300 ease-in-out shadow-sm shadow-black/[0.02]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex justify-between items-center h-20 gap-4">
           {/* Dynamic Logo / Brand Name */}
-          <div className="flex-shrink-0 flex items-center">
-            <Link href={`/${locale}`} className="flex items-center gap-2 group transition-all duration-300 ease-in-out">
+          <div className="flex-shrink-0 flex items-center mr-2 lg:mr-4">
+            <Link href={`/${locale}`} className="flex items-center gap-2.5 group transition-all duration-300 ease-in-out">
               {tenant.branding?.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={tenant.branding.logoUrl}
                   alt={tenant.name}
-                  className="h-10 w-auto object-contain"
+                  className="h-9 w-auto object-contain"
                 />
               ) : (
-                <span className="text-2xl font-black tracking-wider text-brand-dark group-hover:text-brand-primary transition-all duration-300 ease-in-out uppercase">
+                <span className="text-xl xl:text-2xl font-black tracking-tight text-slate-900 group-hover:text-brand-primary transition-all duration-300 ease-in-out uppercase whitespace-nowrap">
                   {tenant.name}
                 </span>
               )}
@@ -68,53 +68,63 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8 items-center">
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
             {navLinks.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
-                className="text-sm font-bold text-brand-muted hover:text-brand-secondary transition-all duration-300 ease-in-out relative py-1 group/item"
+                className="text-xs xl:text-[13.5px] font-semibold text-slate-600 hover:text-brand-primary hover:bg-black/[0.03] px-2.5 xl:px-3 py-1.5 rounded-full transition-all duration-200 whitespace-nowrap relative group/item"
               >
                 {link.label}
-                <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-brand-primary transition-all duration-300 ease-in-out group-hover/item:w-full rounded-full" />
+                <span className="absolute bottom-1 left-3 right-3 h-[2px] bg-brand-primary scale-x-0 group-hover/item:scale-x-100 transition-transform duration-200 rounded-full" />
               </Link>
             ))}
           </nav>
 
           {/* Desktop CTA / Auth */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2 xl:gap-2.5 flex-shrink-0">
             {/* Language Selector */}
-            <select
-              aria-label="Language Selector"
-              value={locale}
-              onChange={handleLanguageChange}
-              className="bg-white/50 border border-black/10 rounded-full px-3 py-1.5 text-xs font-bold text-brand-muted hover:text-brand-secondary outline-none focus:border-brand-primary cursor-pointer transition-all"
-            >
-              <option value="en">EN</option>
-              <option value="fr">FR</option>
-              <option value="de">GE</option>
-              <option value="si">SI</option>
-            </select>
+            <div className="relative flex items-center">
+              <select
+                aria-label="Language Selector"
+                value={locale}
+                onChange={handleLanguageChange}
+                className="appearance-none bg-white/70 border border-slate-200/80 hover:bg-white hover:border-slate-300 rounded-full pl-3 pr-7 h-9 text-xs font-bold text-slate-700 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 cursor-pointer transition-all shadow-sm"
+              >
+                <option value="en">EN</option>
+                <option value="fr">FR</option>
+                <option value="de">GE</option>
+                <option value="si">SI</option>
+              </select>
+              <svg className="w-3 h-3 text-slate-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
 
             {/* Currency Selector */}
-            <select 
-              aria-label="Currency Selector" 
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value as Currency)}
-              className="bg-white/50 border border-black/10 rounded-full px-3 py-1.5 text-xs font-bold text-brand-muted hover:text-brand-secondary outline-none focus:border-brand-primary cursor-pointer transition-all mr-1"
-            >
-              <option value="USD">USD ($)</option>
-              <option value="LKR">LKR (Rs)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="GBP">GBP (£)</option>
-            </select>
+            <div className="relative flex items-center">
+              <select 
+                aria-label="Currency Selector" 
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value as Currency)}
+                className="appearance-none bg-white/70 border border-slate-200/80 hover:bg-white hover:border-slate-300 rounded-full pl-3 pr-7 h-9 text-xs font-bold text-slate-700 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 cursor-pointer transition-all shadow-sm"
+              >
+                <option value="USD">USD ($)</option>
+                <option value="LKR">LKR (Rs)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+              </select>
+              <svg className="w-3 h-3 text-slate-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
 
             {session ? (
               <ProfileDropdown />
             ) : (
               <Link
                 href={`/${locale}/login`}
-                className="inline-flex items-center justify-center px-6 py-2.5 rounded-full text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary/90 shadow-[0_8px_30px_rgba(var(--brand-primary),0.3)] hover:scale-105 active:scale-95 transition-all duration-300 ease-in-out"
+                className="inline-flex items-center justify-center h-9 px-5 rounded-full text-xs font-bold text-white bg-brand-primary hover:bg-brand-primary/90 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap"
               >
                 {t("login")}
               </Link>
@@ -122,11 +132,11 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="flex items-center md:hidden">
+          <div className="flex items-center lg:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
               type="button"
-              className="inline-flex items-center justify-center p-2.5 rounded-2xl text-brand-muted hover:text-brand-dark hover:bg-white/60 focus:outline-none transition-all duration-300 ease-in-out"
+              className="inline-flex items-center justify-center p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none transition-all"
               aria-controls="mobile-menu"
               aria-expanded={isOpen}
             >
@@ -147,19 +157,19 @@ export default function Navbar() {
 
       {/* Mobile Drawer */}
       {isOpen && (
-        <div className="md:hidden animate-fade-in-down" id="mobile-menu">
-          <div className="px-3 pt-2 pb-5 space-y-1 bg-white/80 backdrop-blur-lg border-b border-white/20 shadow-xl">
+        <div className="lg:hidden animate-fade-in-down" id="mobile-menu">
+          <div className="px-4 pt-2 pb-6 space-y-1 bg-white/95 backdrop-blur-xl border-b border-slate-200 shadow-xl">
             {navLinks.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
                 onClick={() => setIsOpen(false)}
-                className="block px-4 py-3 rounded-2xl text-base font-bold text-brand-muted hover:bg-white/60 hover:text-brand-secondary transition-all duration-300 ease-in-out"
+                className="block px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-brand-primary/10 hover:text-brand-primary transition-all"
               >
                 {link.label}
               </Link>
             ))}
-            <div className="pt-4 pb-2 px-4 border-t border-white/30 mt-2 space-y-4">
+            <div className="pt-4 pb-2 px-2 border-t border-slate-200/80 mt-2 space-y-3">
               <div className="flex items-center gap-3">
                 <select
                   aria-label="Mobile Language Selector"
@@ -168,7 +178,7 @@ export default function Navbar() {
                     handleLanguageChange(e);
                     setIsOpen(false);
                   }}
-                  className="flex-1 bg-white border border-black/10 rounded-2xl px-4 py-2.5 text-sm font-bold text-brand-muted outline-none focus:border-brand-primary"
+                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-brand-primary"
                 >
                   <option value="en">English (EN)</option>
                   <option value="fr">French (FR)</option>
@@ -179,7 +189,7 @@ export default function Navbar() {
                   aria-label="Mobile Currency Selector"
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value as Currency)}
-                  className="flex-1 bg-white border border-black/10 rounded-2xl px-4 py-2.5 text-sm font-bold text-brand-muted outline-none focus:border-brand-primary"
+                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-brand-primary"
                 >
                   <option value="USD">USD ($)</option>
                   <option value="LKR">LKR (Rs)</option>
@@ -188,14 +198,14 @@ export default function Navbar() {
                 </select>
               </div>
               {session ? (
-                <div className="flex items-center gap-3 animate-fade-in-up">
+                <div className="flex items-center gap-3 pt-1">
                   <ProfileDropdown />
                 </div>
               ) : (
                 <Link
                   href={`/${locale}/login`}
                   onClick={() => setIsOpen(false)}
-                  className="block w-full text-center px-6 py-3 rounded-full text-base font-bold text-white bg-brand-primary hover:bg-brand-primary/90 shadow-[0_8px_30px_rgba(var(--brand-primary),0.3)] hover:scale-105 active:scale-95 transition-all duration-300 ease-in-out"
+                  className="block w-full text-center px-6 py-2.5 rounded-full text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary/90 shadow-sm transition-all"
                 >
                   {t("login")}
                 </Link>

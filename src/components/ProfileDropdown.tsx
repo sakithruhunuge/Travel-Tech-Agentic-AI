@@ -37,7 +37,7 @@ export default function ProfileDropdown() {
     if (!session) return null;
 
     return (
-        <div ref={ref} className="relative">
+        <div ref={ref} className="relative flex items-center">
             <button
                 aria-haspopup="menu"
                 aria-expanded={open}
@@ -45,18 +45,25 @@ export default function ProfileDropdown() {
                 onKeyDown={(e) => {
                     if (e.key === "Escape") setOpen(false);
                 }}
-                className="flex items-center gap-3 px-3 py-2 rounded-2xl hover:bg-white/60 transition-all duration-300 ease-in-out"
+                className="flex items-center gap-2 h-9 pl-1.5 pr-2.5 rounded-full bg-white/70 border border-slate-200/80 hover:bg-white shadow-sm transition-all focus:outline-none"
             >
                 {session.user?.image ? (
-                    <div className="relative w-9 h-9 rounded-full overflow-hidden border border-slate-200">
-                        <Image src={session.user.image} alt={session.user.name || "Avatar"} fill className="object-cover" sizes="36px" referrerPolicy="no-referrer" />
+                    <div className="relative w-6 h-6 rounded-full overflow-hidden border border-slate-200">
+                        <Image src={session.user.image} alt={session.user.name || "Avatar"} fill className="object-cover" sizes="24px" referrerPolicy="no-referrer" />
                     </div>
                 ) : (
-                    <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-bold">{(session.user?.name || "").slice(0, 1)}</div>
+                    <div className="w-6 h-6 rounded-full bg-slate-800 text-white text-[11px] flex items-center justify-center font-bold">
+                        {(session.user?.name || "").slice(0, 1).toUpperCase()}
+                    </div>
                 )}
-                <div className="text-left hidden sm:block">
-                    <div className="text-base font-bold text-slate-900 leading-none">{session.user?.name}</div>
+                <div className="text-left hidden xl:block max-w-[110px]">
+                    <div className="text-xs font-bold text-slate-800 truncate leading-none">
+                        {session.user?.name?.split(" ")[0] || session.user?.name}
+                    </div>
                 </div>
+                <svg className={`w-3 h-3 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
             </button>
 
             {open && (
@@ -66,7 +73,11 @@ export default function ProfileDropdown() {
                         <div className="text-xxs text-slate-500 truncate">{session.user?.email}</div>
                     </div>
                     <div className="flex flex-col py-2">
-                        <Link href={`/${locale}/dashboard`} className="px-4 py-2 text-sm hover:bg-slate-50">Dashboard</Link>
+                        {(session.user as any)?.role === "super_admin" ? (
+                            <Link href={`/${locale}/admin`} className="px-4 py-2 text-sm font-semibold text-indigo-600 hover:bg-indigo-50">SuperAdmin Console</Link>
+                        ) : (
+                            <Link href={`/${locale}/dashboard`} className="px-4 py-2 text-sm hover:bg-slate-50">Dashboard</Link>
+                        )}
                         <Link href={`/${locale}/dashboard/profile`} className="px-4 py-2 text-sm hover:bg-slate-50">Profile</Link>
                         <button onClick={handleSignOut} className="text-left px-4 py-2 text-sm hover:bg-slate-50">Sign Out</button>
                     </div>
