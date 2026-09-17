@@ -1,0 +1,445 @@
+{
+  "Hero": {
+    "title": "Entdecken Sie das wunderschöne",
+    "country": "Sri Lanka",
+    "description": "Von alten Königreichen und nebligen Bergen bis hin zu goldenen Stränden und unvergesslichen Wildtiererlebnissen – erkunden Sie Sri Lanka mit sorgfältig zusammengestellten Reisepaketen.",
+    "planTrip": "Meine Reise planen",
+    "browsePackages": "Alle Angebote durchsuchen",
+    "destination": "Reiseziel",
+    "travelDate": "Reisedatum",
+    "budget": "Budget"
+  },
+  "Navbar": {
+    "home": "Startseite",
+    "about": "Über uns",
+    "destinations": "Reiseziele",
+    "packages": "Reisepakete",
+    "whyChooseUs": "Warum wir",
+    "contact": "Kontakt",
+    "customize": "Tour Anpassen",
+    "login": "Anmelden"
+  },
+  "About": {
+    "wonder": "Das Wunder Asiens",
+    "title": "Warum Sri Lanka besuchen?",
+    "description": "Sri Lanka ist ein Inselparadies, das vielfältige, atemberaubende Reiseerlebnisse in einem kompakten Reiseziel vereint. Bekannt als die „Perle des Indischen Ozeans“, bietet es für jeden Reisetyp genau das Richtige.",
+    "heritage": {
+      "title": "Antikes Weltkulturerbe",
+      "desc": "Erkunden Sie über 2.500 Jahre Zivilisation mit 8 UNESCO-Weltkulturerbestätten, darunter Sigiriya und Kandy."
+    },
+    "highlands": {
+      "title": "Malerische neblige Berge",
+      "desc": "Fahren Sie mit dem weltberühmten blauen Zug durch kaskadierende Teeplantagen, grüne Hügel und Wasserfälle in Ella und Nuwara Eliya."
+    },
+    "wildlife": {
+      "title": "Artenreiche Wildtiersafaris",
+      "desc": "Begeben Sie sich auf offene Jeep-Safaris in Yala oder Udawalawe, um Leoparden, Lippenbären und riesige Elefantenherden zu beobachten."
+    }
+  },
+  "Destinations": {
+    "tagline": "Inselwunder",
+    "title": "Top-Reiseziele in Sri Lanka",
+    "description": "Von antiken archäologischen Ruinen und heiligen Bergschreinen bis hin zu nebligen Bergen und surf-freundlichen Küsten.",
+    "tags": {
+      "coastline": "Küste",
+      "heritage": "Kulturerbe",
+      "highlands": "Hochland",
+      "wildlife": "Wildtiere",
+      "urban": "Städtisch"
+    },
+    "items": {
+      "sigiriya": "Sigiriya Felsenfestung",
+      "dambulla": "Dambulla Höhlentempel",
+      "kandy": "Zahntempel in Kandy",
+      "tea": "Nuwara Eliya Teeplantagen",
+      "bridge": "Neun-Bogen-Brücke, Ella",
+      "safari": "Yala Nationalpark Safari",
+      "mirissa": "Mirissa Strand",
+      "galle": "Galle Fort",
+      "bentota": "Bentota Strand",
+      "colombo": "Colombo Skyline"
+    }
+  },
+  "Packages": {
+    "tagline": "Ausgewählte Reisen",
+    "title": "Empfohlene Sri Lanka Pakete",
+    "description": "Handverlesene Premium-Touren, die Komfort, Abenteuer und tiefgehende lokale Erlebnisse verbinden. Erkunden Sie Sri Lanka mit unseren sorgfältig zusammengestellten Angeboten.",
+    "from": "Ab",
+    "duration": "Dauer",
+    "destinations": "Reiseziele",
+    "includes": "Inklusive",
+    "select": "Dieses Paket wählen",
+    "items": {
+      "cultural": {
+        "name": "Kulturdreieck Entdecker",
+        "duration": "5 Tage",
+        "priceRange": "$450 - $600",
+        "inclusions": ["Hotelunterkunft", "Privater Transport", "Frühstück", "Deutschsprachiger Guide"]
+      },
+      "beach": {
+        "name": "Südküsten-Strandurlaub",
+        "duration": "5 Tage",
+        "priceRange": "$500 - $700",
+        "inclusions": ["Strandhotels", "Flughafentransfer", "Frühstück", "Transport"]
+      },
+      "hill": {
+        "name": "Hochland Abenteuer",
+        "duration": "6 Tage",
+        "priceRange": "$550 - $750",
+        "inclusions": ["Malerische Zugfahrt", "Hotelunterkunft", "Transport", "Reiseleiter"]
+      },
+      "safari": {
+        "name": "Wildtier-Safari Erlebnis",
+        "duration": "4 Tage",
+        "priceRange": "$400 - $550",
+        "inclusions": ["Safari-Jeep", "Hotels", "Transport", "Frühstück"]
+      },
+      "grand": {
+        "name": "Große Sri Lanka Rundreise",
+        "duration": "10 Tage",
+        "priceRange": "$1200 - $1600",
+        "inclusions": ["Premium-Hotels", "Flughafentransfers", "Privatfahrzeug", "Reiseleiter", "Frühstück"]
+      }
+    }
+  },
+  "WhyChooseUs": {
+    "tagline": "Unsere Vorteile",
+    "title": "Warum Reisende Horizon Travel wählen",
+    "description": "Die Planung einer Reise nach Sri Lanka sollte nicht stressig sein. Wir schließen die Lücke zwischen Traumrouten und makelloser Durchführung, sodass Sie Ihre Reise in vollen Zügen genießen können.",
+    "cta": "Planen Sie Ihre Reise",
+    "points": {
+      "experts": {
+        "title": "Vertrauenswürdige lokale Experten",
+        "desc": "Unser Team besteht aus einheimischen Reisekoordinatoren, die Routen mit tiefem Insiderwissen entwerfen."
+      },
+      "hotels": {
+        "title": "Handverlesene Hotels",
+        "desc": "Wir prüfen, wählen und auditieren persönlich Boutique-Luxusresorts, Premium-Villas und historische Unterkünfte."
+      },
+      "transport": {
+        "title": "Komfortabler Transport",
+        "desc": "Reisen Sie in modernen, voll klimatisierten Fahrzeugen mit professionellen touristischen Fahrern durch Sri Lanka."
+      },
+      "itineraries": {
+        "title": "Personalisierte Routen",
+        "desc": "Wir passen alle Touren an Ihren Zeitplan, Ihr gewünschtes Tempo, Ihre Interessen, Ihr Budget und Ihre Vorlieben an."
+      },
+      "assistance": {
+        "title": "Flughafen-Abholung & Hilfe",
+        "desc": "Ein nahtloser Start Ihrer Reise mit 24/7-Begrüßung am Flughafen, SIM-Karten-Einrichtung und Gepäckabwicklung."
+      },
+      "support": {
+        "title": "24/7 Kundendienst",
+        "desc": "Sofortige Unterstützung während der Reise für Buchungsänderungen, Notfälle oder Echtzeit-Fragen."
+      }
+    }
+  },
+  "Testimonials": {
+    "tagline": "Kundenbewertungen",
+    "title": "Beliebt bei Reisenden weltweit",
+    "description": "Lesen Sie Geschichten von internationalen Touristen, die mit uns die reiche Kultur, das malerische Hochland und die goldenen Küsten Sri Lankas erkundet haben.",
+    "reviews": {
+      "charlotte": {
+        "name": "Charlotte Mercier",
+        "country": "Frankreich",
+        "review": "Das Hochland-Abenteuer war spektakulär! Die malerische Zugfahrt nach Ella ist etwas, das wir für immer in Erinnerung behalten werden. Horizon Travel ist wegen der tadellosen Planung absolut empfehlenswert.",
+        "package": "Hochland Abenteuer"
+      },
+      "liam": {
+        "name": "Liam Kaelen",
+        "country": "Deutschland",
+        "review": "Der Kulturdreieck-Entdecker hat alle Erwartungen übertroffen. Die Felsenfestung Sigiriya ist atemberaubend. Unser privates Auto war sauber und der Reiseleiter ließ die Geschichte lebendig werden.",
+        "package": "Kulturdreieck Entdecker"
+      },
+      "sarah": {
+        "name": "Sarah Lawson",
+        "country": "Australien",
+        "review": "Wir haben den Südküsten-Strandurlaub gebucht. Die goldenen Strände, die Walbeobachtung in Mirissa und das historische Galle Fort waren unglaublich. Reibungsloser Flughafentransfer und tolle Hotelauswahl.",
+        "package": "Südküsten-Strandurlaub"
+      },
+      "david": {
+        "name": "David Ross",
+        "country": "Vereinigtes Königreich",
+        "review": "Das Wildtier-Safari-Erlebnis war pure Magie! Wir haben Leoparden, Lippenbären und wilde Elefantenherden in Yala gesehen. Hochprofessionelle Fahrer und wunderschöne Resorts.",
+        "package": "Wildtier-Safari Erlebnis"
+      }
+    }
+  },
+  "Contact": {
+    "tagline": "Anfragen",
+    "title": "Planen Sie Ihre Reise",
+    "description": "Bereit für das Abenteuer? Schreiben Sie uns. Unsere engagierten Reiseplaner antworten innerhalb von 24 Stunden, um eine persönliche Beratung zu vereinbaren.",
+    "taglineCta": "Beratung starten",
+    "titleCta": "Gestalten Sie Ihren Traumurlaub in Sri Lanka",
+    "descCta": "Nutzen Sie unseren Schritt-für-Schritt-Assistenten, um eine maßgeschneiderte Reiseroute zu erstellen. Wählen Sie Ihre Ziele, Aktivitäten und sichern Sie sich die Preise mit unseren Spezialisten.",
+    "bullet1": "Erfahrene lokale Reiseleiter und private Transportmöglichkeiten.",
+    "bullet2": "Flexible Planung und kostenlose Stornierungen.",
+    "bullet3": "Ein persönlicher Spezialist koordiniert jedes Buchungsdetail.",
+    "btnCta": "Jetzt mit der Planung beginnen"
+  },
+  "Footer": {
+    "desc": "Erstklassige Reiseerlebnisse und lebenslange Erinnerungen gestalten. Erkunden Sie die atemberaubendsten Ziele der Welt mit unserem engagierten Team.",
+    "explore": "Erkunden",
+    "hours": {
+      "title": "Geschäftszeiten",
+      "monFri": "Montag - Freitag: 9:00 - 18:00 Uhr",
+      "sat": "Samstag: 10:00 - 16:00 Uhr",
+      "sun": "Sonntag: Geschlossen"
+    },
+    "contact": {
+      "title": "Kontaktieren Sie uns",
+      "address": "Adresse",
+      "phone": "Telefon",
+      "email": "E-Mail"
+    },
+    "privacy": "Datenschutzerklärung",
+    "terms": "Nutzungsbedingungen",
+    "rights": "Horizon Travel. Alle Rechte vorbehalten."
+  },
+  "Dashboard": {
+    "Sidebar": {
+      "home": "Startseite",
+      "dashboard": "Dashboard",
+      "myRequests": "Meine Anfragen",
+      "requestHistory": "Anfrageverlauf",
+      "profile": "Profil",
+      "settings": "Einstellungen",
+      "logout": "Abmelden",
+      "brand": "HORIZON"
+    },
+    "TopNavbar": {
+      "title": "Dashboard",
+      "subtitle": "Verwalten Sie Ihre Sri Lanka Pläne",
+      "searchPlaceholder": "Anfragen, Reiseziele suchen...",
+      "notifications": "Benachrichtigungen",
+      "markAllRead": "Alle als gelesen markieren",
+      "noNew": "Keine neuen Benachrichtigungen",
+      "viewAll": "Alle Benachrichtigungen anzeigen",
+      "signOut": "Abmelden"
+    },
+    "Status": {
+      "pending": "Ausstehend",
+      "approved": "Genehmigt",
+      "rejected": "Abgelehnt",
+      "cancelled": "Storniert"
+    },
+    "Home": {
+      "welcome": "Willkommen zurück, {name}",
+      "curatedJourneys": "Sri Lanka Kuratierte Reisen",
+      "managePlans": "Verwalten Sie Ihre Reisepläne, Anfragen und Präferenzen für Sri Lanka über ein sicheres und übersichtliches Dashboard.",
+      "viewRequests": "Anfragen anzeigen",
+      "updateProfile": "Profil aktualisieren",
+      "travelTip": "Reisetipp",
+      "sigiriyaTip": "Die beste Zeit für einen Besuch in Sri Lanka ist von Dezember bis April für sonnige Strände und das üppig grüne Hochland.",
+      "recommendations": "Empfehlungen",
+      "suggestedDestinations": "Empfohlene Reiseziele in Sri Lanka",
+      "ourTeamRecommends": "Unser Team empfiehlt diese berühmten Orte für Ihren nächsten Urlaub.",
+      "needHelp": "Brauchen Sie Hilfe bei der Planung?",
+      "support": "Hilfe",
+      "specialistsTailor": "Unsere Reiseberater können die Reiseroute nach Ihren Wünschen und Ihrem Zeitplan anpassen.",
+      "tip1": "Beste Strände und Surfspots",
+      "tip2": "Malerische Zugstrecken und Teeregionen",
+      "tip3": "Wildtiersafaris und Kulturerbe",
+      "quickSettings": "Schnelleinstellungen",
+      "accessControls": "Greifen Sie direkt vom Haupt-Dashboard auf Ihre Kontoeinstellungen zu.",
+      "signedInAs": "Angemeldet als {name}",
+      "signedInHorizon": "Angemeldet in Ihrem Horizon Travel Konto.",
+      "openFullSettings": "Alle Einstellungen öffnen",
+      "logout": "Abmelden",
+      "accountStatus": "Kontostatus",
+      "seeConnected": "Sehen Sie, wie Ihr Dashboard-Konto verknüpft ist.",
+      "signinMethod": "Anmeldemethode",
+      "googleConnection": "Google-Konto Verbindung",
+      "passwordLogin": "Sichere Anmeldung mit E-Mail & Passwort",
+      "fullSettingsNotice": "Nutzen Sie die Seite mit den vollständigen Einstellungen für Passwortänderungen.",
+      "unableLoadStats": "Dashboard-Statistiken konnten nicht geladen werden",
+      "loadingDashboard": "Dashboard wird geladen...",
+      "stats": {
+        "total": "Anfragen insgesamt",
+        "pending": "Ausstehend",
+        "awaitingReview": "Wartet auf Prüfung",
+        "approved": "Genehmigt",
+        "confirmed": "Bestätigt",
+        "rejected": "Abgelehnt",
+        "needsAttention": "Aktion erforderlich"
+      }
+    },
+    "MyRequests": {
+      "category": "Reiseanfragen",
+      "title": "Meine Reiseanfragen",
+      "description": "Verfolgen Sie Ihre ausstehenden, genehmigten und stornierten Reisen.",
+      "unableLoad": "Anfragen konnten nicht geladen werden",
+      "noRequestsYet": "Noch keine Reiseanfragen vorhanden",
+      "submitRequestDesc": "Senden Sie eine Anfrage über das Formular, damit sie hier angezeigt wird.",
+      "package": "Reisepaket",
+      "travelers": "Reisende",
+      "preferredDate": "Bevorzugtes Datum",
+      "submitted": "Eingereicht",
+      "specialRequests": "Besondere Wünsche",
+      "none": "Keine",
+      "viewDetails": "Details anzeigen",
+      "cancelRequest": "Anfrage stornieren",
+      "cancelling": "Wird storniert...",
+      "cancelled": "Storniert"
+    },
+    "RequestHistory": {
+      "title": "Anfrageverlauf",
+      "description": "Überprüfen Sie alle eingereichten Anfragen und deren aktuellen Status.",
+      "category": "Verlauf",
+      "requestDetails": "Anfragedetails",
+      "travelerCount": "Anzahl der Reisenden",
+      "travelDate": "Reisedatum",
+      "specialRequests": "Besondere Wünsche",
+      "none": "Keine",
+      "willContact": "Unser Reiseteam wird sich in Kürze mit Ihnen in Verbindung setzen.",
+      "unableLoad": "Verlauf konnte nicht geladen werden",
+      "noHistoryFound": "Kein Verlauf gefunden",
+      "pastRequestsDesc": "Ihre abgeschlossenen und vergangenen Reiseanfragen werden hier angezeigt."
+    },
+    "Profile": {
+      "title": "Profildetails",
+      "description": "Aktualisieren Sie Ihre öffentlichen Profilinformationen.",
+      "fullName": "Vollständiger Name",
+      "email": "E-Mail",
+      "photoUrl": "Profilbild-URL",
+      "saveChanges": "Änderungen speichern",
+      "saving": "Wird gespeichert...",
+      "success": "Profil erfolgreich aktualisiert.",
+      "error": "Fehler beim Aktualisieren des Profils",
+      "joined": "Mitglied seit",
+      "emailPassword": "E-Mail/Passwort"
+    },
+    "Settings": {
+      "security": "Sicherheit",
+      "securityDesc": "Verwalten Sie Ihre Kontosicherheit.",
+      "googleManaged": "Das Passwort wird über Ihr Google-Konto verwaltet.",
+      "newPassword": "Neues Passwort",
+      "confirmPassword": "Passwort bestätigen",
+      "changePassword": "Passwort ändern",
+      "updating": "Wird aktualisiert...",
+      "mismatch": "Passwörter stimmen nicht überein.",
+      "success": "Passwort erfolgreich aktualisiert.",
+      "error": "Passwort konnte nicht aktualisiert werden",
+      "session": "Sitzung",
+      "sessionDesc": "Melden Sie sich von Ihrer aktuellen Dashboard-Sitzung ab.",
+      "logout": "Abmelden",
+      "deleteAccount": "Konto löschen",
+      "deleteDesc": "Diese Aktion ist unwiderruflich und löscht Ihr Konto sowie alle Reiseanfragen.",
+      "placeholder": "Geben Sie LÖSCHEN ein",
+      "deleteButton": "Konto löschen"
+    }
+  },
+  "CustomizeTour": {
+    "tagline": "Sri Lanka Tour Designer",
+    "tripDuration": "Reisedauer",
+    "destinationsSelected": "{count} Reiseziele ausgewählt",
+    "liveEstimate": "Live-Kalkulation",
+    "tripSummary": "Reisezusammenfassung",
+    "route": "Route",
+    "travelers": "Reisende",
+    "subtitle": "Reiserouten-Architekt",
+    "title": "Interaktiver Tour-Konfigurator",
+    "description": "Wählen Sie eine Basistour und nutzen Sie die interaktive Karte, um Ziele dynamisch festzulegen. Konfigurieren Sie Reisedauer, Gäste und Verpflegung.",
+    "step1": "1. Basis-Paket Vorlage Wählen",
+    "step2": "2. Interaktive Routenkarte",
+    "step3": "3. Reisende & Zusatznächte",
+    "step4": "4. Unterkunftskategorie Wählen",
+    "step5": "5. Transportmittel",
+    "step6": "6. Verpflegung & Extras",
+    "baseDays": "{duration} Tage Basis",
+    "mapInstruction": "Klicken Sie auf Stecknadeln, um Städte hinzuzufügen oder zu entfernen. Linien zeigen Entfernungen (km) und Fahrtrichtungen.",
+    "citiesSelected": "{count} Städte Ausgewählt",
+    "activeRoute": "Ihre Aktive Route",
+    "routeDirectionsSummary": "Routenrichtungen & Kilometer-Aufschlüsselung",
+    "totalRouteDistance": "Gesamte Routendistanz: {distance} km",
+    "estDrivingTime": "Geschätzte Fahrzeit: ~{time}",
+    "legTitle": "Etappe {number}",
+    "distFromCityCenter": "~{distance} km vom Stadtzentrum {city}",
+    "hoverPin": "Fahren Sie über eine Stecknadel für Details, Richtungen und Entfernungen.",
+    "clickPinEdit": "Klicken Sie auf die Karte zur Bearbeitung",
+    "addToRoute": "Zur Route Hinzufügen",
+    "removeFromRoute": "Ziel Entfernen",
+    "travelersCount": "Anzahl der Reisenden",
+    "guests": "{count} Gäste",
+    "guest": "1 Gast",
+    "extraNights": "Zusatznächte",
+    "nights": "+{count} Nächte",
+    "zeroNights": "0 Nächte",
+    "summaryTitle": "Zusammenfassung & Angebot",
+    "baseSelected": "Ausgewählte Basis",
+    "totalNights": "Gesamtnächte",
+    "baseCost": "Basiskosten ({duration} Tage)",
+    "hotelSurcharges": "Hotelaufpreise ({nights} Nächte)",
+    "transportLogistics": "Transportlogistik",
+    "destinationTickets": "Eintrittskarten ({count} Städte)",
+    "mealAddOns": "Verpflegung & Extras",
+    "groupDiscount": "Gruppenrabatt (-{rate}%)",
+    "taxesFees": "Lokale Steuern & Gebühren (12%)",
+    "totalQuote": "Gesamtsumme",
+    "departureDate": "Abreisedatum",
+    "travelerPreferences": "Wünsche & Sonderanfragen",
+    "placeholderPreferences": "Z.B. Ernährungsanforderungen, Flugzeiten, Hotelwünsche...",
+    "planningAsGuest": "Planung als Gast. Beim Absenden werden Sie zur Anmeldung weitergeleitet.",
+    "savingQuote": "Angebot wird gespeichert...",
+    "signInSubmit": "Anmelden & Absenden",
+    "submitCustom": "Individuelle Anfrage Absenden",
+    "itinerarySaved": "Reiseroute Gespeichert!",
+    "savedDesc": "Ihre maßgeschneiderte Reiseroute wurde erfolgreich gespeichert. Ein Reiseberater wird Ihre Anfrage prüfen.",
+    "viewDashboardRequests": "Anfragen im Dashboard Anzeigen",
+    "configureAnother": "Weitere Route Konfigurieren",
+    "selectStartDate": "Bitte wählen Sie ein Abreisedatum.",
+    "futureDate": "Das Datum muss in der Zukunft liegen.",
+    "correctErrors": "Bitte korrigieren Sie die Fehler vor der Buchung.",
+    "redirectLogin": "Weiterleitung zur Anmeldung. Ihre Daten bleiben erhalten.",
+    "customizedTourSaved": "Ihre maßgeschneiderte Tour wurde gespeichert.",
+    "baseTours": {
+      "cultural": "Altes Kulturelles Dreieck",
+      "culturalDesc": "5-tägige historische Route zu alten Hauptstädten und Tempeln.",
+      "southern": "Südstrand & Wildtiersafari",
+      "southernDesc": "6-tägige Küstentour mit Sonne, Geschichte und Safari.",
+      "hill": "Bergland Panorama Trail",
+      "hillDesc": "6-tägige Tour durch neblige Berge, Zugfahrten und Wasserfälle.",
+      "custom": "Maßgeschneiderte Route",
+      "customDesc": "Erstellen Sie Ihre eigene Reiseroute mithilfe der Karte.",
+      "aiSuggested": "KI-Vorgeschlagenes Paket",
+      "aiSuggestedDesc": "Automatisch generiert durch unsere KI-Engine basierend auf Ihren Wünschen."
+    },
+    "aiSuggestTitle": "KI-Reisevorschlag Generieren",
+    "aiSuggestDesc": "Lassen Sie unsere 3-Agenten-KI Ihre Reisedaten und Vorlieben analysieren, um das optimale Sri Lanka Paket zu erstellen.",
+    "dateRangeStart": "Startdatum",
+    "dateRangeEnd": "Enddatum",
+    "keywordsLabel": "Stimmung & Präferenzen",
+    "keywordsPlaceholder": "Z.B. ruhige Strände, alte Felsenfestung, Elefantensafari, frische Meeresfrüchte...",
+    "generatePackage": "KI-Paket Generieren 🚀",
+    "generatingPackage": "KI-Pipeline generiert Paket...",
+    "aiItineraryReview": "KI-Reiseverlauf & Explainable AI Highlights",
+    "suggestedPlacesTitle": "Empfohlene Hotels & Sehenswürdigkeiten",
+    "suggestedPlacesDesc": "Wählen Sie bestimmte KI-empfohlene Hotels und Orte aus, um echte Preise zu sichern.",
+    "aiMatchedRate": "KI-Angepasster Preis",
+    "selectPlace": "+ Hinzufügen",
+    "selectedPlace": "Ausgewählt ✓",
+    "baggageCount": "Gepäckstücke",
+    "bags": "{count} Taschen",
+    "pricingModeLabel": "Transport-Preismodell",
+    "perDay": "Tagesrate",
+    "perTrip": "Pauschalpreis",
+    "baggageSurcharge": "Zusatzgepäck-Aufpreis",
+    "whyThisWasChosen": "💡 Warum Dies Gewählt Wurde:",
+    "hotelTiers": {
+      "budget": "3-Sterne Standard Komfort",
+      "standard": "4-Sterne Luxushotels",
+      "luxury": "5-Sterne Resort Kollektion",
+      "premiumBoutique": "Boutique-Hotels & Private Villen"
+    },
+    "transportModes": {
+      "selfDrive": "Mietwagen für Selbstfahrer",
+      "privateDriver": "Privatwagen mit Klimaanlage & Fahrer",
+      "firstClassTrain": "Erstklassiger Panoramazug & Privattransfers",
+      "charterFlight": "Helikopter & Inlands-Charterflüge"
+    },
+    "addOnLabels": {
+      "breakfast": "Tägliches Frühstücksbuffet",
+      "dinner": "3-Gänge Gourmet-Abendessen"
+    }
+  }
+}

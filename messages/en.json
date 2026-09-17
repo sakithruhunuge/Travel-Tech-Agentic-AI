@@ -1,0 +1,445 @@
+{
+  "Hero": {
+    "title": "Explore Beautiful",
+    "country": "Sri Lanka",
+    "description": "From ancient kingdoms and misty mountains to golden beaches and unforgettable wildlife experiences, explore Sri Lanka with carefully crafted travel packages.",
+    "planTrip": "Plan My Trip",
+    "browsePackages": "Browse all packages",
+    "destination": "Destination",
+    "travelDate": "Travel Date",
+    "budget": "Budget"
+  },
+  "Navbar": {
+    "home": "Home",
+    "about": "About",
+    "destinations": "Destinations",
+    "packages": "Packages",
+    "whyChooseUs": "Why Choose Us",
+    "contact": "Contact",
+    "customize": "Customize Tour",
+    "login": "Login"
+  },
+  "About": {
+    "wonder": "Wonder of Asia",
+    "title": "Why Visit Sri Lanka?",
+    "description": "Sri Lanka is an island paradise packing diverse, breathtaking travel experiences into a compact destination. Known as the \"Pearl of the Indian Ocean,\" it caters to every type of global traveler.",
+    "heritage": {
+      "title": "Ancient World Heritage",
+      "desc": "Explore over 2,500 years of civilization, featuring 8 UNESCO World Heritage Sites including Sigiriya and Kandy."
+    },
+    "highlands": {
+      "title": "Scenic Misty mountains",
+      "desc": "Ride the world-famous blue train through cascading tea estates, green hills, and waterfalls in Ella and Nuwara Eliya."
+    },
+    "wildlife": {
+      "title": "Rich Wildlife Safaris",
+      "desc": "Embark on open jeep safaris in Yala or Udawalawe to see high leopard densities, sloth bears, and giant elephant herds."
+    }
+  },
+  "Destinations": {
+    "tagline": "Island Wonders",
+    "title": "Top Sri Lanka Destinations",
+    "description": "From ancient archaeological ruins and sacred mountain shrines to misty hills and surf-friendly coastal shores.",
+    "tags": {
+      "coastline": "Coastline",
+      "heritage": "Heritage",
+      "highlands": "Highlands",
+      "wildlife": "Wildlife",
+      "urban": "Urban"
+    },
+    "items": {
+      "sigiriya": "Sigiriya Rock Fortress",
+      "dambulla": "Dambulla Cave Temple",
+      "kandy": "Temple of the Tooth in Kandy",
+      "tea": "Nuwara Eliya Tea Plantations",
+      "bridge": "Nine Arches Bridge, Ella",
+      "safari": "Yala National Park Safari",
+      "mirissa": "Mirissa Beach",
+      "galle": "Galle Fort",
+      "bentota": "Bentota Beach",
+      "colombo": "Colombo Skyline"
+    }
+  },
+  "Packages": {
+    "tagline": "Curated Escapes",
+    "title": "Featured Sri Lanka Packages",
+    "description": "Handpicked premium tours that combine comfort, adventure, and immersive local experiences. Explore Sri Lanka with our carefully crafted travel packages.",
+    "from": "From",
+    "duration": "Duration",
+    "destinations": "Destinations",
+    "includes": "Includes",
+    "select": "Select this Package",
+    "items": {
+      "cultural": {
+        "name": "Cultural Triangle Explorer",
+        "duration": "5 Days",
+        "priceRange": "$450 - $600",
+        "inclusions": ["Hotel accommodation", "Private transport", "Breakfast", "English-speaking guide"]
+      },
+      "beach": {
+        "name": "Southern Beach Escape",
+        "duration": "5 Days",
+        "priceRange": "$500 - $700",
+        "inclusions": ["Beach hotels", "Airport pickup", "Breakfast", "Transportation"]
+      },
+      "hill": {
+        "name": "Hill Country Adventure",
+        "duration": "6 Days",
+        "priceRange": "$550 - $750",
+        "inclusions": ["Scenic train journey", "Hotel accommodation", "Transportation", "Guide"]
+      },
+      "safari": {
+        "name": "Wildlife Safari Experience",
+        "duration": "4 Days",
+        "priceRange": "$400 - $550",
+        "inclusions": ["Safari jeep", "Hotels", "Transportation", "Breakfast"]
+      },
+      "grand": {
+        "name": "Sri Lanka Grand Tour",
+        "duration": "10 Days",
+        "priceRange": "$1200 - $1600",
+        "inclusions": ["Premium hotels", "Airport transfers", "Private vehicle", "Guide", "Breakfast"]
+      }
+    }
+  },
+  "WhyChooseUs": {
+    "tagline": "Our Advantages",
+    "title": "Why Travelers Choose Horizon Travel",
+    "description": "Planning a trip to Sri Lanka shouldn't be stressful. We bridge the gap between dream itineraries and flawless execution, giving you complete freedom to enjoy your travels.",
+    "cta": "Plan Your Escapes",
+    "points": {
+      "experts": {
+        "title": "Trusted Local Travel Experts",
+        "desc": "Our team consists of native Sri Lankan trip coordinators who design itineraries leveraging deep local secrets."
+      },
+      "hotels": {
+        "title": "Handpicked Hotels",
+        "desc": "We personally vet, select, and audit boutique luxury resorts, premium villas, and unique heritage stays."
+      },
+      "transport": {
+        "title": "Comfortable Transportation",
+        "desc": "Travel across Sri Lanka in modern, fully air-conditioned vehicles driven by professional tourist drivers."
+      },
+      "itineraries": {
+        "title": "Personalized Itineraries",
+        "desc": "We tailor all tours to match your timeline, desired pace, interests, budget, and travel preferences."
+      },
+      "assistance": {
+        "title": "Airport Pickup & Assistance",
+        "desc": "A seamless start to your journey with 24/7 airport greeting, dedicated SIM setups, and baggage handling."
+      },
+      "support": {
+        "title": "24/7 Customer Support",
+        "desc": "Immediate traveler assistance on-the-road for booking shifts, emergencies, or real-time query answers."
+      }
+    }
+  },
+  "Testimonials": {
+    "tagline": "Guest Testimonials",
+    "title": "Loved by Travelers Worldwide",
+    "description": "Read stories from international tourists who explored the rich culture, scenic highlands, and gold coastlines of Sri Lanka with us.",
+    "reviews": {
+      "charlotte": {
+        "name": "Charlotte Mercier",
+        "country": "France",
+        "review": "The Hill Country Adventure was spectacular! The scenic train journey to Ella is something we will cherish forever. Highly recommend Horizon Travel for their flawless planning.",
+        "package": "Hill Country Adventure"
+      },
+      "liam": {
+        "name": "Liam Kaelen",
+        "country": "Germany",
+        "review": "The Cultural Triangle Explorer exceeded all expectations. Sigiriya Rock Fortress is mind-blowing. Our private vehicle was clean, and the English-speaking guide made history come alive.",
+        "package": "Cultural Triangle Explorer"
+      },
+      "sarah": {
+        "name": "Sarah Lawson",
+        "country": "Australia",
+        "review": "We booked the Southern Beach Escape. Golden beaches, whale watching in Mirissa, and the historic Galle Fort were incredible. Smooth airport pickup and excellent beach resort selections.",
+        "package": "Southern Beach Escape"
+      },
+      "david": {
+        "name": "David Ross",
+        "country": "United Kingdom",
+        "review": "The Wildlife Safari Experience was absolute magic! We saw leopards, sloth bears, and herds of wild elephants in Yala. Highly professional drivers and beautiful national park resorts.",
+        "package": "Wildlife Safari Experience"
+      }
+    }
+  },
+  "Contact": {
+    "tagline": "Inquiries",
+    "title": "Plan Your Journey",
+    "description": "Ready to explore? Drop us a line. Our dedicated travel planners will respond to you within 24 hours to schedule a custom consultation.",
+    "taglineCta": "Start Your Consultation",
+    "titleCta": "Design Your Dream Sri Lankan Getaway",
+    "descCta": "Use our step-by-step customization wizard to design a personalized itinerary. Choose destinations, select activities, and lock in pricing details with our local travel specialists.",
+    "bullet1": "Curated local guides and private transport options.",
+    "bullet2": "Flexible planning and free cancellations.",
+    "bullet3": "Personal specialist coordinates every booking detail.",
+    "btnCta": "Start Planning Now"
+  },
+  "Footer": {
+    "desc": "Crafting premium travel experiences and lifelong memories. Explore the world's most breathtaking destinations with our dedicated team of travel experts.",
+    "explore": "Explore",
+    "hours": {
+      "title": "Business Hours",
+      "monFri": "Monday - Friday: 9:00 AM - 6:00 PM",
+      "sat": "Saturday: 10:00 AM - 4:00 PM",
+      "sun": "Sunday: Closed"
+    },
+    "contact": {
+      "title": "Contact Us",
+      "address": "Address",
+      "phone": "Phone",
+      "email": "Email"
+    },
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "rights": "Horizon Travel. All rights reserved."
+  },
+  "Dashboard": {
+    "Sidebar": {
+      "home": "Home",
+      "dashboard": "Dashboard",
+      "myRequests": "My Travel Requests",
+      "requestHistory": "Request History",
+      "profile": "Profile",
+      "settings": "Settings",
+      "logout": "Logout",
+      "brand": "HORIZON"
+    },
+    "TopNavbar": {
+      "title": "Dashboard",
+      "subtitle": "Manage your Sri Lanka plans",
+      "searchPlaceholder": "Search requests, destinations...",
+      "notifications": "Notifications",
+      "markAllRead": "Mark all as read",
+      "noNew": "No new notifications",
+      "viewAll": "View all notifications",
+      "signOut": "Sign out"
+    },
+    "Status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "Home": {
+      "welcome": "Welcome back, {name}",
+      "curatedJourneys": "Sri Lanka Curated Journeys",
+      "managePlans": "Manage your Sri Lanka travel plans, requests, and preferences from one secure and beautiful dashboard.",
+      "viewRequests": "View Requests",
+      "updateProfile": "Update Profile",
+      "travelTip": "Travel tip",
+      "sigiriyaTip": "The best time to visit Sri Lanka is December–April for sunny beaches and lush hill country.",
+      "recommendations": "Recommendations",
+      "suggestedDestinations": "Suggested Sri Lanka destinations",
+      "ourTeamRecommends": "Our team recommends these iconic places for your next escape.",
+      "needHelp": "Need help planning?",
+      "support": "Support",
+      "specialistsTailor": "Our Ceylon travel specialists can tailor the itinerary around your preferences and schedule.",
+      "tip1": "Best beaches and surf spots",
+      "tip2": "Scenic train routes and tea country",
+      "tip3": "Wildlife safaris and cultural heritage",
+      "quickSettings": "Quick settings",
+      "accessControls": "Access your account controls from the main dashboard.",
+      "signedInAs": "Signed in as {name}",
+      "signedInHorizon": "Signed in to your Horizon Travel account.",
+      "openFullSettings": "Open Full Settings",
+      "logout": "Logout",
+      "accountStatus": "Account status",
+      "seeConnected": "See how your dashboard account is connected.",
+      "signinMethod": "Sign-in method",
+      "googleConnection": "Google Account Connection",
+      "passwordLogin": "Email & Password Secure Login",
+      "fullSettingsNotice": "Use the full settings page for password changes and other account actions.",
+      "unableLoadStats": "Unable to load dashboard stats",
+      "loadingDashboard": "Loading dashboard...",
+      "stats": {
+        "total": "Total Requests",
+        "pending": "Pending",
+        "awaitingReview": "Awaiting review",
+        "approved": "Approved",
+        "confirmed": "Confirmed",
+        "rejected": "Rejected",
+        "needsAttention": "Needs attention"
+      }
+    },
+    "MyRequests": {
+      "category": "Travel Requests",
+      "title": "My Travel Requests",
+      "description": "Track your pending, approved, and cancelled journeys.",
+      "unableLoad": "Unable to load requests",
+      "noRequestsYet": "No travel requests yet",
+      "submitRequestDesc": "Submit a request through the travel form to see it appear here.",
+      "package": "Package",
+      "travelers": "Travelers",
+      "preferredDate": "Preferred date",
+      "submitted": "Submitted",
+      "specialRequests": "Special requests",
+      "none": "None",
+      "viewDetails": "View Details",
+      "cancelRequest": "Cancel Request",
+      "cancelling": "Cancelling...",
+      "cancelled": "Cancelled"
+    },
+    "RequestHistory": {
+      "title": "Request History",
+      "description": "Review all of your submitted requests and their latest status.",
+      "category": "History",
+      "requestDetails": "Request Details",
+      "travelerCount": "Traveler Count",
+      "travelDate": "Travel Date",
+      "specialRequests": "Special Requests",
+      "none": "None",
+      "willContact": "Our travel team will contact you shortly.",
+      "unableLoad": "Unable to load request history",
+      "noHistoryFound": "No history found",
+      "pastRequestsDesc": "Your completed and past travel requests will appear here."
+    },
+    "Profile": {
+      "title": "Profile details",
+      "description": "Update your public profile information.",
+      "fullName": "Full name",
+      "email": "Email",
+      "photoUrl": "Profile photo URL",
+      "saveChanges": "Save changes",
+      "saving": "Saving...",
+      "success": "Profile updated successfully.",
+      "error": "Failed to update profile",
+      "joined": "Joined",
+      "emailPassword": "Email/Password"
+    },
+    "Settings": {
+      "security": "Security",
+      "securityDesc": "Manage your account security settings.",
+      "googleManaged": "Password is managed through your Google account.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "changePassword": "Change password",
+      "updating": "Updating...",
+      "mismatch": "Passwords do not match.",
+      "success": "Password updated successfully.",
+      "error": "Could not update password",
+      "session": "Session",
+      "sessionDesc": "Sign out of your current dashboard session.",
+      "logout": "Logout",
+      "deleteAccount": "Delete account",
+      "deleteDesc": "This action is irreversible and removes your account and travel requests.",
+      "placeholder": "Type DELETE to confirm",
+      "deleteButton": "Delete account"
+    }
+  },
+  "CustomizeTour": {
+    "tagline": "Ceylon Tour Builder",
+    "tripDuration": "Trip Duration",
+    "destinationsSelected": "{count} Destinations Selected",
+    "liveEstimate": "Live Estimate",
+    "tripSummary": "Trip Summary",
+    "route": "Route",
+    "travelers": "Travelers",
+    "subtitle": "Itinerary Architect",
+    "title": "Interactive Tour Customizer",
+    "description": "Choose a starting base tour, then use the live map pins to dynamically route destinations. Configure travelers, nights, and meals with instant estimates.",
+    "step1": "1. Select Base Package Template",
+    "step2": "2. Interactive Route Builder Map",
+    "step3": "3. Travelers & Extra Nights",
+    "step4": "4. Choose Accommodation Level",
+    "step5": "5. Transport Mode",
+    "step6": "6. Meal Add-ons & Extras",
+    "baseDays": "{duration} Days Base",
+    "mapInstruction": "Click pins on the map to add/remove cities. Visual lines connect chosen routes in sequence with exact distances and directions.",
+    "citiesSelected": "{count} Cities Selected",
+    "activeRoute": "Your Active Route",
+    "routeDirectionsSummary": "Route Directions & Kilometer Breakdown",
+    "totalRouteDistance": "Total Route Distance: {distance} km",
+    "estDrivingTime": "Est. Driving Time: ~{time}",
+    "legTitle": "Leg {number}",
+    "distFromCityCenter": "~{distance} km from {city} center",
+    "hoverPin": "Hover over any pin to preview highlights, directions, and distances.",
+    "clickPinEdit": "Click Map Pin to Edit Route",
+    "addToRoute": "Add to Route",
+    "removeFromRoute": "Remove Destination",
+    "travelersCount": "Travelers Headcount",
+    "guests": "{count} Guests",
+    "guest": "1 Guest",
+    "extraNights": "Extra Nights",
+    "nights": "+{count} Nights",
+    "zeroNights": "0 Nights",
+    "summaryTitle": "Summary & Custom Estimate",
+    "baseSelected": "Base Selected",
+    "totalNights": "Total Nights",
+    "baseCost": "Base Cost ({duration} Days)",
+    "hotelSurcharges": "Hotel Surcharges ({nights} Nights)",
+    "transportLogistics": "Transportation logistics",
+    "destinationTickets": "Destination ticket entries ({count} cities)",
+    "mealAddOns": "Meal Add-ons & Extras",
+    "groupDiscount": "Group discount (-{rate}%)",
+    "taxesFees": "Local taxes & service fees (12%)",
+    "totalQuote": "Total Quote",
+    "departureDate": "Departure Date",
+    "travelerPreferences": "Traveler Preferences & Special Requests",
+    "placeholderPreferences": "E.g. dietary instructions, airport pick-up flight info, hotel notes...",
+    "planningAsGuest": "Planning as guest. Submit booking redirects to login to authorize your custom request.",
+    "savingQuote": "Saving Quote...",
+    "signInSubmit": "Sign In & Submit Booking",
+    "submitCustom": "Submit Custom Booking Request",
+    "itinerarySaved": "Itinerary Saved!",
+    "savedDesc": "Your customized itinerary is successfully stored as a request in our databases. An agency coordinator will review the pricing breakdown and confirm your slots.",
+    "viewDashboardRequests": "View Dashboard Requests",
+    "configureAnother": "Configure Another Route",
+    "selectStartDate": "Please select a preferred start date.",
+    "futureDate": "Departure date must be in the future.",
+    "correctErrors": "Please correct validation issues before booking.",
+    "redirectLogin": "Redirecting to secure login. Your configuration is preserved.",
+    "customizedTourSaved": "Your customized Ceylon tour is saved.",
+    "baseTours": {
+      "cultural": "Ancient Cultural Triangle",
+      "culturalDesc": "A 5-day historic route visiting ancient capitals and temples.",
+      "southern": "Southern Beach & Wildlife Safari",
+      "southernDesc": "A 6-day coastal escape focusing on sun, history, and safari.",
+      "hill": "Hill Country Scenic Trail",
+      "hillDesc": "A 6-day misty mountain loops, train tours, and waterfalls.",
+      "custom": "Custom Tailor-Made Route",
+      "customDesc": "Build your own itinerary from scratch utilizing the map pins.",
+      "aiSuggested": "AI-Suggested Package",
+      "aiSuggestedDesc": "Auto-generated by 3-Agent AI Engine matching your preferences."
+    },
+    "aiSuggestTitle": "AI Suggest My Trip",
+    "aiSuggestDesc": "Let our 3-Agent AI Engine analyze your date range and vibe preferences to auto-generate the optimal Sri Lanka package.",
+    "dateRangeStart": "Start Date",
+    "dateRangeEnd": "End Date",
+    "keywordsLabel": "Vibe Keywords & Preferences",
+    "keywordsPlaceholder": "E.g. quiet beaches, ancient rock fort, wild elephant safari, fresh seafood...",
+    "generatePackage": "Generate My AI Package 🚀",
+    "generatingPackage": "3-Agent Pipeline Generating Package...",
+    "aiItineraryReview": "AI-Suggested Itinerary & Explainable AI Highlights",
+    "suggestedPlacesTitle": "Suggested Hotels & Attractions",
+    "suggestedPlacesDesc": "Select specific AI-recommended hotels and places to lock real nightly rates and add them to your interactive route.",
+    "aiMatchedRate": "AI-Matched Rate",
+    "selectPlace": "+ Add to Trip",
+    "selectedPlace": "Selected ✓",
+    "baggageCount": "Baggage Items",
+    "bags": "{count} Bags",
+    "pricingModeLabel": "Transport Pricing Mode",
+    "perDay": "Per Day Rate",
+    "perTrip": "Flat Trip Rate",
+    "baggageSurcharge": "Extra Baggage Handling",
+    "whyThisWasChosen": "💡 Why This Was Chosen:",
+    "hotelTiers": {
+      "budget": "3-Star Standard Comfort",
+      "standard": "4-Star Luxury Hotels",
+      "luxury": "5-Star Resort Collection",
+      "premiumBoutique": "Boutique & Villa Private Retainers"
+    },
+    "transportModes": {
+      "selfDrive": "Self-Drive Vehicle Rental",
+      "privateDriver": "Private AC Car & Dedicated Driver",
+      "firstClassTrain": "First-Class Scenic Train & Private Transits",
+      "charterFlight": "Helicopter & Charter Domestic Flights"
+    },
+    "addOnLabels": {
+      "breakfast": "Full Daily Buffet Breakfast",
+      "dinner": "3-Course Gourmet Dinner Package"
+    }
+  }
+}
