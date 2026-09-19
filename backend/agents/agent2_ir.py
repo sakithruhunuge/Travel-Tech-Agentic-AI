@@ -68,11 +68,37 @@ def retrieve_candidates(params: Dict[str, Any]) -> Dict[str, Any]:
     staged_hotels = staging_db["staged_hotels"]
     staged_places = staging_db["staged_places"]
 
+    # -------------------------------------------------------------------------
+    # Strategy A — Geospatial Hotel Search ($geoNear)
+    # -------------------------------------------------------------------------
+    pipeline_a = [
+        {
+            "$geoNear": {
+                "near": {"type": "Point", "coordinates": [lng, lat]},
+                "distanceField": "dist_meters",
+                "maxDistance": 100000,  # 100km radius
+                "query": {
+                    "embedding_ready": True,
+                    "price_usd": {"$lte": budget_per_night},
+                },
+                "spherical": True,
+            }
+        },
+        {"$limit": 15},
+        {"$project": {"embedding": 0}},
+    ]
+    try:
+        hotels_geo = list(staged_hotels.aggregate(pipeline_a))
+    except Exception as e:
+        print(f"⚠️ Strategy A ($geoNear hotels) warning: {e}")
+        hotels_geo = []
+
     return {
-        "hotels": [],
+        "hotels": _convert_object_ids(hotels_geo),
         "pois": [],
         "query_metadata": {
             "destination_coords": params.get("destination_coords"),
             "budget_per_night": budget_per_night,
+            "hotels_geo_count": len(hotels_geo),
         },
     }
