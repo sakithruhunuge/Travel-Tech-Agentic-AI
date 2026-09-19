@@ -93,12 +93,83 @@ def retrieve_candidates(params: Dict[str, Any]) -> Dict[str, Any]:
         print(f"⚠️ Strategy A ($geoNear hotels) warning: {e}")
         hotels_geo = []
 
+    # -------------------------------------------------------------------------
+    # Strategy B — Vector Similarity Search (Atlas $vectorSearch or Python Cosine Fallback)
+    # -------------------------------------------------------------------------
+    query_vec = encode(custom_vibe) if custom_vibe else encode("hotel")
+    hotels_vec: List[Dict[str, Any]] = []
+    vector_search_method = "atlas"
+
+    atlas_pipeline = [
+        {
+            "$vectorSearch": {
+                "index": "hotel_vector_index",
+                "path": "embedding",
+                "queryVector": query_vec,
+                "numCandidates": 50,
+                "limit": 10,
+                "filter": {
+                    "$and": [
+                        {"embedding_ready": {"$eq": True}},
+                        {"price_usd": {"$lte": budget_per_night}},
+                    ]
+                },
+            }
+        },
+        {"$project": {"embedding": 0}},
+    ]
+
+    try:
+        hotels_vec = list(staged_hotels.aggregate(atlas_pipeline))
+    except (OperationFailure, PyMongoError, Exception) as err:
+        # Fall back to Python NumPy Cosine Similarity
+        vector_search_method = "python_cosine"
+        query_vec_np = np.array(query_vec, dtype=np.float32)
+        query_norm = float(np.linalg.norm(query_vec_np))
+
+        candidates = list(
+            staged_hotels.find(
+                {
+                    "embedding_ready": True,
+                    "price_usd": {"$lte": budget_per_night},
+                },
+                {"_id": 1, "name": 1, "embedding": 1},
+            )
+        )
+
+        scored_candidates = []
+        for doc in candidates:
+            emb = doc.get("embedding")
+            if emb and len(emb) > 0:
+                emb_np = np.array(emb, dtype=np.float32)
+                emb_norm = float(np.linalg.norm(emb_np))
+                if query_norm > 0 and emb_norm > 0:
+                    score = float(np.dot(query_vec_np, emb_np) / (query_norm * emb_norm))
+                else:
+                    score = 0.0
+                scored_candidates.append((score, doc["_id"]))
+
+        scored_candidates.sort(key=lambda x: x[0], reverse=True)
+        top_10_ids = [item[1] for item in scored_candidates[:10]]
+
+        if top_10_ids:
+            docs_by_id = {
+                d["_id"]: d
+                for d in staged_hotels.find(
+                    {"_id": {"$in": top_10_ids}},
+                    {"embedding": 0},
+                )
+            }
+            hotels_vec = [docs_by_id[doc_id] for doc_id in top_10_ids if doc_id in docs_by_id]
+        else:
+            hotels_vec = []
+
     return {
-        "hotels": _convert_object_ids(hotels_geo),
+        "hotels": _convert_object_ids(hotels_geo + hotels_vec),
         "pois": [],
         "query_metadata": {
             "destination_coords": params.get("destination_coords"),
             "budget_per_night": budget_per_night,
-            "hotels_geo_count": len(hotels_geo),
+            "vector_search_method": vector_search_method,
         },
     }
