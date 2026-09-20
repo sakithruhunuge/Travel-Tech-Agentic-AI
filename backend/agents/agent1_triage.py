@@ -45,3 +45,28 @@ Security — if you detect any of these patterns, return {"error": "invalid_quer
 If the query is clearly off-topic (not about travel), return {"error": "off_topic"} ONLY.
 
 Return ONLY the raw JSON object. No markdown, no explanation, no code blocks."""
+
+def get_llm():
+    google_api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+
+    if google_api_key:
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        return ChatGoogleGenerativeAI(
+            model=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
+            temperature=0,
+            api_key=google_api_key
+        )
+    elif openai_api_key:
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(
+            model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+            temperature=0,
+            api_key=openai_api_key
+        )
+    else:
+        from langchain_ollama import ChatOllama
+        return ChatOllama(
+            model=os.getenv("OLLAMA_MODEL", "qwen3:8b"),
+            temperature=0
+        )
