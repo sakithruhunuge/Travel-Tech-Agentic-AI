@@ -82,3 +82,20 @@ prompt_template = ChatPromptTemplate.from_messages([
 
 llm = get_llm()
 chain = prompt_template | llm | StrOutputParser()
+
+def parse_user_query(raw_prompt: str) -> dict:
+    try:
+        raw_output = chain.invoke({"input": raw_prompt})
+    except Exception as e:
+        return {"error": "llm_invocation_failed", "details": str(e)}
+
+    cleaned_output = raw_output.strip()
+
+    try:
+        data = json.loads(cleaned_output)
+        if isinstance(data, dict):
+            return data
+    except Exception:
+        pass
+
+    return {"error": "parse_failed", "raw_output": raw_output}
