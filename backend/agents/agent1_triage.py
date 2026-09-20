@@ -70,3 +70,15 @@ def get_llm():
             model=os.getenv("OLLAMA_MODEL", "qwen3:8b"),
             temperature=0
         )
+
+from langchain_core.messages import SystemMessage
+from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+prompt_template = ChatPromptTemplate.from_messages([
+    SystemMessage(content=SYSTEM_PROMPT),
+    HumanMessagePromptTemplate.from_template("{input}")
+])
+
+llm = get_llm()
+chain = prompt_template | llm | StrOutputParser()
