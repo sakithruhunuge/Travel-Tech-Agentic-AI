@@ -45,3 +45,7 @@ venv/
 
 # Backend data dumps
 backend/backups/*.json
+
+# Workflows & internal prompts
+master prompt workflow
+
