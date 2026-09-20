@@ -52,7 +52,24 @@ def _convert_object_ids(obj: Any) -> Any:
 
 
 def retrieve_candidates(params: Dict[str, Any]) -> Dict[str, Any]:
-    """Retrieves hotel and POI candidates using geospatial and vector similarity search strategies."""
+    """Retrieves hotel and POI candidates using geospatial and vector similarity search strategies.
+
+    Args:
+        params (dict): Dict containing:
+          - destination_coords: {"lat": float, "lng": float}
+          - budget_max_usd: float
+          - duration_days: int
+          - interests: list[str]
+          - custom_vibe: str
+          - party_size: int
+
+    Returns:
+        dict: {
+            "hotels": list[dict],
+            "pois": list[dict],
+            "query_metadata": dict
+        }
+    """
     dest_coords = params.get("destination_coords", {})
     lat = float(dest_coords.get("lat", 0.0))
     lng = float(dest_coords.get("lng", 0.0))
@@ -164,12 +181,76 @@ def retrieve_candidates(params: Dict[str, Any]) -> Dict[str, Any]:
         else:
             hotels_vec = []
 
+    # -------------------------------------------------------------------------
+    # Strategy C — Geospatial POI Search ($geoNear)
+    # -------------------------------------------------------------------------
+    poi_query: Dict[str, Any] = {"embedding_ready": True}
+    if interests:
+        poi_query["$or"] = [{"intent_tags": {"$in": interests}}]
+
+    pipeline_c = [
+        {
+            "$geoNear": {
+                "near": {"type": "Point", "coordinates": [lng, lat]},
+                "distanceField": "dist_meters",
+                "maxDistance": 50000,  # 50km radius
+                "query": poi_query,
+                "spherical": True,
+            }
+        },
+        {"$sort": {"popularity_index": -1}},
+        {"$limit": 25},
+        {"$project": {"embedding": 0}},
+    ]
+
+    try:
+        pois_list = list(staged_places.aggregate(pipeline_c))
+    except Exception as e:
+        print(f"⚠️ Strategy C ($geoNear places) warning: {e}")
+        pois_list = []
+
+    # -------------------------------------------------------------------------
+    # Merge & Deduplicate Hotels by _id
+    # -------------------------------------------------------------------------
+    seen_ids = set()
+    merged_hotels = []
+    for h in hotels_geo + hotels_vec:
+        h_id_str = str(h["_id"])
+        if h_id_str not in seen_ids:
+            seen_ids.add(h_id_str)
+            merged_hotels.append(h)
+
+    # Convert all ObjectIds to string
+    merged_hotels_serialized = _convert_object_ids(merged_hotels)
+    pois_list_serialized = _convert_object_ids(pois_list)
+
     return {
-        "hotels": _convert_object_ids(hotels_geo + hotels_vec),
-        "pois": [],
+        "hotels": merged_hotels_serialized,
+        "pois": pois_list_serialized,
         "query_metadata": {
-            "destination_coords": params.get("destination_coords"),
+            "destination_coords": params["destination_coords"],
             "budget_per_night": budget_per_night,
+            "total_hotels_found": len(merged_hotels_serialized),
+            "total_pois_found": len(pois_list_serialized),
             "vector_search_method": vector_search_method,
         },
     }
+
+
+if __name__ == "__main__":
+    test_params = {
+        "destination_coords": {"lat": 6.0535, "lng": 80.2209},  # Galle, Sri Lanka
+        "budget_max_usd": 500.0,
+        "duration_days": 5,
+        "interests": ["Historical", "Beach"],
+        "custom_vibe": "quiet boutique hotel near Galle Fort with sea view",
+        "party_size": 2,
+    }
+    result = retrieve_candidates(test_params)
+    print(f"Hotels found: {len(result['hotels'])}")
+    print(f"POIs found: {len(result['pois'])}")
+    print(f"Vector search method: {result['query_metadata']['vector_search_method']}")
+    if result["hotels"]:
+        print(f"Top hotel: {result['hotels'][0]['name']} — ${result['hotels'][0]['price_usd']}/night")
+    if result["pois"]:
+        print(f"Top POI: {result['pois'][0]['name']} | Tags: {result['pois'][0].get('intent_tags')}")
