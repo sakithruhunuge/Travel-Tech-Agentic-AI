@@ -50,7 +50,7 @@ def parse_star_rating(star_rating: Any) -> float:
 def score_hotel(
     hotel: dict, budget_ceiling: float, all_pois: Optional[list] = None
 ) -> Tuple[float, dict]:
-    """Score an individual hotel based on budget fit."""
+    """Score an individual hotel based on budget, amenities, and star rating."""
     # a) Budget Fit (30 pts)
     raw_price = hotel.get("price_usd")
     price_usd = float(raw_price) if raw_price is not None else 0.0
@@ -61,9 +61,21 @@ def score_hotel(
         budget_fit = 30.0 * (1.0 - (price_usd / effective_ceiling))
         budget_fit = min(max(budget_fit, 0.0), 30.0)
 
-    total_score = budget_fit
+    # b) Amenity Score (20 pts)
+    has_wifi = 1 if hotel.get("has_wifi", 0) else 0
+    has_pool = 1 if hotel.get("has_pool", 0) else 0
+    has_restaurant = 1 if hotel.get("has_restaurant", 0) else 0
+    amenities = float((has_wifi * 6) + (has_pool * 7) + (has_restaurant * 7))
+    amenities = min(max(amenities, 0.0), 20.0)
+
+    # c) Star Rating Score (15 pts)
+    star_rating_score = parse_star_rating(hotel.get("star_rating"))
+
+    total_score = budget_fit + amenities + star_rating_score
     breakdown = {
         "budget_fit": round(budget_fit, 2),
+        "amenities": round(amenities, 2),
+        "star_rating": round(star_rating_score, 2),
     }
 
     return round(total_score, 2), breakdown
