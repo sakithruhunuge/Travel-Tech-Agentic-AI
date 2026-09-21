@@ -7,6 +7,7 @@ amenity matching, star ratings, density/proximity, and traveler interests.
 
 from __future__ import annotations
 
+import copy
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -176,3 +177,62 @@ def score_poi(
 
     total_score = interest_score + popularity_score + proximity_score
     return round(total_score, 2)
+
+
+def curate_candidates(candidates: dict, user_params: dict) -> dict:
+    """Pre-filters, scores, and curates top candidate hotels and POIs."""
+    raw_budget = user_params.get("budget_max_usd", 0.0)
+    budget_max_usd = float(raw_budget) if raw_budget is not None else 0.0
+    duration_days = max(int(user_params.get("duration_days", 1) or 1), 1)
+    interests = user_params.get("interests", []) or []
+
+    budget_ceiling_per_night = budget_max_usd / duration_days
+    budget_warning = False
+
+    # ---------------------------------------------------------
+    # STEP 1 — Pre-filter hotels
+    # ---------------------------------------------------------
+    candidate_hotels = candidates.get("hotels", []) or []
+    filtered_hotels: List[dict] = []
+
+    for hotel in candidate_hotels:
+        h = copy.deepcopy(hotel)
+        price = float(h.get("price_usd", 0.0) or 0.0)
+        if price == 0.0:
+            h["price_unknown"] = True
+        else:
+            h["price_unknown"] = False
+
+        if price <= budget_ceiling_per_night or price == 0.0:
+            filtered_hotels.append(h)
+
+    effective_budget_ceiling = budget_ceiling_per_night
+
+    # If no hotels pass filter, relax to 1.5x the budget ceiling and set budget_warning = True
+    if not filtered_hotels and candidate_hotels:
+        budget_warning = True
+        relaxed_ceiling = budget_ceiling_per_night * 1.5
+        effective_budget_ceiling = relaxed_ceiling
+
+        for hotel in candidate_hotels:
+            h = copy.deepcopy(hotel)
+            price = float(h.get("price_usd", 0.0) or 0.0)
+            if price == 0.0:
+                h["price_unknown"] = True
+            else:
+                h["price_unknown"] = False
+
+            if price <= relaxed_ceiling or price == 0.0:
+                filtered_hotels.append(h)
+
+        # Fallback to keep all hotels if none pass even relaxed ceiling
+        if not filtered_hotels:
+            for hotel in candidate_hotels:
+                h = copy.deepcopy(hotel)
+                price = float(h.get("price_usd", 0.0) or 0.0)
+                h["price_unknown"] = price == 0.0
+                filtered_hotels.append(h)
+    elif not candidate_hotels:
+        budget_warning = True
+
+    return {"filtered_hotels": filtered_hotels, "budget_warning": budget_warning}
