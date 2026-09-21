@@ -83,6 +83,41 @@ prompt_template = ChatPromptTemplate.from_messages([
 llm = get_llm()
 chain = prompt_template | llm | StrOutputParser()
 
+INTEREST_MAP = {
+    "historical": "Historical",
+    "history": "Historical",
+    "nature": "Nature",
+    "beach": "Beach",
+    "beaches": "Beach",
+    "adventure": "Adventure",
+    "adventures": "Adventure",
+    "hiking": "Adventure",
+    "urban": "Urban",
+    "city": "Urban",
+    "food": "Food",
+    "dining": "Food",
+    "photography": "Photography",
+    "photo": "Photography",
+}
+
+def _normalize_interests(data: dict) -> dict:
+    if isinstance(data, dict) and "interests" in data and isinstance(data["interests"], list):
+        normalized = []
+        for item in data["interests"]:
+            cleaned = str(item).strip().lower()
+            if cleaned in INTEREST_MAP:
+                tag = INTEREST_MAP[cleaned]
+                if tag not in normalized:
+                    normalized.append(tag)
+            else:
+                for k, v in INTEREST_MAP.items():
+                    if k in cleaned and v not in normalized:
+                        normalized.append(v)
+                        break
+        if normalized:
+            data["interests"] = normalized
+    return data
+
 def parse_user_query(raw_prompt: str) -> dict:
     try:
         raw_output = chain.invoke({"input": raw_prompt})
@@ -104,7 +139,7 @@ def parse_user_query(raw_prompt: str) -> dict:
     try:
         data = json.loads(cleaned_output)
         if isinstance(data, dict):
-            return data
+            return _normalize_interests(data)
     except Exception:
         pass
 
@@ -114,7 +149,7 @@ def parse_user_query(raw_prompt: str) -> dict:
         try:
             data = json.loads(match.group(0))
             if isinstance(data, dict):
-                return data
+                return _normalize_interests(data)
         except Exception:
             pass
 
