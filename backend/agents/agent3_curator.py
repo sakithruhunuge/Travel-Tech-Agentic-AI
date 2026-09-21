@@ -125,7 +125,22 @@ def score_hotel(
 def score_poi(
     poi: dict, interests: list, hotel_shortlist: Optional[list] = None
 ) -> float:
-    """Score an individual POI across interest, popularity, and proximity."""
+    """Score an individual POI across 3 dimensions (Total: 100 points).
+
+    a) Interest Match (40 pts):
+       - If interests specified and any intent_tag in interests: 40 pts
+       - If interests empty: 20 pts (neutral)
+       - If interests specified and none match: 0 pts
+
+    b) Popularity Index (30 pts):
+       - popularity_index * 30
+
+    c) Proximity Score (30 pts):
+       - max(0, 30 * (1 - dist_meters / 50000)), clamped to [0, 30]
+
+    Returns:
+        total_score (float)
+    """
     # a) Interest Match (40 pts)
     poi_tags = poi.get("intent_tags") or []
     interests_clean = [str(i).strip().lower() for i in interests if i] if interests else []
