@@ -120,3 +120,26 @@ def score_hotel(
     }
 
     return round(total_score, 2), breakdown
+
+
+def score_poi(
+    poi: dict, interests: list, hotel_shortlist: Optional[list] = None
+) -> float:
+    """Score an individual POI across dimensions (Total: 100 points)."""
+    # a) Interest Match (40 pts)
+    poi_tags = poi.get("intent_tags") or []
+    interests_clean = [str(i).strip().lower() for i in interests if i] if interests else []
+    poi_tags_clean = [str(t).strip().lower() for t in poi_tags if t]
+
+    if interests:
+        if any(t in interests for t in poi_tags) or any(
+            t in interests_clean for t in poi_tags_clean
+        ):
+            interest_score = 40.0
+        else:
+            interest_score = 0.0
+    else:
+        interest_score = 20.0
+
+    total_score = interest_score
+    return round(total_score, 2)
