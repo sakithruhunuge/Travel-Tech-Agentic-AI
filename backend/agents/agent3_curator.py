@@ -45,3 +45,25 @@ def parse_star_rating(star_rating: Any) -> float:
             return 7.5
 
     return 7.5
+
+
+def score_hotel(
+    hotel: dict, budget_ceiling: float, all_pois: Optional[list] = None
+) -> Tuple[float, dict]:
+    """Score an individual hotel based on budget fit."""
+    # a) Budget Fit (30 pts)
+    raw_price = hotel.get("price_usd")
+    price_usd = float(raw_price) if raw_price is not None else 0.0
+    if price_usd <= 0.0:
+        budget_fit = 15.0
+    else:
+        effective_ceiling = max(float(budget_ceiling), 1.0)
+        budget_fit = 30.0 * (1.0 - (price_usd / effective_ceiling))
+        budget_fit = min(max(budget_fit, 0.0), 30.0)
+
+    total_score = budget_fit
+    breakdown = {
+        "budget_fit": round(budget_fit, 2),
+    }
+
+    return round(total_score, 2), breakdown
