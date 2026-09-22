@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     }
 
     let userId = sessionUser.id;
-    let userEmail = sessionUser.email;
+    const userEmail = sessionUser.email;
     let userName = sessionUser.name;
 
     if ((!userId || !userName) && userEmail) {
