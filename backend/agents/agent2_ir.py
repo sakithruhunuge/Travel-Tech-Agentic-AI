@@ -78,6 +78,28 @@ def retrieve_candidates(params: Dict[str, Any]) -> Dict[str, Any]:
     budget_per_night = budget_max_usd / max(duration_days, 1)
 
     interests = params.get("interests", []) or []
+    # Normalize interests to match canonical intent_tags stored in MongoDB
+    CANONICAL_TAGS = {"Historical", "Nature", "Beach", "Adventure", "Urban", "Food", "Photography"}
+    normalized_interests = []
+    for tag in interests:
+        t_str = str(tag).strip().title()
+        if t_str in CANONICAL_TAGS:
+            normalized_interests.append(t_str)
+        elif t_str.lower().startswith("beach"):
+            normalized_interests.append("Beach")
+        elif "hist" in t_str.lower():
+            normalized_interests.append("Historical")
+        elif "photo" in t_str.lower():
+            normalized_interests.append("Photography")
+        elif "nature" in t_str.lower():
+            normalized_interests.append("Nature")
+        elif "advent" in t_str.lower():
+            normalized_interests.append("Adventure")
+        elif "food" in t_str.lower():
+            normalized_interests.append("Food")
+        elif "urb" in t_str.lower():
+            normalized_interests.append("Urban")
+    interests = list(dict.fromkeys(normalized_interests or interests))
     custom_vibe = params.get("custom_vibe", "") or ""
 
     # MongoDB collection handles
