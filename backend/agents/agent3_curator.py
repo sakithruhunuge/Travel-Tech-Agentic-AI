@@ -235,4 +235,24 @@ def curate_candidates(candidates: dict, user_params: dict) -> dict:
     elif not candidate_hotels:
         budget_warning = True
 
-    return {"filtered_hotels": filtered_hotels, "budget_warning": budget_warning}
+    # ---------------------------------------------------------
+    # STEP 2 — Pre-filter POIs
+    # ---------------------------------------------------------
+    candidate_pois = candidates.get("pois", []) or []
+    filtered_pois: List[dict] = []
+
+    if interests:
+        interests_norm = {str(i).strip().lower() for i in interests if i}
+        for poi in candidate_pois:
+            p = copy.deepcopy(poi)
+            tags_norm = {str(t).strip().lower() for t in p.get("intent_tags", []) if t}
+            if any(t in interests for t in p.get("intent_tags", [])) or interests_norm.intersection(tags_norm):
+                filtered_pois.append(p)
+
+        # If no POIs match specific interests, fallback to keep all to preserve utility
+        if not filtered_pois and candidate_pois:
+            filtered_pois = [copy.deepcopy(p) for p in candidate_pois]
+    else:
+        filtered_pois = [copy.deepcopy(p) for p in candidate_pois]
+
+    return {"filtered_hotels": filtered_hotels, "filtered_pois": filtered_pois, "budget_warning": budget_warning}
