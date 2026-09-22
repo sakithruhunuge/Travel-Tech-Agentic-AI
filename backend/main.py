@@ -30,14 +30,14 @@ try:
         scraper_client,
         main_client,
     )
-    from backend.api.routes import router as api_router
+    from backend.api.routes import router as api_router, agent_router
 except ImportError:
     from db.mongo_client import (
         ping_connections,
         scraper_client,
         main_client,
     )
-    from api.routes import router as api_router
+    from api.routes import router as api_router, agent_router
 
 
 @asynccontextmanager
@@ -82,6 +82,7 @@ app.add_middleware(
 )
 
 # Include API routes
+app.include_router(agent_router)
 app.include_router(api_router)
 
 

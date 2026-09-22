@@ -18,14 +18,66 @@ from backend.api.models import (
     ItineraryRequest,
     ItineraryResponse,
     SaveItineraryRequest,
+    Agent1ProcessRequest,
+    Agent1ProcessResponse,
 )
 
 try:
     from backend.db.mongo_client import main_db
+    from backend.agents.agent1_triage import parse_user_query
 except ImportError:
     from mongo_client import main_db
+    from agents.agent1_triage import parse_user_query
 
 router = APIRouter(prefix="/api/v1", tags=["Itineraries"])
+agent_router = APIRouter(tags=["Agents"])
+
+
+@agent_router.post(
+    "/agent1/process",
+    response_model=Agent1ProcessResponse,
+    summary="Agent 1: Travel Intake & NLP Parser",
+)
+@router.post(
+    "/agent1/process",
+    response_model=Agent1ProcessResponse,
+    summary="Agent 1: Travel Intake & NLP Parser (API v1)",
+)
+async def process_agent1(request: Agent1ProcessRequest) -> Agent1ProcessResponse:
+    """Parses natural language user query into structured travel parameters."""
+    prompt_text = (request.message or request.prompt or request.raw_prompt or "").strip()
+    if not prompt_text:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing prompt or message in request body",
+        )
+
+    result = parse_user_query(prompt_text)
+
+    if "error" in result:
+        err = result["error"]
+        if err == "invalid_query":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Security rejection: invalid or adversarial travel query detected.",
+            )
+        elif err == "off_topic":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Off-topic query: prompt must be related to Sri Lanka travel.",
+            )
+        elif err == "parse_failed":
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Failed to extract structured parameters from travel query.",
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Agent 1 processing error: {err}",
+            )
+
+    return Agent1ProcessResponse(**result)
 
 
 @router.post(
