@@ -280,9 +280,36 @@ def curate_candidates(candidates: dict, user_params: dict) -> dict:
     scored_pois.sort(key=lambda x: x[0], reverse=True)
     top_10_pois = [item[1] for item in scored_pois[:10]]
 
+    # ---------------------------------------------------------
+    # STEP 5 — Estimate trip cost
+    # ---------------------------------------------------------
+    if top_3_hotels:
+        valid_prices = [
+            float(h.get("price_usd", 0.0) or 0.0)
+            for h in top_3_hotels
+            if float(h.get("price_usd", 0.0) or 0.0) > 0.0
+        ]
+        if valid_prices:
+            cheapest_hotel_cost = min(valid_prices)
+            hotel_cost = cheapest_hotel_cost * duration_days
+        else:
+            hotel_cost = 0.0
+            budget_warning = True
+    else:
+        hotel_cost = 0.0
+        budget_warning = True
+
+    poi_cost = len(top_10_pois[:10]) * 5.0  # $5 avg entry fee per POI
+    transfer_cost = 15.0  # flat airport transfer
+    estimated_total = hotel_cost + poi_cost + transfer_cost
+
+    if budget_max_usd > 0 and estimated_total > (budget_max_usd * 1.2):
+        budget_warning = True
+
     return {
         "hotels": top_3_hotels,
         "pois": top_10_pois,
         "budget_warning": budget_warning,
+        "estimated_total_usd": round(estimated_total, 2),
         "scoring_breakdown": scoring_breakdown,
     }
