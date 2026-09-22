@@ -180,7 +180,21 @@ def score_poi(
 
 
 def curate_candidates(candidates: dict, user_params: dict) -> dict:
-    """Pre-filters, scores, and curates top candidate hotels and POIs."""
+    """Pre-filters, scores, and curates top candidate hotels and POIs.
+
+    Args:
+        candidates: dict with "hotels", "pois", and optional "query_metadata"
+        user_params: dict with "destination_coords", "budget_max_usd",
+                     "duration_days", "interests", "party_size", "custom_vibe"
+
+    Returns:
+        dict containing:
+          - hotels: Top recommended hotels (limit 3, sorted by score desc)
+          - pois: Top recommended POIs (limit 10, sorted by score desc)
+          - budget_warning: bool flag indicating budget risk or relaxed criteria
+          - estimated_total_usd: total estimated trip cost
+          - scoring_breakdown: component score breakdown for top 3 hotels
+    """
     raw_budget = user_params.get("budget_max_usd", 0.0)
     budget_max_usd = float(raw_budget) if raw_budget is not None else 0.0
     duration_days = max(int(user_params.get("duration_days", 1) or 1), 1)
@@ -306,6 +320,9 @@ def curate_candidates(candidates: dict, user_params: dict) -> dict:
     if budget_max_usd > 0 and estimated_total > (budget_max_usd * 1.2):
         budget_warning = True
 
+    # ---------------------------------------------------------
+    # STEP 6 — Build and return output
+    # ---------------------------------------------------------
     return {
         "hotels": top_3_hotels,
         "pois": top_10_pois,
@@ -313,3 +330,78 @@ def curate_candidates(candidates: dict, user_params: dict) -> dict:
         "estimated_total_usd": round(estimated_total, 2),
         "scoring_breakdown": scoring_breakdown,
     }
+
+
+if __name__ == "__main__":
+    mock_candidates = {
+        "hotels": [
+            {
+                "name": "Galle Fort Hotel",
+                "price_usd": 85.0,
+                "price_tier": "Standard",
+                "star_rating": "4 stars",
+                "has_wifi": 1,
+                "has_pool": 0,
+                "has_restaurant": 1,
+                "poi_density_5km": 12,
+                "nearest_airport": {"distance_km": 90},
+                "dist_meters": 500,
+            },
+            {
+                "name": "Budget Inn Unawatuna",
+                "price_usd": 35.0,
+                "price_tier": "Budget",
+                "star_rating": "Unrated",
+                "has_wifi": 1,
+                "has_pool": 0,
+                "has_restaurant": 0,
+                "poi_density_5km": 4,
+                "nearest_airport": {"distance_km": 95},
+                "dist_meters": 3000,
+            },
+            {
+                "name": "Jetwing Lighthouse",
+                "price_usd": 220.0,
+                "price_tier": "Luxury",
+                "star_rating": "5 stars",
+                "has_wifi": 1,
+                "has_pool": 1,
+                "has_restaurant": 1,
+                "poi_density_5km": 8,
+                "nearest_airport": {"distance_km": 87},
+                "dist_meters": 1200,
+            },
+        ],
+        "pois": [
+            {
+                "name": "Galle Fort",
+                "intent_tags": ["Historical", "Urban"],
+                "popularity_index": 0.95,
+                "dist_meters": 200,
+            },
+            {
+                "name": "Unawatuna Beach",
+                "intent_tags": ["Beach", "Nature"],
+                "popularity_index": 0.88,
+                "dist_meters": 4000,
+            },
+            {
+                "name": "Jungle Beach",
+                "intent_tags": ["Beach", "Adventure"],
+                "popularity_index": 0.62,
+                "dist_meters": 6000,
+            },
+        ],
+        "query_metadata": {},
+    }
+    mock_params = {
+        "budget_max_usd": 400.0,
+        "duration_days": 5,
+        "interests": ["Historical", "Beach"],
+        "party_size": 2,
+    }
+    result = curate_candidates(mock_candidates, mock_params)
+    print(f"Top hotels: {[h['name'] for h in result['hotels']]}")
+    print(f"Budget warning: {result['budget_warning']}")
+    print(f"Estimated total: ${result['estimated_total_usd']}")
+    print(f"Scoring: {result['scoring_breakdown']}")
