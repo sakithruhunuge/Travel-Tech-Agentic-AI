@@ -100,23 +100,70 @@ INTEREST_MAP = {
     "photo": "Photography",
 }
 
-def _normalize_interests(data: dict) -> dict:
-    if isinstance(data, dict) and "interests" in data and isinstance(data["interests"], list):
+def _normalize_output(data: dict) -> dict:
+    if not isinstance(data, dict):
+        return data
+
+    if "error" in data:
+        return data
+
+    # 1. Normalize interests without premature break
+    interests_raw = data.get("interests", [])
+    if isinstance(interests_raw, list):
         normalized = []
-        for item in data["interests"]:
+        for item in interests_raw:
             cleaned = str(item).strip().lower()
-            if cleaned in INTEREST_MAP:
-                tag = INTEREST_MAP[cleaned]
-                if tag not in normalized:
-                    normalized.append(tag)
-            else:
-                for k, v in INTEREST_MAP.items():
-                    if k in cleaned and v not in normalized:
-                        normalized.append(v)
-                        break
+            # Tokenize on commas, slashes, ampersands, 'and', 'with', and whitespace
+            tokens = re.split(r"[,/&+;]|\band\b|\bwith\b|\s+", cleaned)
+            matched_any = False
+            for token in tokens:
+                t = token.strip()
+                if t in INTEREST_MAP and INTEREST_MAP[t] not in normalized:
+                    normalized.append(INTEREST_MAP[t])
+                    matched_any = True
+
+            # Also scan full phrase against all keys without early break
+            for k, v in INTEREST_MAP.items():
+                if k in cleaned and v not in normalized:
+                    normalized.append(v)
+                    matched_any = True
+
+            # Fallback if no canonical tag matched
+            if not matched_any and cleaned:
+                title_item = item.strip().title()
+                if title_item not in normalized:
+                    normalized.append(title_item)
+
         if normalized:
             data["interests"] = normalized
+
+    # 2. Reconcile frontend Agent 1 contract fields (duration, travellers, budget)
+    # with backend internal schema (duration_days, party_size, budget_max_usd)
+    raw_duration = data.get("duration") if data.get("duration") is not None else data.get("duration_days")
+    try:
+        data["duration"] = int(raw_duration) if raw_duration is not None else 1
+    except (ValueError, TypeError):
+        data["duration"] = 1
+    data["duration_days"] = data["duration"]
+
+    raw_travellers = data.get("travellers") if data.get("travellers") is not None else data.get("party_size")
+    try:
+        data["travellers"] = int(raw_travellers) if raw_travellers is not None else 2
+    except (ValueError, TypeError):
+        data["travellers"] = 2
+    data["party_size"] = data["travellers"]
+
+    raw_budget = data.get("budget") if data.get("budget") is not None else data.get("budget_max_usd")
+    try:
+        data["budget"] = float(raw_budget) if raw_budget is not None else 500.0
+    except (ValueError, TypeError):
+        data["budget"] = 500.0
+    data["budget_max_usd"] = data["budget"]
+
+    data["destination"] = str(data.get("destination", "")).strip()
+
     return data
+
 
 def parse_user_query(raw_prompt: str) -> dict:
     try:
@@ -139,7 +186,7 @@ def parse_user_query(raw_prompt: str) -> dict:
     try:
         data = json.loads(cleaned_output)
         if isinstance(data, dict):
-            return _normalize_interests(data)
+            return _normalize_output(data)
     except Exception:
         pass
 
@@ -149,7 +196,7 @@ def parse_user_query(raw_prompt: str) -> dict:
         try:
             data = json.loads(match.group(0))
             if isinstance(data, dict):
-                return _normalize_interests(data)
+                return _normalize_output(data)
         except Exception:
             pass
 

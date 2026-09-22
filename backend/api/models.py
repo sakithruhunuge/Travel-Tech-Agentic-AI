@@ -38,3 +38,30 @@ class SaveItineraryRequest(BaseModel):
     estimated_total_usd: float = Field(..., ge=0.0, description="Estimated total cost in USD")
     hotels: List[Dict[str, Any]] = Field(default_factory=list, description="Saved hotel items")
     pois: List[Dict[str, Any]] = Field(default_factory=list, description="Saved POI items")
+
+
+class Agent1ProcessRequest(BaseModel):
+    """Agent 1 NLP Triage parsing request payload."""
+
+    message: str = Field(default="", description="Natural language travel query")
+    prompt: str = Field(default="", description="Alternative prompt field")
+    raw_prompt: str = Field(default="", description="Alternative raw_prompt field")
+
+
+class Agent1ProcessResponse(BaseModel):
+    """Agent 1 response complying with frontend contract and downstream agents."""
+
+    destination: str = Field(default="", description="Target destination")
+    duration: int = Field(default=1, description="Duration in days")
+    travellers: int = Field(default=2, description="Number of travelers")
+    budget: float = Field(default=500.0, description="Total budget in USD")
+    interests: List[str] = Field(default_factory=list, description="Normalized traveler interests")
+
+    # Additional fields to support backend agent coordination
+    destination_coords: Dict[str, float] = Field(default_factory=dict)
+    duration_days: int = Field(default=1)
+    party_size: int = Field(default=2)
+    budget_max_usd: float = Field(default=500.0)
+    custom_vibe: str = Field(default="")
+    travel_dates: str = Field(default="")
+
