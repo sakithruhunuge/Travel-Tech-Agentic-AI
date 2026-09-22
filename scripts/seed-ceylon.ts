@@ -28,7 +28,7 @@ async function run() {
     console.log("✓ Connected to MongoDB database successfully.");
 
     const slug = "ceylon";
-    let existingTenant = await Tenant.findOne({ slug });
+    const existingTenant = await Tenant.findOne({ slug });
 
     if (existingTenant) {
       console.log(`✓ Tenant "ceylon" already exists (ID: ${existingTenant._id}). Updating status to active...`);
