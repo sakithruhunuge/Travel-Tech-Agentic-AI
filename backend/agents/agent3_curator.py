@@ -255,4 +255,34 @@ def curate_candidates(candidates: dict, user_params: dict) -> dict:
     else:
         filtered_pois = [copy.deepcopy(p) for p in candidate_pois]
 
-    return {"filtered_hotels": filtered_hotels, "filtered_pois": filtered_pois, "budget_warning": budget_warning}
+    # ---------------------------------------------------------
+    # STEP 3 — Score each hotel (total 100 points)
+    # ---------------------------------------------------------
+    scored_hotels: List[Tuple[float, dict, dict]] = []
+    for hotel in filtered_hotels:
+        score, breakdown = score_hotel(hotel, effective_budget_ceiling, candidate_pois)
+        hotel["curator_score"] = score
+        scored_hotels.append((score, hotel, breakdown))
+
+    scored_hotels.sort(key=lambda x: x[0], reverse=True)
+    top_3_hotels = [item[1] for item in scored_hotels[:3]]
+    scoring_breakdown = {item[1]["name"]: item[2] for item in scored_hotels[:3]}
+
+    # ---------------------------------------------------------
+    # STEP 4 — Score each POI (total 100 points)
+    # ---------------------------------------------------------
+    scored_pois: List[Tuple[float, dict]] = []
+    for poi in filtered_pois:
+        score = score_poi(poi, interests, top_3_hotels)
+        poi["curator_score"] = score
+        scored_pois.append((score, poi))
+
+    scored_pois.sort(key=lambda x: x[0], reverse=True)
+    top_10_pois = [item[1] for item in scored_pois[:10]]
+
+    return {
+        "hotels": top_3_hotels,
+        "pois": top_10_pois,
+        "budget_warning": budget_warning,
+        "scoring_breakdown": scoring_breakdown,
+    }
