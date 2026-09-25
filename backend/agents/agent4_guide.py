@@ -7,6 +7,7 @@ and Agent 1's user parameters.
 
 import os
 from pathlib import Path
+from typing import Any, Dict
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -87,3 +88,32 @@ def get_llm():
             model=os.getenv("OLLAMA_MODEL", "qwen3:8b"),
             temperature=0.3,
         )
+
+
+def _build_user_message(curated_data: Dict[str, Any], user_params: Dict[str, Any]) -> str:
+    """Build a structured and readable prompt for the synthesis LLM."""
+    # a) user_params as a readable summary
+    destination = user_params.get("destination", "Sri Lanka")
+    duration_days = user_params.get("duration_days") or user_params.get("duration", 1)
+    travel_dates = user_params.get("travel_dates", "Flexible / Upcoming")
+    budget_usd = user_params.get("budget_max_usd") or user_params.get("budget", "Flexible")
+    party_size = user_params.get("party_size") or user_params.get("travellers", 2)
+    interests = user_params.get("interests", [])
+    if isinstance(interests, list):
+        interests_str = ", ".join(interests) if interests else "Sightseeing & Culture"
+    else:
+        interests_str = str(interests)
+    custom_vibe = user_params.get("custom_vibe", "Authentic, relaxing, and memorable")
+
+    user_summary = (
+        f"USER TRAVEL PARAMETERS:\n"
+        f"- Destination: {destination}\n"
+        f"- Duration: {duration_days} Day(s)\n"
+        f"- Travel Dates: {travel_dates}\n"
+        f"- Total Budget: ${budget_usd}\n"
+        f"- Party Size: {party_size} traveler(s)\n"
+        f"- Preferred Interests: {interests_str}\n"
+        f"- Travel Vibe & Preferences: {custom_vibe}\n"
+    )
+
+    return user_summary
