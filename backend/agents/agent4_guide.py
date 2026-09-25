@@ -60,3 +60,30 @@ Reference specific user preferences, budget fit, and proximity reasoning.]
 
 Write in a warm, first-person guide tone. Be specific — use actual hotel names and POI names 
 from the data provided. Never make up places not in the provided list."""
+
+
+def get_llm():
+    """Retrieve the configured LLM matching Agent 1's provider order."""
+    google_api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+
+    if google_api_key:
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        return ChatGoogleGenerativeAI(
+            model=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
+            temperature=0.3,
+            api_key=google_api_key,
+        )
+    elif openai_api_key:
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(
+            model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+            temperature=0.3,
+            api_key=openai_api_key,
+        )
+    else:
+        from langchain_ollama import ChatOllama
+        return ChatOllama(
+            model=os.getenv("OLLAMA_MODEL", "qwen3:8b"),
+            temperature=0.3,
+        )
