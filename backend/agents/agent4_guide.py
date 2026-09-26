@@ -116,4 +116,46 @@ def _build_user_message(curated_data: Dict[str, Any], user_params: Dict[str, Any
         f"- Travel Vibe & Preferences: {custom_vibe}\n"
     )
 
-    return user_summary
+    # b) curated_data["hotels"] (top 3) formatted as a numbered list with key fields
+    hotels = curated_data.get("hotels", [])[:3]
+    hotel_lines = []
+    for idx, h in enumerate(hotels, 1):
+        name = h.get("name", f"Hotel #{idx}")
+        price = h.get("price_usd", "N/A")
+        tier = h.get("price_tier", "Standard")
+        stars = h.get("star_rating", "Unrated")
+        score = h.get("curator_score", "N/A")
+
+        amenities = []
+        if h.get("has_wifi"):
+            amenities.append("Free WiFi")
+        if h.get("has_pool"):
+            amenities.append("Swimming Pool")
+        if h.get("has_restaurant"):
+            amenities.append("In-house Restaurant")
+        amenities_str = ", ".join(amenities) if amenities else "Standard amenities"
+
+        dist_str = ""
+        if "dist_meters" in h:
+            dist_km = round(h["dist_meters"] / 1000, 1)
+            dist_str = f" | Distance: {dist_km} km"
+
+        hotel_lines.append(
+            f"{idx}. {name} — Price: ${price}/night ({tier}) | Rating: {stars} | Amenities: {amenities_str}{dist_str} | Match Score: {score}"
+        )
+    hotels_summary = "TOP RECOMMENDED HOTELS:\n" + ("\n".join(hotel_lines) if hotel_lines else "None provided")
+
+    # c) curated_data["pois"] (top 10) formatted as a numbered list with name, intent_tags, popularity_index
+    pois = curated_data.get("pois", [])[:10]
+    poi_lines = []
+    for idx, p in enumerate(pois, 1):
+        name = p.get("name", f"Attraction #{idx}")
+        tags = p.get("intent_tags", [])
+        tags_str = ", ".join(tags) if isinstance(tags, list) else str(tags)
+        pop = p.get("popularity_index", "N/A")
+        score = p.get("curator_score", "")
+        score_info = f" | Curator Score: {score}" if score != "" else ""
+        poi_lines.append(f"{idx}. {name} — Intent Tags: [{tags_str}] | Popularity Index: {pop}{score_info}")
+    pois_summary = "TOP CURATED POINTS OF INTEREST (POIs):\n" + ("\n".join(poi_lines) if poi_lines else "None provided")
+
+    return f"{user_summary}\n{hotels_summary}\n\n{pois_summary}"
