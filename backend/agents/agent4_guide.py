@@ -1,7 +1,7 @@
 """Agent 4 — The Itinerary Explainer & Markdown Synthesis Agent.
 
-Uses LangChain with the configured LLM to synthesize a personalized,
-beautiful day-by-day Markdown itinerary from Agent 3's curated data
+Uses LangChain with the configured LLM (Gemini, OpenAI, or Ollama) to synthesize
+a personalized, beautiful day-by-day Markdown itinerary from Agent 3's curated data
 and Agent 1's user parameters.
 """
 
@@ -125,7 +125,7 @@ def _build_user_message(curated_data: Dict[str, Any], user_params: Dict[str, Any
         tier = h.get("price_tier", "Standard")
         stars = h.get("star_rating", "Unrated")
         score = h.get("curator_score", "N/A")
-
+        
         amenities = []
         if h.get("has_wifi"):
             amenities.append("Free WiFi")
@@ -183,3 +183,76 @@ def _build_user_message(curated_data: Dict[str, Any], user_params: Dict[str, Any
     )
 
     return f"{user_summary}\n{hotels_summary}\n\n{pois_summary}\n\n{cost_summary}"
+
+
+def generate_itinerary(curated_data: dict, user_params: dict) -> str:
+    """Generate a synthesized Markdown travel itinerary using LangChain and LLM."""
+    from langchain_core.messages import SystemMessage
+    from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
+    from langchain_core.output_parsers import StrOutputParser
+
+    user_message = _build_user_message(curated_data, user_params)
+
+    prompt_template = ChatPromptTemplate.from_messages([
+        SystemMessage(content=SYSTEM_PROMPT),
+        HumanMessagePromptTemplate.from_template("{input}")
+    ])
+
+    llm = get_llm()
+    chain = prompt_template | llm | StrOutputParser()
+
+    result = chain.invoke({"input": user_message})
+    return str(result).strip()
+
+
+if __name__ == "__main__":
+    # Self-test mock execution
+    mock_user_params = {
+        "destination": "Galle",
+        "travel_dates": "December 10-15 2026",
+        "duration_days": 5,
+        "budget_max_usd": 400.0,
+        "party_size": 2,
+        "interests": ["Historical", "Beach"],
+        "custom_vibe": "quiet boutique hotel near the fort",
+    }
+    mock_curated = {
+        "hotels": [
+            {
+                "name": "Galle Fort Hotel",
+                "price_usd": 85.0,
+                "price_tier": "Standard",
+                "star_rating": "4 stars",
+                "has_wifi": 1,
+                "has_pool": 0,
+                "has_restaurant": 1,
+                "dist_meters": 500,
+                "curator_score": 82.5,
+            },
+            {
+                "name": "Budget Inn Unawatuna",
+                "price_usd": 35.0,
+                "price_tier": "Budget",
+                "star_rating": "Unrated",
+                "has_wifi": 1,
+                "has_pool": 0,
+                "has_restaurant": 0,
+                "dist_meters": 3000,
+                "curator_score": 75.0,
+            },
+        ],
+        "pois": [
+            {"name": "Galle Fort", "intent_tags": ["Historical", "Urban"], "popularity_index": 0.95, "curator_score": 90.0},
+            {"name": "Unawatuna Beach", "intent_tags": ["Beach", "Nature"], "popularity_index": 0.88, "curator_score": 85.0},
+            {"name": "Jungle Beach", "intent_tags": ["Beach", "Adventure"], "popularity_index": 0.62, "curator_score": 72.0},
+        ],
+        "budget_warning": False,
+        "estimated_total_usd": 375.0,
+        "scoring_breakdown": {
+            "Galle Fort Hotel": {"budget_fit": 23.6, "amenity": 15.0, "rating": 12.0, "density": 16.0, "proximity": 15.9, "total": 82.5}
+        },
+    }
+
+    print("Testing generate_itinerary...")
+    md = generate_itinerary(mock_curated, mock_user_params)
+    print(md[:500] + "...")
