@@ -158,4 +158,28 @@ def _build_user_message(curated_data: Dict[str, Any], user_params: Dict[str, Any
         poi_lines.append(f"{idx}. {name} — Intent Tags: [{tags_str}] | Popularity Index: {pop}{score_info}")
     pois_summary = "TOP CURATED POINTS OF INTEREST (POIs):\n" + ("\n".join(poi_lines) if poi_lines else "None provided")
 
-    return f"{user_summary}\n{hotels_summary}\n\n{pois_summary}"
+    # d) budget_warning flag and estimated_total_usd
+    budget_warning = curated_data.get("budget_warning", False)
+    estimated_total_usd = curated_data.get("estimated_total_usd", 0.0)
+
+    # Calculate accommodation subtotal estimation for reference
+    cheapest_nightly = 0.0
+    if hotels:
+        valid_rates = [float(h.get("price_usd", 0)) for h in hotels if float(h.get("price_usd", 0)) > 0]
+        if valid_rates:
+            cheapest_nightly = min(valid_rates)
+    approx_stay_cost = round(cheapest_nightly * duration_days, 2)
+    approx_activity_cost = round(len(pois) * 5.0, 2)
+
+    cost_summary = (
+        f"BUDGET & FEASIBILITY CONTEXT:\n"
+        f"- Budget Warning: {budget_warning}\n"
+        f"- Target Budget: ${budget_usd}\n"
+        f"- Estimated Trip Total: ${estimated_total_usd}\n"
+        f"- Duration: {duration_days} nights\n"
+        f"- Estimated Accommodation Total: ~${approx_stay_cost}\n"
+        f"- Estimated Activities Total: ~${approx_activity_cost}\n"
+        f"- Airport Transfers: $15\n"
+    )
+
+    return f"{user_summary}\n{hotels_summary}\n\n{pois_summary}\n\n{cost_summary}"
