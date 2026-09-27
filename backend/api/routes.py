@@ -88,16 +88,34 @@ async def process_agent1(request: Agent1ProcessRequest) -> Agent1ProcessResponse
 async def generate_itinerary(request: ItineraryRequest) -> ItineraryResponse:
     """Generates a complete multi-day itinerary using the 4-agent pipeline."""
     try:
-        # TODO: Replace with orchestrator.run_agent_pipeline() in Phase 7
-        return ItineraryResponse(
-            itinerary="# Itinerary placeholder\n\nAgents not yet connected.",
-            hotels=[],
-            pois=[],
-            estimated_total_usd=0.0,
-            budget_warning=False,
-            reasoning={},
-            agent_timings={},
-        )
+        try:
+            from backend.agents.orchestrator import run_agent_pipeline
+        except ImportError:
+            from agents.orchestrator import run_agent_pipeline
+
+        interests_str = ", ".join(request.interests) if request.interests else "general sightseeing"
+        prompt_parts = [
+            f"{request.duration_days} days in {request.destination}",
+            f"during {request.travel_dates}",
+            f"budget ${request.budget_usd}",
+            f"party size of {request.party_size}",
+            f"interested in {interests_str}",
+        ]
+        if request.custom_vibe:
+            prompt_parts.append(f"vibe: {request.custom_vibe}")
+
+        raw_prompt = ", ".join(prompt_parts)
+        result = run_agent_pipeline(raw_prompt)
+
+        if "error" in result:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Agent pipeline error: {result['error']}",
+            )
+
+        return ItineraryResponse(**result)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
