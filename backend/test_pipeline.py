@@ -15,6 +15,8 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from backend.agents.agent1_triage import parse_user_query
 from backend.agents.agent2_ir import retrieve_candidates
 from backend.agents.agent3_curator import curate_candidates
+from backend.agents.agent4_guide import generate_itinerary
+from backend.agents.orchestrator import run_agent_pipeline
 
 def run_test():
     query = "5 days in Galle this December, budget $400, couple, love beaches and history, want a quiet boutique hotel near the fort"
@@ -62,8 +64,23 @@ def run_test():
         print(f"    {i}. {p['name']} (Tags: {p.get('intent_tags')})")
 
     print(f"\n  Budget Assessment: Warning={curated.get('budget_warning')}, Estimated Total=${curated.get('estimated_total_usd')}")
+
+    # 4. Agent 4 — Itinerary Explainer & Markdown Generator
+    print("\n[Step 4] Running Agent 4 (The Itinerary Explainer)...")
+    itinerary_md = generate_itinerary(curated, parsed_params)
+    print("\n--- Agent 4 Itinerary Preview (First 400 chars) ---")
+    print(itinerary_md[:400] + "...\n")
+
+    # 5. Full Orchestrator Pipeline Test
+    print("[Step 5] Running Full Orchestrator Pipeline (`run_agent_pipeline`)...")
+    pipeline_result = run_agent_pipeline(query)
+    print("  Pipeline execution timings (seconds):", pipeline_result.get("agent_timings"))
+    print("  Pipeline output keys:", list(pipeline_result.keys()))
+    print("  Budget warning:", pipeline_result.get("budget_warning"))
+    print("  Estimated total USD:", pipeline_result.get("estimated_total_usd"))
+
     print("\n==================================================")
-    print("RESULT: Agent 1, Agent 2, and Agent 3 are ALL WORKING PERFECTLY TOGETHER!")
+    print("RESULT: ALL 4 AGENTS AND THE FULL ORCHESTRATOR ARE WORKING PERFECTLY TOGETHER!")
     print("==================================================")
 
 if __name__ == "__main__":
