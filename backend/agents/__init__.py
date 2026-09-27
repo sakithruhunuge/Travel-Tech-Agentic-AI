@@ -16,10 +16,22 @@ try:
 except ImportError:
     parse_user_query = None
 
+try:
+    from backend.agents.agent4_guide import generate_itinerary
+except ImportError:
+    generate_itinerary = None
+
+try:
+    from backend.agents.orchestrator import run_agent_pipeline
+except ImportError:
+    run_agent_pipeline = None
+
 __all__ = [
     "parse_user_query",
     "curate_candidates",
     "score_hotel",
     "score_poi",
     "retrieve_candidates",
+    "generate_itinerary",
+    "run_agent_pipeline",
 ]
