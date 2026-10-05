@@ -100,9 +100,17 @@ async def process_agent1(request: Agent1ProcessRequest) -> Agent1ProcessResponse
 )
 async def generate_itinerary(request: ItineraryRequest) -> ItineraryResponse:
     """Generates a complete multi-day itinerary using the 4-agent pipeline."""
-    # Ensure destination and budget context are preserved
-    if request.custom_vibe and request.destination.lower() in request.custom_vibe.lower():
-        prompt = request.custom_vibe
+    # Prioritize user prompt in custom_vibe so Agent 1 can parse user intent accurately
+    if request.custom_vibe and len(request.custom_vibe.strip()) > 8:
+        prompt = request.custom_vibe.strip()
+        # Append hints only if not already mentioned in prompt
+        hints = []
+        if request.duration_days and "day" not in prompt.lower():
+            hints.append(f"{request.duration_days} days")
+        if request.budget_usd and "budget" not in prompt.lower() and "$" not in prompt:
+            hints.append(f"budget ${request.budget_usd}")
+        if hints:
+            prompt = f"{prompt} ({', '.join(hints)})"
     elif request.custom_vibe:
         prompt = f"{request.duration_days} days in {request.destination}, budget ${request.budget_usd}, {request.custom_vibe}"
     else:

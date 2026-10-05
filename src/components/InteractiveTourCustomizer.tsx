@@ -153,6 +153,39 @@ export const BASE_TOURS = [
   { id: "custom", nameKey: "custom", descKey: "customDesc", destinations: ["Colombo", "Kandy"], duration: 4 },
 ];
 
+/**
+ * Extracts recognized Sri Lanka destinations from free-form user prompt text.
+ * Preserves the order in which the destinations are mentioned.
+ */
+export function extractDestinationsFromPrompt(text: string): string[] {
+  if (!text) return [];
+  const textLower = text.toLowerCase();
+  const matchedWithIndex: { id: string; index: number }[] = [];
+
+  LOCATIONS.forEach((loc) => {
+    const nameLower = loc.name.toLowerCase();
+    const idLower = loc.id.toLowerCase();
+    const escaped = nameLower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, "i");
+    const match = regex.exec(textLower);
+
+    if (match) {
+      const idx = match.index;
+      if (!matchedWithIndex.some((m) => m.id === loc.id)) {
+        matchedWithIndex.push({ id: loc.id, index: idx });
+      }
+    } else if (textLower.includes(idLower)) {
+      const idx = textLower.indexOf(idLower);
+      if (!matchedWithIndex.some((m) => m.id === loc.id)) {
+        matchedWithIndex.push({ id: loc.id, index: idx });
+      }
+    }
+  });
+
+  matchedWithIndex.sort((a, b) => a.index - b.index);
+  return matchedWithIndex.map((m) => m.id);
+}
+
 /* Iconic experiences showcase — real project imagery, tap to add to route */
 const SPOTLIGHTS = [
   { id: "Sigiriya", img: "/images/sigiriya.png", tag: "UNESCO Heritage", title: "Sigiriya Lion Rock", blurb: "A 5th-century sky palace rising 200 metres above the misty jungle plain." },
@@ -163,7 +196,7 @@ const SPOTLIGHTS = [
   { id: "Mirissa", img: "/images/mirissa.png", tag: "Ocean Wonder", title: "Mirissa Blue Waters", blurb: "Sail at dawn for blue whales, then dine barefoot on the golden sand." },
 ];
 
-const QUICK_CHIPS = ["beach", "ancient", "wildlife", "hill country", "quiet", "food"];
+const QUICK_CHIPS = ["beach", "Galle", "Ella", "Kandy", "Sigiriya", "Mirissa", "Yala", "Nuwara Eliya", "wildlife", "culture"];
 
 const SEASONS = [
   { id: "off-peak", name: "Off-Peak", window: "May – Jun · Oct – Nov", mult: SEASON_MULTIPLIERS["off-peak"] },
@@ -501,6 +534,38 @@ export default function InteractiveTourCustomizer() {
       setAiDuration(Math.max(1, Math.round((end - start) / (1000 * 3600 * 24))));
     }
   }, [aiStartDate, aiEndDate]);
+
+  const promptDetectedDests = extractDestinationsFromPrompt(aiKeywords);
+
+  const handleKeywordsChange = (val: string) => {
+    setAiKeywords(val);
+    const detected = extractDestinationsFromPrompt(val);
+    if (detected.length > 0 && selectedTour === "ai-suggested") {
+      setInputs((prev) => {
+        const isSame =
+          prev.destinations.length === detected.length &&
+          prev.destinations.every((d, i) => d === detected[i]);
+        if (isSame) return prev;
+        return {
+          ...prev,
+          destinations: detected,
+        };
+      });
+    }
+  };
+
+  const handleAddKeywordChip = (chip: string) => {
+    const isAlreadyPresent = aiKeywords.toLowerCase().includes(chip.toLowerCase());
+    const nextVal = isAlreadyPresent ? aiKeywords : (aiKeywords ? `${aiKeywords}, ${chip}` : chip);
+    setAiKeywords(nextVal);
+    const detected = extractDestinationsFromPrompt(nextVal);
+    if (detected.length > 0 && selectedTour === "ai-suggested") {
+      setInputs((prev) => ({
+        ...prev,
+        destinations: detected,
+      }));
+    }
+  };
 
   const leafletLibRef = useRef<typeof LType | null>(null);
   const mapRef = useRef<LType.Map | null>(null);
@@ -914,12 +979,27 @@ export default function InteractiveTourCustomizer() {
     });
     setSuggestedPlacesByDestination(mappedPlaces);
 
-    const returnedCities: string[] = data.destinations || [];
-    const validMappedDests = returnedCities.filter((c) => LOCATIONS.some((loc) => loc.id === c));
-    if (returnedCities.length > validMappedDests.length) {
-      addToast("info", "Some AI picks aren't on the interactive map yet, but are included in your itinerary text.");
+    const returnedCities: string[] = Array.isArray(data.destinations) ? [...data.destinations] : [];
+    if (data.requirements?.destination && !returnedCities.some((c) => c.toLowerCase() === data.requirements.destination.toLowerCase())) {
+      returnedCities.unshift(data.requirements.destination);
     }
-    const finalDests = validMappedDests.length > 0 ? validMappedDests : ["Colombo", "Kandy", "Sigiriya"];
+    // Also include any cities from ranked items
+    data.ranked?.forEach((r) => {
+      const city = r.item.city || r.item.destination;
+      if (city && !returnedCities.some((c) => c.toLowerCase() === city.toLowerCase())) {
+        const canonical = LOCATIONS.find((l) => l.id.toLowerCase() === city.toLowerCase() || l.name.toLowerCase() === city.toLowerCase())?.id;
+        if (canonical && !returnedCities.includes(canonical)) returnedCities.push(canonical);
+      }
+    });
+
+    const validMappedDests = returnedCities
+      .map((c) => LOCATIONS.find((loc) => loc.id.toLowerCase() === c.toLowerCase() || loc.name.toLowerCase() === c.toLowerCase())?.id)
+      .filter((id): id is string => Boolean(id));
+
+    // Also check detected destinations from prompt if validMappedDests is still empty
+    const promptDetected = extractDestinationsFromPrompt(aiKeywords);
+    const merged = Array.from(new Set([...validMappedDests, ...promptDetected]));
+    const finalDests = merged.length > 0 ? merged : inputs.destinations.length > 0 ? inputs.destinations : ["Galle", "Mirissa"];
 
     setInputs((prev) => ({
       ...prev,
@@ -928,6 +1008,22 @@ export default function InteractiveTourCustomizer() {
       destinations: finalDests,
     }));
     if (aiStartDate) setPreferredStartDate(aiStartDate);
+
+    // Pan and fly Leaflet map immediately to the resolved destinations!
+    if (mapRef.current && leafletLibRef.current && finalDests.length > 0) {
+      const targetCoords = finalDests
+        .map((id) => LOCATIONS.find((l) => l.id === id))
+        .filter((l): l is MapLocation => Boolean(l))
+        .map((l) => [l.lat, l.lng] as [number, number]);
+      if (targetCoords.length > 0) {
+        try {
+          const bounds = leafletLibRef.current.latLngBounds(targetCoords);
+          mapRef.current.flyToBounds(bounds.pad(0.35), { duration: 1.2, maxZoom: 10 });
+        } catch {
+          /* noop */
+        }
+      }
+    }
   };
 
   /* Apply all AI curated hotels and attractions to the live quote & map route */
@@ -993,6 +1089,17 @@ export default function InteractiveTourCustomizer() {
     setActiveAgentStep(1);
     setAgentStepLabel("Agent 1 (Triage): Extracting travel constraints & vibe vector...");
 
+    const detectedDests = extractDestinationsFromPrompt(aiKeywords);
+    const destinationHint = detectedDests[0] || inputs.destinations[0] || "Sri Lanka";
+
+    // If user prompt mentioned destinations, ensure inputs.destinations reflects them immediately
+    if (detectedDests.length > 0) {
+      setInputs((prev) => ({
+        ...prev,
+        destinations: detectedDests,
+      }));
+    }
+
     const promptMessage = [
       aiKeywords,
       aiStartDate ? `Starting: ${aiStartDate}` : "",
@@ -1007,9 +1114,10 @@ export default function InteractiveTourCustomizer() {
     try {
       const data = await runMultiAgentPipeline(promptMessage, {
         durationHint: aiDuration,
-        destinationHint: inputs.destinations[0] || "Sri Lanka",
+        destinationHint,
         budgetHint: Math.round(pricing.totalPrice || 600),
         travelersHint: inputs.numberOfTravelers,
+        interestsHint: detectedDests.length > 0 ? ["culture", "sightseeing", "beach"] : ["culture", "beaches"],
         allowFallback: false,
         onProgress: (step, label) => {
           setActiveAgentStep(step);
@@ -1411,7 +1519,7 @@ export default function InteractiveTourCustomizer() {
                       <div className="flex items-center gap-3">
                         <span className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FF8B50] to-[#FF6B2C] text-white flex items-center justify-center text-base shadow-lg shadow-[#FF8B50]/30"><ThunderboltOutlined /></span>
                         <div>
-                          <h4 className="text-sm font-black text-[#44403C] uppercase tracking-wide">Configure Your Autonomous 4-Agent Travel Engine</h4>
+                          <h4 className="text-sm font-black text-[#44403C] uppercase tracking-wide">Configure Your AI Trip Preferences</h4>
                           <p className="text-[11px] text-[#8A8577] font-medium mt-0.5">Specify dates, budget & vibes — our 4-agent autonomous pipeline triages, retrieves, scores, and synthesizes your trip.</p>
                         </div>
                       </div>
@@ -1438,25 +1546,71 @@ export default function InteractiveTourCustomizer() {
                     </div>
 
                     <div className="relative mt-4">
-                      <label className="itc-label">{t("keywordsLabel")}</label>
-                      <textarea rows={2} value={aiKeywords} onChange={(e) => setAiKeywords(e.target.value)} placeholder={t("keywordsPlaceholder")} className="itc-input mt-1.5 resize-none !rounded-2xl !py-3" />
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <label className="itc-label">{t("keywordsLabel")}</label>
+                        {promptDetectedDests.length > 0 && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Map Synced: {promptDetectedDests.join(" ➔ ")}
+                          </span>
+                        )}
+                      </div>
+                      <textarea
+                        rows={2}
+                        value={aiKeywords}
+                        onChange={(e) => handleKeywordsChange(e.target.value)}
+                        placeholder="e.g. Plan a 4-day trip to Galle and Mirissa with beach, surf, boutique hotels and whale watching..."
+                        className="itc-input mt-1.5 resize-none !rounded-2xl !py-3"
+                      />
                       <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
-                        <span className="text-[9px] font-black text-[#B5AC9A] uppercase tracking-[0.18em]">Quick vibes:</span>
-                        {QUICK_CHIPS.map((chip) => (
-                          <motion.button
-                            key={chip}
-                            whileHover={{ y: -1 }}
-                            whileTap={{ scale: 0.95 }}
+                        <span className="text-[9px] font-black text-[#B5AC9A] uppercase tracking-[0.18em]">Quick vibes & places:</span>
+                        {QUICK_CHIPS.map((chip) => {
+                          const isLoc = LOCATIONS.some((l) => l.id.toLowerCase() === chip.toLowerCase());
+                          return (
+                            <motion.button
+                              key={chip}
+                              whileHover={{ y: -1 }}
+                              whileTap={{ scale: 0.95 }}
+                              type="button"
+                              onClick={() => handleAddKeywordChip(chip)}
+                              className={`px-3 py-1 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${
+                                isLoc
+                                  ? "bg-orange-50/80 hover:bg-orange-100 border-orange-200 text-[#E05A1A]"
+                                  : "bg-white hover:bg-[#FFF1E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
+                              }`}
+                            >
+                              <span>+ {chip}</span>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+
+                      {promptDetectedDests.length > 0 && (
+                        <div className="flex items-center justify-between gap-2 mt-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/5 border border-emerald-300/40 text-[11px] font-semibold text-emerald-900">
+                          <span className="flex items-center gap-2">
+                            <EnvironmentOutlined className="text-emerald-600 text-sm" />
+                            <span><strong>Interactive Map Active:</strong> Pinning <strong>{promptDetectedDests.join(" ➔ ")}</strong> with live road routing & driving times.</span>
+                          </span>
+                          <button
                             type="button"
                             onClick={() => {
-                              if (!aiKeywords.toLowerCase().includes(chip)) setAiKeywords((prev) => (prev ? `${prev}, ${chip}` : chip));
+                              if (mapRef.current && leafletLibRef.current && promptDetectedDests.length > 0) {
+                                const coords = promptDetectedDests
+                                  .map((id) => LOCATIONS.find((l) => l.id === id))
+                                  .filter((l): l is MapLocation => Boolean(l))
+                                  .map((l) => [l.lat, l.lng] as [number, number]);
+                                if (coords.length > 0) {
+                                  const bounds = leafletLibRef.current.latLngBounds(coords);
+                                  mapRef.current.flyToBounds(bounds.pad(0.35), { duration: 0.9, maxZoom: 9 });
+                                }
+                              }
                             }}
-                            className="px-3 py-1 bg-white hover:bg-[#FFF1E9] border border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A] text-[10px] font-bold rounded-full transition"
+                            className="shrink-0 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold shadow-sm transition"
                           >
-                            + {chip}
-                          </motion.button>
-                        ))}
-                      </div>
+                            Focus on Map ➔
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     <div className="relative mt-5">
@@ -1556,6 +1710,195 @@ export default function InteractiveTourCustomizer() {
                 </motion.div>
               )}
             </AnimatePresence>
+          </motion.section>
+
+          {/* STEP 2 — Interactive Route Builder Map */}
+          <motion.section {...fadeUp} className="itc-card">
+            <header className="itc-sec-head">
+              <span className="itc-step-no">02</span>
+              <div>
+                <h3 className="itc-sec-title">{stripStepNumber(t("step2"))}</h3>
+                <p className="itc-sec-hint">{t("mapInstruction")}</p>
+              </div>
+              <span className="ml-auto shrink-0 text-[10px] font-black uppercase tracking-widest text-[#0E7DD6] bg-[#25A5FE]/10 border border-[#25A5FE]/25 px-3 py-1.5 rounded-full">
+                {t("destinationsSelected", { count: inputs.destinations.length })}
+              </span>
+            </header>
+
+            <div className="itc-map relative w-full h-[420px] rounded-[24px] overflow-hidden border border-[#F0E7D8] bg-[#EFF7FF] z-0 shadow-inner">
+              <div id="sri-lanka-map" className="w-full h-full" />
+              <div className="itc-glass absolute top-3 left-3 z-[500] flex items-center gap-2 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#44403C] shadow-lg pointer-events-none">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FF8B50] animate-pulse" /> {t("clickPinEdit")}
+              </div>
+            </div>
+
+            {/* hover preview */}
+            <div className="mt-4 min-h-[86px]">
+              <AnimatePresence mode="wait">
+                {hoveredLocation ? (
+                  <motion.div key={hoveredLocation.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22 }}
+                    className="itc-glass flex items-center gap-4 p-3.5 rounded-2xl shadow-md">
+                    <div className="w-[72px] h-[58px] rounded-xl overflow-hidden shrink-0 border border-white/80">
+                      <img src={hoveredLocation.img} alt={hoveredLocation.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-black text-[#44403C]">{hoveredLocation.name}</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider text-[#E05A1A] bg-[#FF8B50]/10 px-2 py-0.5 rounded-full">+${DESTINATION_SURCHARGES[hoveredLocation.id] || 40} entry</span>
+                      </div>
+                      <p className="text-[11px] text-[#8A8577] font-medium truncate mt-0.5">{hoveredLocation.description}</p>
+                    </div>
+                    <motion.button whileTap={{ scale: 0.94 }} onClick={() => handleToggleLocation(hoveredLocation.id)}
+                      className={`shrink-0 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition ${inputs.destinations.includes(hoveredLocation.id) ? "bg-rose-50 text-rose-500 border border-rose-200 hover:bg-rose-100" : "bg-gradient-to-r from-[#FF8B50] to-[#FF6B2C] text-white shadow-md shadow-[#FF8B50]/30"}`}>
+                      {inputs.destinations.includes(hoveredLocation.id) ? t("removeFromRoute") : t("addToRoute")}
+                    </motion.button>
+                  </motion.div>
+                ) : (
+                  <motion.div key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex items-center justify-center gap-2 text-[11px] font-semibold text-[#B5AC9A] rounded-2xl border border-dashed border-[#E8DFCC] bg-white/50 py-5">
+                    <InfoCircleOutlined /> {t("hoverPin")}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Category Filter Pills & Location Chips */}
+            <div className="mt-4 pt-4 border-t border-[#F3EBDE] space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#B5AC9A]">
+                  Explore 38+ Sri Lanka Database Places
+                </span>
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                  {[
+                    { id: "all", label: "All Places", icon: "🌐" },
+                    { id: "cultural", label: "Cultural", icon: "🏛️" },
+                    { id: "highlands", label: "Highlands", icon: "☕" },
+                    { id: "beach", label: "Coastline", icon: "🏖️" },
+                    { id: "wildlife", label: "Wildlife", icon: "🐘" },
+                    { id: "urban", label: "Urban", icon: "🏙️" },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`px-2.5 py-1 rounded-xl text-[10px] font-extrabold transition shrink-0 flex items-center gap-1 border ${
+                        selectedCategory === cat.id
+                          ? "bg-[#0F172A] text-white border-slate-800 shadow-sm"
+                          : "bg-white text-[#6E6759] border-[#F0E7D8] hover:border-[#FF8B50]"
+                      }`}
+                    >
+                      <span>{cat.icon}</span>
+                      <span>{cat.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 max-h-[175px] overflow-y-auto pr-1 itc-scroll">
+                {LOCATIONS.filter((loc) => selectedCategory === "all" || loc.category === selectedCategory).map((loc) => {
+                  const isSelected = inputs.destinations.includes(loc.id);
+                  return (
+                    <motion.button key={loc.id} whileHover={{ y: -2 }} whileTap={{ scale: 0.95 }} type="button"
+                      onClick={() => handleToggleLocation(loc.id)} onMouseEnter={() => setHoveredLocation(loc)} onMouseLeave={() => setHoveredLocation(null)}
+                      className={`px-3.5 py-1.5 rounded-full border text-[11px] font-bold transition flex items-center gap-1.5 ${isSelected ? "bg-gradient-to-r from-[#FF8B50] to-[#FF6B2C] text-white border-transparent shadow-md shadow-[#FF8B50]/30" : "bg-white text-[#6E6759] border-[#F0E7D8] hover:border-[#FFD9C4] hover:text-[#E05A1A]"}`}>
+                      {isSelected && <span className="w-4 h-4 rounded-full bg-white/25 text-white text-[8px] font-black flex items-center justify-center">{inputs.destinations.indexOf(loc.id) + 1}</span>}
+                      {loc.name}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* active route ribbon */}
+            <div className="mt-5 pt-5 border-t border-[#F3EBDE]">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#B5AC9A]">{t("activeRoute")}</span>
+              <div className="itc-scroll flex items-center gap-2 mt-3 overflow-x-auto pb-2">
+                <AnimatePresence>
+                  {inputs.destinations.map((d, i) => (
+                    <motion.div key={d} layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ type: "spring", stiffness: 380, damping: 26 }} className="flex items-center gap-2 shrink-0">
+                      <span className="itc-glass flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-black text-[#44403C] shadow-sm">
+                        <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[#FF8B50] to-[#FF6B2C] text-white text-[9px] font-black flex items-center justify-center">{i + 1}</span>
+                        {d}
+                      </span>
+                      {i < inputs.destinations.length - 1 && <span className="text-[#FF8B50] font-black">→</span>}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* route directions & kilometer breakdown */}
+            <div className="mt-5 pt-5 border-t border-[#F3EBDE] space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B5AC9A] flex items-center gap-1.5">
+                  <CompassOutlined className="text-[#FF8B50]" /> {t("routeDirectionsSummary")}
+                </span>
+                {activeLegs.length > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[11px] font-black text-[#E05A1A] bg-[#FFF1E9] border border-[#FFD9C4] px-3 py-1 rounded-full shadow-sm">
+                      📍 {t("totalRouteDistance", { distance: displayTotalKm })}
+                    </span>
+                    <span className="text-[11px] font-black text-[#0E7DD6] bg-[#EFF7FF] border border-[#BDE3FE] px-3 py-1 rounded-full shadow-sm">
+                      ⏱️ {t("estDrivingTime", { time: displayTotalDriveLabel })}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {activeLegs.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {activeLegs.map((leg, idx) => (
+                    <motion.div
+                      key={`${leg.from.id}-${leg.to.id}-${idx}`}
+                      whileHover={{ y: -2 }}
+                      onClick={() => {
+                        if (mapRef.current && leafletLibRef.current) {
+                          const bounds = leafletLibRef.current.latLngBounds(
+                            leg.pathCoords.length > 0
+                              ? leg.pathCoords
+                              : [
+                                  [leg.from.lat, leg.from.lng],
+                                  [leg.to.lat, leg.to.lng],
+                                ]
+                          );
+                          mapRef.current.flyToBounds(bounds.pad(0.3), { duration: 0.8 });
+                        }
+                      }}
+                      className="p-3.5 rounded-2xl bg-gradient-to-br from-white to-[#FDFBF7] border border-[#F0E7D8] shadow-sm hover:border-[#FF8B50] hover:shadow-md transition cursor-pointer flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[9px] font-black text-white bg-gradient-to-r from-[#FF8B50] to-[#FF6B2C] px-2 py-0.5 rounded-md uppercase tracking-wider shadow-sm">
+                            {t("legTitle", { number: idx + 1 })}
+                          </span>
+                          <span className="text-[10px] font-extrabold text-[#E05A1A] bg-[#FFF6EF] border border-[#FFD9C4] px-2 py-0.5 rounded-md">
+                            {leg.direction.arrow} {leg.direction.code} ({leg.direction.label})
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 my-1.5">
+                          <span className="text-xs font-black text-[#44403C]">{leg.from.name}</span>
+                          <span className="text-[#FF8B50] font-black text-xs">➔</span>
+                          <span className="text-xs font-black text-[#44403C]">{leg.to.name}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] font-bold text-[#6E6759] pt-2 border-t border-[#F3EBDE] mt-2">
+                        <span className="flex items-center gap-1 text-[#E05A1A]">
+                          📏 {leg.distanceKm} km
+                        </span>
+                        <span className="flex items-center gap-1 text-[#8A8577]">
+                          <CarOutlined className="text-[#25A5FE]" /> ~{leg.driveTime.label}
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[11px] font-semibold text-[#8A8577] bg-[#FDFBF7] p-3 rounded-xl border border-dashed border-[#E8DFCC]">
+                  Select at least 2 destinations on the map to calculate exact leg directions and distances in kilometers.
+                </p>
+              )}
+            </div>
           </motion.section>
 
           {/* 4-Agent Autonomous AI Engine & XAI Itinerary Review */}
@@ -2232,194 +2575,7 @@ export default function InteractiveTourCustomizer() {
             )}
           </AnimatePresence>
 
-          {/* STEP 2 — map */}
-          <motion.section {...fadeUp} className="itc-card">
-            <header className="itc-sec-head">
-              <span className="itc-step-no">02</span>
-              <div>
-                <h3 className="itc-sec-title">{stripStepNumber(t("step2"))}</h3>
-                <p className="itc-sec-hint">{t("mapInstruction")}</p>
-              </div>
-              <span className="ml-auto shrink-0 text-[10px] font-black uppercase tracking-widest text-[#0E7DD6] bg-[#25A5FE]/10 border border-[#25A5FE]/25 px-3 py-1.5 rounded-full">
-                {t("destinationsSelected", { count: inputs.destinations.length })}
-              </span>
-            </header>
 
-            <div className="itc-map relative w-full h-[420px] rounded-[24px] overflow-hidden border border-[#F0E7D8] bg-[#EFF7FF] z-0 shadow-inner">
-              <div id="sri-lanka-map" className="w-full h-full" />
-              <div className="itc-glass absolute top-3 left-3 z-[500] flex items-center gap-2 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#44403C] shadow-lg pointer-events-none">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FF8B50] animate-pulse" /> {t("clickPinEdit")}
-              </div>
-            </div>
-
-            {/* hover preview */}
-            <div className="mt-4 min-h-[86px]">
-              <AnimatePresence mode="wait">
-                {hoveredLocation ? (
-                  <motion.div key={hoveredLocation.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22 }}
-                    className="itc-glass flex items-center gap-4 p-3.5 rounded-2xl shadow-md">
-                    <div className="w-[72px] h-[58px] rounded-xl overflow-hidden shrink-0 border border-white/80">
-                      <img src={hoveredLocation.img} alt={hoveredLocation.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-black text-[#44403C]">{hoveredLocation.name}</span>
-                        <span className="text-[9px] font-black uppercase tracking-wider text-[#E05A1A] bg-[#FF8B50]/10 px-2 py-0.5 rounded-full">+${DESTINATION_SURCHARGES[hoveredLocation.id] || 40} entry</span>
-                      </div>
-                      <p className="text-[11px] text-[#8A8577] font-medium truncate mt-0.5">{hoveredLocation.description}</p>
-                    </div>
-                    <motion.button whileTap={{ scale: 0.94 }} onClick={() => handleToggleLocation(hoveredLocation.id)}
-                      className={`shrink-0 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition ${inputs.destinations.includes(hoveredLocation.id) ? "bg-rose-50 text-rose-500 border border-rose-200 hover:bg-rose-100" : "bg-gradient-to-r from-[#FF8B50] to-[#FF6B2C] text-white shadow-md shadow-[#FF8B50]/30"}`}>
-                      {inputs.destinations.includes(hoveredLocation.id) ? t("removeFromRoute") : t("addToRoute")}
-                    </motion.button>
-                  </motion.div>
-                ) : (
-                  <motion.div key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex items-center justify-center gap-2 text-[11px] font-semibold text-[#B5AC9A] rounded-2xl border border-dashed border-[#E8DFCC] bg-white/50 py-5">
-                    <InfoCircleOutlined /> {t("hoverPin")}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Category Filter Pills & Location Chips */}
-            <div className="mt-4 pt-4 border-t border-[#F3EBDE] space-y-3">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#B5AC9A]">
-                  Explore 38+ Sri Lanka Database Places
-                </span>
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-                  {[
-                    { id: "all", label: "All Places", icon: "🌐" },
-                    { id: "cultural", label: "Cultural", icon: "🏛️" },
-                    { id: "highlands", label: "Highlands", icon: "☕" },
-                    { id: "beach", label: "Coastline", icon: "🏖️" },
-                    { id: "wildlife", label: "Wildlife", icon: "🐘" },
-                    { id: "urban", label: "Urban", icon: "🏙️" },
-                  ].map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className={`px-2.5 py-1 rounded-xl text-[10px] font-extrabold transition shrink-0 flex items-center gap-1 border ${
-                        selectedCategory === cat.id
-                          ? "bg-[#0F172A] text-white border-slate-800 shadow-sm"
-                          : "bg-white text-[#6E6759] border-[#F0E7D8] hover:border-[#FF8B50]"
-                      }`}
-                    >
-                      <span>{cat.icon}</span>
-                      <span>{cat.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2 max-h-[175px] overflow-y-auto pr-1 itc-scroll">
-                {LOCATIONS.filter((loc) => selectedCategory === "all" || loc.category === selectedCategory).map((loc) => {
-                  const isSelected = inputs.destinations.includes(loc.id);
-                  return (
-                    <motion.button key={loc.id} whileHover={{ y: -2 }} whileTap={{ scale: 0.95 }} type="button"
-                      onClick={() => handleToggleLocation(loc.id)} onMouseEnter={() => setHoveredLocation(loc)} onMouseLeave={() => setHoveredLocation(null)}
-                      className={`px-3.5 py-1.5 rounded-full border text-[11px] font-bold transition flex items-center gap-1.5 ${isSelected ? "bg-gradient-to-r from-[#FF8B50] to-[#FF6B2C] text-white border-transparent shadow-md shadow-[#FF8B50]/30" : "bg-white text-[#6E6759] border-[#F0E7D8] hover:border-[#FFD9C4] hover:text-[#E05A1A]"}`}>
-                      {isSelected && <span className="w-4 h-4 rounded-full bg-white/25 text-white text-[8px] font-black flex items-center justify-center">{inputs.destinations.indexOf(loc.id) + 1}</span>}
-                      {loc.name}
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* active route ribbon */}
-            <div className="mt-5 pt-5 border-t border-[#F3EBDE]">
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#B5AC9A]">{t("activeRoute")}</span>
-              <div className="itc-scroll flex items-center gap-2 mt-3 overflow-x-auto pb-2">
-                <AnimatePresence>
-                  {inputs.destinations.map((d, i) => (
-                    <motion.div key={d} layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ type: "spring", stiffness: 380, damping: 26 }} className="flex items-center gap-2 shrink-0">
-                      <span className="itc-glass flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-black text-[#44403C] shadow-sm">
-                        <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[#FF8B50] to-[#FF6B2C] text-white text-[9px] font-black flex items-center justify-center">{i + 1}</span>
-                        {d}
-                      </span>
-                      {i < inputs.destinations.length - 1 && <span className="text-[#FF8B50] font-black">→</span>}
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            </div>
-
-            {/* route directions & kilometer breakdown */}
-            <div className="mt-5 pt-5 border-t border-[#F3EBDE] space-y-4">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B5AC9A] flex items-center gap-1.5">
-                  <CompassOutlined className="text-[#FF8B50]" /> {t("routeDirectionsSummary")}
-                </span>
-                {activeLegs.length > 0 && (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[11px] font-black text-[#E05A1A] bg-[#FFF1E9] border border-[#FFD9C4] px-3 py-1 rounded-full shadow-sm">
-                      📍 {t("totalRouteDistance", { distance: displayTotalKm })}
-                    </span>
-                    <span className="text-[11px] font-black text-[#0E7DD6] bg-[#EFF7FF] border border-[#BDE3FE] px-3 py-1 rounded-full shadow-sm">
-                      ⏱️ {t("estDrivingTime", { time: displayTotalDriveLabel })}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {activeLegs.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {activeLegs.map((leg, idx) => (
-                    <motion.div
-                      key={`${leg.from.id}-${leg.to.id}-${idx}`}
-                      whileHover={{ y: -2 }}
-                      onClick={() => {
-                        if (mapRef.current && leafletLibRef.current) {
-                          const bounds = leafletLibRef.current.latLngBounds(
-                            leg.pathCoords.length > 0
-                              ? leg.pathCoords
-                              : [
-                                  [leg.from.lat, leg.from.lng],
-                                  [leg.to.lat, leg.to.lng],
-                                ]
-                          );
-                          mapRef.current.flyToBounds(bounds.pad(0.3), { duration: 0.8 });
-                        }
-                      }}
-                      className="p-3.5 rounded-2xl bg-gradient-to-br from-white to-[#FDFBF7] border border-[#F0E7D8] shadow-sm hover:border-[#FF8B50] hover:shadow-md transition cursor-pointer flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-[9px] font-black text-white bg-gradient-to-r from-[#FF8B50] to-[#FF6B2C] px-2 py-0.5 rounded-md uppercase tracking-wider shadow-sm">
-                            {t("legTitle", { number: idx + 1 })}
-                          </span>
-                          <span className="text-[10px] font-extrabold text-[#E05A1A] bg-[#FFF6EF] border border-[#FFD9C4] px-2 py-0.5 rounded-md">
-                            {leg.direction.arrow} {leg.direction.code} ({leg.direction.label})
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2 my-1.5">
-                          <span className="text-xs font-black text-[#44403C]">{leg.from.name}</span>
-                          <span className="text-[#FF8B50] font-black text-xs">➔</span>
-                          <span className="text-xs font-black text-[#44403C]">{leg.to.name}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[11px] font-bold text-[#6E6759] pt-2 border-t border-[#F3EBDE] mt-2">
-                        <span className="flex items-center gap-1 text-[#E05A1A]">
-                          📏 {leg.distanceKm} km
-                        </span>
-                        <span className="flex items-center gap-1 text-[#8A8577]">
-                          <CarOutlined className="text-[#25A5FE]" /> ~{leg.driveTime.label}
-                        </span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-[11px] font-semibold text-[#8A8577] bg-[#FDFBF7] p-3 rounded-xl border border-dashed border-[#E8DFCC]">
-                  Select at least 2 destinations on the map to calculate exact leg directions and distances in kilometers.
-                </p>
-              )}
-            </div>
-          </motion.section>
 
           {/* STEP 3 — travelers & nights */}
           <motion.section {...fadeUp} className="itc-card">

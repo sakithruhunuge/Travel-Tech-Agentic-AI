@@ -287,7 +287,14 @@ function transformBackendResultToPipelineResult(
   ].sort((a, b) => b.score - a.score);
 
   // Extract Destinations
+  const primaryDest = backendData.destination || inputPayload.destination;
   const destSet = new Set<string>();
+  if (backendData.destination) {
+    destSet.add(backendData.destination);
+  }
+  if (Array.isArray(backendData.destinations)) {
+    backendData.destinations.forEach((d: string) => d && destSet.add(d));
+  }
   if (inputPayload.destination && inputPayload.destination !== "Sri Lanka") {
     destSet.add(inputPayload.destination);
   }
@@ -296,15 +303,15 @@ function transformBackendResultToPipelineResult(
   const destinations = Array.from(destSet).filter(Boolean);
 
   const req: Agent1Response = {
-    destination: inputPayload.destination,
-    duration: inputPayload.duration_days,
-    travellers: inputPayload.party_size,
-    budget: inputPayload.budget_usd,
-    interests: inputPayload.interests,
+    destination: primaryDest || (destinations[0] || "Sri Lanka"),
+    duration: backendData.params?.duration_days || inputPayload.duration_days,
+    travellers: backendData.params?.party_size || inputPayload.party_size,
+    budget: backendData.params?.budget_max_usd || inputPayload.budget_usd,
+    interests: backendData.params?.interests || inputPayload.interests,
   };
 
   const explanations = {
-    intakeSummary: `Agent 1 parsed "${originalMessage}": duration ${inputPayload.duration_days} days, destination ${inputPayload.destination}.`,
+    intakeSummary: `Agent 1 parsed "${originalMessage}": duration ${req.duration} days, destination ${req.destination}.`,
     retrievalSummary: `Agent 2 retrieved ${hotels.length} candidate hotels and ${attractions.length} POIs via MongoDB Atlas geospatial & vector search.`,
     evaluationSummary: `Agent 3 evaluated candidate feasibility: budget fit, amenity matching, and traveler satisfaction.`,
     synthesisSummary: `Agent 4 synthesized complete day-by-day Markdown itinerary with Explainable AI (XAI) justifications.`,
@@ -322,7 +329,7 @@ function transformBackendResultToPipelineResult(
     itinerary: [],
     explanations,
     itineraryMarkdown: backendData.itinerary,
-    destinations: destinations.length > 0 ? destinations : [inputPayload.destination || "Galle"],
+    destinations: destinations.length > 0 ? destinations : [primaryDest || "Galle"],
     agentTimings: timings,
     budgetWarning: backendData.budget_warning,
     estimatedTotalUsd: backendData.estimated_total_usd,

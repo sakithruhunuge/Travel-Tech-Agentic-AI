@@ -26,6 +26,10 @@ class ItineraryResponse(BaseModel):
     budget_warning: bool = Field(default=False, description="Flag indicating if cost exceeds budget")
     reasoning: Dict[str, Any] = Field(default_factory=dict, description="Scoring & explainability breakdown from Agent 3")
     agent_timings: Dict[str, Any] = Field(default_factory=dict, description="Execution timings for each agent in seconds")
+    destination: str = Field(default="", description="Primary destination identified by Agent 1")
+    destinations: List[str] = Field(default_factory=list, description="All destinations or stops identified")
+    destination_coords: Dict[str, Any] = Field(default_factory=dict, description="Primary destination GPS coordinates")
+    params: Dict[str, Any] = Field(default_factory=dict, description="Parsed traveler parameters from Agent 1")
 
 
 class SaveItineraryRequest(BaseModel):
