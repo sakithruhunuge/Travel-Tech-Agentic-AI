@@ -96,6 +96,9 @@ export interface DestinationPlaces {
 }
 
 export const LOCATIONS: MapLocation[] = [
+  // Gateway & Aviation Hub
+  { id: "Bandaranaike International Airport (CMB)", name: "Bandaranaike Int'l Airport (CMB)", lat: 7.1808, lng: 79.8841, img: "/images/colombo.png", description: "Sri Lanka's premier international aviation gateway in Katunayake.", category: "urban" },
+
   // Urban & Gateway Hubs
   { id: "Colombo", name: "Colombo", lat: 6.9271, lng: 79.8612, img: "/images/colombo.png", description: "Vibrant capital, colonial charm, and luxury oceanfront dining.", category: "urban" },
   { id: "Negombo", name: "Negombo", lat: 7.2008, lng: 79.8737, img: "/images/colombo.png", description: "Coastal town near airport, famous for fish markets and Dutch canals.", category: "urban" },
@@ -162,6 +165,12 @@ export function extractDestinationsFromPrompt(text: string): string[] {
   const textLower = text.toLowerCase();
   const matchedWithIndex: { id: string; index: number }[] = [];
 
+  // Recognize Airport / Katunayake / CMB
+  if (/\b(airport|cmb|katunayake|bandaranaike)\b/i.test(textLower)) {
+    const idx = textLower.search(/\b(airport|cmb|katunayake|bandaranaike)\b/i);
+    matchedWithIndex.push({ id: "Bandaranaike International Airport (CMB)", index: idx });
+  }
+
   LOCATIONS.forEach((loc) => {
     const nameLower = loc.name.toLowerCase();
     const idLower = loc.id.toLowerCase();
@@ -185,6 +194,23 @@ export function extractDestinationsFromPrompt(text: string): string[] {
   matchedWithIndex.sort((a, b) => a.index - b.index);
   return matchedWithIndex.map((m) => m.id);
 }
+
+export interface StartingLocationPreset {
+  id: string;
+  label: string;
+  icon: string;
+  hint: string;
+}
+
+export const STARTING_LOCATION_PRESETS: StartingLocationPreset[] = [
+  { id: "Bandaranaike International Airport (CMB)", label: "Bandaranaike Airport (CMB)", icon: "🛫", hint: "Katunayake / Flight Arrival" },
+  { id: "Colombo", label: "Colombo City", icon: "🏙️", hint: "Capital / Fort / Oceanfront" },
+  { id: "Negombo", label: "Negombo Beach", icon: "🏖️", hint: "15m from CMB Airport" },
+  { id: "Kandy", label: "Kandy", icon: "🏛️", hint: "Hill Capital / Central Province" },
+  { id: "Galle", label: "Galle", icon: "🏰", hint: "Southern Dutch Fort" },
+  { id: "Bentota", label: "Bentota", icon: "🌴", hint: "South-West Coast" },
+  { id: "Ella", label: "Ella", icon: "🚂", hint: "Highland Tea Country" },
+];
 
 /* Iconic experiences showcase — real project imagery, tap to add to route */
 const SPOTLIGHTS = [
@@ -761,6 +787,7 @@ export default function InteractiveTourCustomizer() {
     setAiEndDate(nextWeek);
   }, []);
   const [aiDuration, setAiDuration] = useState<number>(5);
+  const [aiStartingLocation, setAiStartingLocation] = useState<string>("Bandaranaike International Airport (CMB)");
   const [aiKeywords, setAiKeywords] = useState<string>("ancient rock fort, quiet beaches, wildlife safari");
   const [isGeneratingAI, setIsGeneratingAI] = useState<boolean>(false);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -782,6 +809,38 @@ export default function InteractiveTourCustomizer() {
     }
   }, [aiStartDate, aiEndDate]);
 
+  const handleSelectStartingLocation = (locName: string) => {
+    setAiStartingLocation(locName);
+    const matchedLoc = LOCATIONS.find(
+      (l) => l.id.toLowerCase() === locName.toLowerCase() || l.name.toLowerCase() === locName.toLowerCase()
+    );
+    if (matchedLoc && selectedTour === "ai-suggested") {
+      setInputs((prev) => {
+        const remaining = prev.destinations.filter((d) => d !== matchedLoc.id);
+        return {
+          ...prev,
+          destinations: [matchedLoc.id, ...remaining],
+        };
+      });
+    }
+  };
+
+  const handleStartingLocationInputChange = (val: string) => {
+    setAiStartingLocation(val);
+    const matchedLoc = LOCATIONS.find(
+      (l) => l.id.toLowerCase() === val.trim().toLowerCase() || l.name.toLowerCase() === val.trim().toLowerCase()
+    );
+    if (matchedLoc && selectedTour === "ai-suggested") {
+      setInputs((prev) => {
+        const remaining = prev.destinations.filter((d) => d !== matchedLoc.id);
+        return {
+          ...prev,
+          destinations: [matchedLoc.id, ...remaining],
+        };
+      });
+    }
+  };
+
   const promptDetectedDests = extractDestinationsFromPrompt(aiKeywords);
 
   const handleKeywordsChange = (val: string) => {
@@ -789,13 +848,20 @@ export default function InteractiveTourCustomizer() {
     const detected = extractDestinationsFromPrompt(val);
     if (detected.length > 0 && selectedTour === "ai-suggested") {
       setInputs((prev) => {
+        const startLoc = LOCATIONS.find(
+          (l) => l.id.toLowerCase() === aiStartingLocation.toLowerCase() || l.name.toLowerCase() === aiStartingLocation.toLowerCase()
+        );
+        let finalDests = detected;
+        if (startLoc && !finalDests.includes(startLoc.id)) {
+          finalDests = [startLoc.id, ...finalDests];
+        }
         const isSame =
-          prev.destinations.length === detected.length &&
-          prev.destinations.every((d, i) => d === detected[i]);
+          prev.destinations.length === finalDests.length &&
+          prev.destinations.every((d, i) => d === finalDests[i]);
         if (isSame) return prev;
         return {
           ...prev,
-          destinations: detected,
+          destinations: finalDests,
         };
       });
     }
@@ -807,10 +873,19 @@ export default function InteractiveTourCustomizer() {
     setAiKeywords(nextVal);
     const detected = extractDestinationsFromPrompt(nextVal);
     if (detected.length > 0 && selectedTour === "ai-suggested") {
-      setInputs((prev) => ({
-        ...prev,
-        destinations: detected,
-      }));
+      setInputs((prev) => {
+        const startLoc = LOCATIONS.find(
+          (l) => l.id.toLowerCase() === aiStartingLocation.toLowerCase() || l.name.toLowerCase() === aiStartingLocation.toLowerCase()
+        );
+        let finalDests = detected;
+        if (startLoc && !finalDests.includes(startLoc.id)) {
+          finalDests = [startLoc.id, ...finalDests];
+        }
+        return {
+          ...prev,
+          destinations: finalDests,
+        };
+      });
     }
   };
 
@@ -1348,6 +1423,7 @@ export default function InteractiveTourCustomizer() {
     }
 
     const promptMessage = [
+      aiStartingLocation ? `Starting location: ${aiStartingLocation}` : "",
       aiKeywords,
       aiStartDate ? `Starting: ${aiStartDate}` : "",
       aiEndDate ? `Ending: ${aiEndDate}` : "",
@@ -1403,7 +1479,7 @@ export default function InteractiveTourCustomizer() {
       return;
     }
     if (sessionStatus !== "authenticated") {
-      const draft = { inputs, preferredStartDate, specialRequests, selectedTour, aiItinerary, agentTelemetry, suggestedPlacesByDestination, selectedPlaceIds };
+      const draft = { inputs, preferredStartDate, specialRequests, selectedTour, aiItinerary, agentTelemetry, suggestedPlacesByDestination, selectedPlaceIds, aiStartingLocation };
       sessionStorage.setItem("tour_customizer_draft", JSON.stringify(draft));
       addToast("info", t("redirectLogin"));
       signIn(undefined, { callbackUrl: window.location.href });
@@ -1420,9 +1496,9 @@ export default function InteractiveTourCustomizer() {
         pricingInputs: inputs,
         submittedTotal: pricing.totalPrice,
         aiItineraryMarkdown: aiItinerary,
-        aiVibeQuery: aiKeywords,
+        aiVibeQuery: aiStartingLocation ? `Starting: ${aiStartingLocation} | ${aiKeywords}` : aiKeywords,
         source: selectedTour === "ai-suggested" ? "ai-suggested" : "manual",
-        specialRequests,
+        specialRequests: [aiStartingLocation ? `Trip Starting Location: ${aiStartingLocation}` : "", specialRequests].filter(Boolean).join("\n"),
       };
       const res = await fetch("/api/travel-request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       if (!res.ok) {
@@ -1790,6 +1866,81 @@ export default function InteractiveTourCustomizer() {
                           <CalendarOutlined /> {aiDuration} Days ({aiDuration - 1} Nights)
                         </div>
                       </div>
+                    </div>
+
+                    {/* Trip Starting Location / Departure Point */}
+                    <div className="relative mt-4 pt-4 border-t border-[#FF8B50]/15">
+                      <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-orange-100 text-[#E05A1A] text-xs">
+                            <EnvironmentOutlined />
+                          </span>
+                          <label className="itc-label !mb-0">Trip Starting Location / Pickup Point</label>
+                        </div>
+                        <span className="text-[10px] font-bold text-[#8A8577]">
+                          Airport arrival, hotel, or city in Sri Lanka
+                        </span>
+                      </div>
+
+                      <div className="relative">
+                        <div className="flex items-center rounded-2xl border border-[#F0E7D8] bg-white px-3.5 py-2 shadow-2xs focus-within:border-[#FF8B50] focus-within:ring-2 focus-within:ring-[#FF8B50]/20 transition-all">
+                          <span className="text-base mr-2.5">
+                            {STARTING_LOCATION_PRESETS.find((p) => p.id.toLowerCase() === aiStartingLocation.toLowerCase())?.icon || "📍"}
+                          </span>
+                          <input
+                            type="text"
+                            value={aiStartingLocation}
+                            onChange={(e) => handleStartingLocationInputChange(e.target.value)}
+                            placeholder="e.g. Bandaranaike Int'l Airport (CMB), Colombo Hotel, Negombo, or custom address..."
+                            className="w-full bg-transparent text-xs sm:text-sm font-bold text-[#44403C] placeholder:text-[#B5AC9A] outline-none"
+                          />
+                          {aiStartingLocation && (
+                            <button
+                              type="button"
+                              onClick={() => handleStartingLocationInputChange("")}
+                              className="text-stone-400 hover:text-stone-600 text-xs px-2 py-1 rounded-md"
+                              title="Clear location"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+                        <span className="text-[9px] font-black text-[#B5AC9A] uppercase tracking-[0.18em]">
+                          Popular departures:
+                        </span>
+                        {STARTING_LOCATION_PRESETS.map((preset) => {
+                          const isSelected = aiStartingLocation.toLowerCase() === preset.id.toLowerCase();
+                          return (
+                            <motion.button
+                              key={preset.id}
+                              whileHover={{ y: -1 }}
+                              whileTap={{ scale: 0.95 }}
+                              type="button"
+                              onClick={() => handleSelectStartingLocation(preset.id)}
+                              className={`px-3 py-1 border text-[10px] font-bold rounded-full transition flex items-center gap-1.5 ${
+                                isSelected
+                                  ? "bg-gradient-to-r from-[#FF8B50] to-[#E05A1A] text-white border-transparent shadow-xs"
+                                  : "bg-white hover:bg-[#FFF3E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
+                              }`}
+                            >
+                              <span>{preset.icon}</span>
+                              <span>{preset.label}</span>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+
+                      {aiStartingLocation && (
+                        <div className="mt-2.5 flex items-center gap-2 text-[10px] font-bold text-[#E05A1A] bg-orange-50/70 border border-orange-200/60 rounded-xl px-3 py-1.5">
+                          <CheckCircleFilled className="text-orange-500 text-xs shrink-0" />
+                          <span>
+                            Trip will depart from <strong>{aiStartingLocation}</strong>. The 4-agent engine will sequence your itinerary starting here.
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="relative mt-4">
