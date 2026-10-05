@@ -34,13 +34,18 @@ Your output MUST follow this exact Markdown structure:
 ---
 
 ## Day 1: [Theme Title]
+
 **🌅 Morning:** [Activity + why it suits the user's vibe]
+
 **☀️ Afternoon:** [Activity + estimated time + travel tip]
+
 **🌙 Evening:** [Activity or dinner recommendation]
+
 **🏨 Tonight's Stay:** [Hotel name] — [1 sentence: why this hotel specifically matches their budget and preferences]
+
 **💰 Estimated Day Cost:** ~$[X] per person
 
-[Repeat for each day...]
+[Repeat for each day, ALWAYS keeping a blank line between Morning, Afternoon, Evening, Tonight's Stay, and Estimated Day Cost...]
 
 ---
 

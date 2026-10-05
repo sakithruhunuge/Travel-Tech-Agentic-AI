@@ -230,6 +230,253 @@ const getPlainText = (node: React.ReactNode): string => {
   return "";
 };
 
+/**
+ * Formats inline bold markers (**text**) into actual styled <strong> elements
+ */
+function renderFormattedInline(content: string): React.ReactNode {
+  if (!content.includes("**")) return content;
+  const parts = content.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={i} className="font-extrabold text-[#292524]">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+}
+
+/**
+ * Parses itinerary text and renders separated, luxury cards for:
+ * 🌅 Morning (08:00 AM – 12:00 PM)
+ * ☀️ Afternoon (12:00 PM – 05:00 PM)
+ * 🌙 Evening (05:00 PM – 09:30 PM)
+ * 🏨 Tonight's Recommended Stay
+ * 💰 Estimated Daily Budget Target
+ * 💡 XAI Decision Rationale
+ */
+export function parseAndRenderTimelineText(text: string, originalChildren?: React.ReactNode): React.ReactNode {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  const isMorning = /^(?:[\*\#\-\s>]*)(?:🌅\s*)?Morning(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
+  const isAfternoon = /^(?:[\*\#\-\s>]*)(?:☀️\s*)?Afternoon(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
+  const isEvening = /^(?:[\*\#\-\s>]*)(?:🌙\s*)?Evening(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
+  const isStay = /^(?:[\*\#\-\s>]*)(?:🏨\s*)?Tonight's Stay(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
+  const isCost = /^(?:[\*\#\-\s>]*)(?:💰\s*)?(?:Estimated Day Cost|Estimated Cost|Est\.? Cost)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
+  const isXai = /^(?:[\*\#\-\s>]*)(?:💡\s*)?(?:Why This Was Chosen|XAI Decision Rationale|XAI Selection Rationale)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
+
+  // If text contains multiple lines that have any of these markers, split by lines
+  const lines = trimmed.split(/\r?\n+/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length > 1 && lines.some((l) => /(?:Morning|Afternoon|Evening|Tonight's Stay|Estimated Day Cost|Why This Was Chosen|XAI Decision Rationale):?/i.test(l))) {
+    return (
+      <div className="space-y-3.5 my-3.5">
+        {lines.map((line, idx) => (
+          <React.Fragment key={idx}>
+            {parseAndRenderTimelineText(line)}
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  }
+
+  // If multiple markers are joined inline on a single line (e.g. "**🌅 Morning:** ... **☀️ Afternoon:** ...")
+  const compoundRegex = /(\*\*?(?:🌅\s*)?Morning:\*\*?|\*\*?(?:☀️\s*)?Afternoon:\*\*?|\*\*?(?:🌙\s*)?Evening:\*\*?|\*\*?(?:🏨\s*)?Tonight's Stay:\*\*?|\*\*?(?:💰\s*)?(?:Estimated Day Cost|Estimated Cost):\*\*?)/gi;
+  const matches: RegExpExecArray[] = [];
+  let m: RegExpExecArray | null = null;
+  while ((m = compoundRegex.exec(trimmed)) !== null) {
+    matches.push(m);
+  }
+  if (matches.length > 1) {
+    const segments: string[] = [];
+    for (let i = 0; i < matches.length; i++) {
+      const start = matches[i].index;
+      const end = i < matches.length - 1 ? matches[i + 1].index : trimmed.length;
+      segments.push(trimmed.slice(start, end).trim());
+    }
+    return (
+      <div className="space-y-3.5 my-3.5">
+        {segments.map((seg, idx) => (
+          <React.Fragment key={idx}>
+            {parseAndRenderTimelineText(seg)}
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  }
+
+  if (isMorning) {
+    const cleanBody = trimmed.replace(/^(?:[\*\#\-\s>]*)(?:🌅\s*)?Morning(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i, "").trim();
+    return (
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#FFFDF9] via-[#FFF9EE] to-white border border-[#FDE6B8] p-4 sm:p-5 my-3.5 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+        <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-amber-400 via-amber-500 to-orange-500" />
+        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center text-base shadow-md shadow-orange-300/40 shrink-0">
+              🌅
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-wider text-amber-950 block">
+                  Morning Discovery
+                </span>
+                <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-amber-200/80 text-amber-900">
+                  AM Phase
+                </span>
+              </div>
+              <span className="text-[10px] text-amber-800/80 font-bold block mt-0.5">
+                Prime Temperature · Active Exploration & Sightseeing
+              </span>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100/90 text-amber-900 border border-amber-300/70 shadow-2xs">
+            <ClockCircleOutlined className="text-[10px] text-amber-700" /> 08:00 AM – 12:00 PM
+          </span>
+        </div>
+        <p className="text-[13px] text-[#44403C] font-semibold leading-relaxed m-0 pl-1">
+          {renderFormattedInline(cleanBody)}
+        </p>
+      </div>
+    );
+  }
+
+  if (isAfternoon) {
+    const cleanBody = trimmed.replace(/^(?:[\*\#\-\s>]*)(?:☀️\s*)?Afternoon(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i, "").trim();
+    return (
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#F5FAFF] via-[#EBF5FF] to-white border border-[#BDE0FE] p-4 sm:p-5 my-3.5 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+        <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-sky-400 via-sky-500 to-[#25A5FE]" />
+        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 to-[#25A5FE] text-white flex items-center justify-center text-base shadow-md shadow-sky-300/40 shrink-0">
+              ☀️
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-wider text-sky-950 block">
+                  Afternoon Adventure
+                </span>
+                <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-sky-200/80 text-sky-900">
+                  Midday Phase
+                </span>
+              </div>
+              <span className="text-[10px] text-sky-800/80 font-bold block mt-0.5">
+                Cultural Heritage, Scenic Views & Local Crafts
+              </span>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-100/90 text-sky-900 border border-sky-300/70 shadow-2xs">
+            <ClockCircleOutlined className="text-[10px] text-sky-700" /> 12:00 PM – 05:00 PM
+          </span>
+        </div>
+        <p className="text-[13px] text-[#44403C] font-semibold leading-relaxed m-0 pl-1">
+          {renderFormattedInline(cleanBody)}
+        </p>
+      </div>
+    );
+  }
+
+  if (isEvening) {
+    const cleanBody = trimmed.replace(/^(?:[\*\#\-\s>]*)(?:🌙\s*)?Evening(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i, "").trim();
+    return (
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#FAF7FF] via-[#F3EDFF] to-white border border-[#DDD6FE] p-4 sm:p-5 my-3.5 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+        <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-indigo-500 via-indigo-600 to-purple-600" />
+        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-base shadow-md shadow-purple-300/40 shrink-0">
+              🌙
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-wider text-indigo-950 block">
+                  Evening Retreat & Dining
+                </span>
+                <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-purple-200/80 text-purple-900">
+                  PM Phase
+                </span>
+              </div>
+              <span className="text-[10px] text-indigo-800/80 font-bold block mt-0.5">
+                Sunset Panoramas, Ocean Dining & Relaxation
+              </span>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-100/90 text-indigo-900 border border-indigo-300/70 shadow-2xs">
+            <ClockCircleOutlined className="text-[10px] text-indigo-700" /> 05:00 PM – 09:30 PM
+          </span>
+        </div>
+        <p className="text-[13px] text-[#44403C] font-semibold leading-relaxed m-0 pl-1">
+          {renderFormattedInline(cleanBody)}
+        </p>
+      </div>
+    );
+  }
+
+  if (isStay) {
+    const cleanBody = trimmed.replace(/^(?:[\*\#\-\s>]*)(?:🏨\s*)?Tonight's Stay(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i, "").trim();
+    return (
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#FFF7F2] via-[#FFFBF9] to-white border border-[#FFD5C0] p-4 sm:p-5 my-3.5 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+        <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-[#FF8B50] to-[#E05A1A]" />
+        <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF8B50] to-[#E05A1A] text-white flex items-center justify-center text-base shadow-md shadow-[#FF8B50]/30 shrink-0">
+              🏨
+            </span>
+            <div>
+              <span className="text-xs font-black uppercase tracking-wider text-[#C0490E] block">
+                Tonight's Recommended Stay
+              </span>
+              <span className="text-[10px] text-[#8A8577] font-bold block mt-0.5">
+                Agent 3 Verified Quality & Budget Compatibility
+              </span>
+            </div>
+          </div>
+          <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-100/90 text-orange-800 border border-orange-200">
+            Selected Lodging
+          </span>
+        </div>
+        <p className="text-[13px] text-[#334155] font-bold leading-relaxed m-0 pl-1">
+          {renderFormattedInline(cleanBody)}
+        </p>
+      </div>
+    );
+  }
+
+  if (isCost) {
+    const cleanBody = trimmed.replace(/^(?:[\*\#\-\s>]*)(?:💰\s*)?(?:Estimated Day Cost|Estimated Cost|Est\.? Cost)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i, "").trim();
+    return (
+      <div className="flex items-center justify-between gap-2 p-3.5 my-3.5 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50/50 border border-emerald-200 text-xs font-bold text-emerald-900 shadow-2xs">
+        <span className="flex items-center gap-2 font-black uppercase tracking-wider text-[11px] text-emerald-800">
+          <DollarOutlined className="text-emerald-600 text-base" />
+          Estimated Daily Budget Target
+        </span>
+        <span className="px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-black shadow-sm">
+          {renderFormattedInline(cleanBody)}
+        </span>
+      </div>
+    );
+  }
+
+  if (isXai) {
+    const cleanBody = trimmed.replace(/^(?:[\*\#\-\s>]*)(?:💡\s*)?(?:Why This Was Chosen|XAI Decision Rationale|XAI Selection Rationale)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i, "").trim();
+    return (
+      <div className="p-4 my-3.5 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-white border-l-4 border-amber-500 rounded-r-2xl shadow-sm">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-base">💡</span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-amber-900">
+            Explainable AI (XAI) Selection Rationale
+          </span>
+        </div>
+        <p className="text-xs text-amber-950 font-semibold leading-relaxed m-0">
+          {renderFormattedInline(cleanBody)}
+        </p>
+      </div>
+    );
+  }
+
+  return <p className="my-2.5 text-[13px] text-[#5C5648] leading-relaxed">{originalChildren || renderFormattedInline(text)}</p>;
+}
+
 /* ---------------- Distance & Compass Direction Helpers ---------------- */
 export function calculateHaversineDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // Earth's radius in km
@@ -2101,9 +2348,34 @@ export default function InteractiveTourCustomizer() {
                         },
                         h2: ({ children }: { children?: React.ReactNode }) => {
                           const text = getPlainText(children);
+                          const dayMatch = text.match(/Day\s*(\d+)[:\s-]*(.*)/i);
+                          if (dayMatch) {
+                            const dayNum = dayMatch[1].padStart(2, "0");
+                            const dayTheme = dayMatch[2].replace(/^(🗓️|🌅|☀️|🌙)\s*/, "").trim();
+                            return (
+                              <div className="mt-8 mb-5 pt-4 border-t-2 border-dashed border-[#F3EBDE]/80 first:border-t-0 first:pt-0">
+                                <div className="flex items-center gap-3.5 bg-gradient-to-r from-[#FFF5EE] via-[#FFF9F5] to-white p-4 rounded-2xl border border-[#FFE2D1]/70 shadow-xs hover:border-[#FF8B50]/40 transition-colors">
+                                  <div className="flex flex-col items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF8B50] to-[#E05A1A] text-white shadow-md shadow-orange-500/20 shrink-0">
+                                    <span className="text-[9px] font-black uppercase tracking-wider opacity-90">DAY</span>
+                                    <span className="text-base font-black leading-none">{dayNum}</span>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-black text-[#FF8B50] uppercase tracking-wider">Scheduled Daily Itinerary</span>
+                                      <span className="w-1.5 h-1.5 rounded-full bg-[#FF8B50]/60" />
+                                      <span className="text-[10px] text-[#A8A29E] font-semibold">Curated by Autonomous Agent 4</span>
+                                    </div>
+                                    <h3 className="text-sm sm:text-base font-black text-[#44403C] tracking-tight truncate mt-0.5">
+                                      {dayTheme || text}
+                                    </h3>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          }
+
                           let icon: React.ReactNode = <CompassOutlined className="text-[#25A5FE]" />;
-                          if (text.includes("Day") || text.includes("🗓️")) icon = <CalendarOutlined className="text-[#FF8B50]" />;
-                          else if (text.includes("🏨")) icon = <span>🏨</span>;
+                          if (text.includes("🏨")) icon = <span>🏨</span>;
                           else if (text.includes("💡") || text.includes("Why")) icon = <BulbOutlined className="text-amber-500" />;
                           else if (text.includes("💰") || text.includes("Budget")) icon = <DollarOutlined className="text-emerald-500" />;
                           return (
@@ -2120,8 +2392,18 @@ export default function InteractiveTourCustomizer() {
                             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#25A5FE]" />{getPlainText(children)}
                           </div>
                         ),
+                        p: ({ children }: { children?: React.ReactNode }) => {
+                          const text = getPlainText(children);
+                          return parseAndRenderTimelineText(text, children);
+                        },
                         li: ({ children, ...props }: { children?: React.ReactNode } & React.HTMLAttributes<HTMLLIElement>) => {
                           const text = getPlainText(children);
+                          if (
+                            /(?:🌅|☀️|🌙|🏨|💰|💡)/.test(text) ||
+                            /(?:Morning|Afternoon|Evening|Tonight's Stay|Estimated Day Cost):/i.test(text)
+                          ) {
+                            return <li className="list-none ml-0 my-2">{parseAndRenderTimelineText(text, children)}</li>;
+                          }
                           if (text.includes("Why This Was Chosen:") || text.includes("XAI Decision Rationale:") || text.includes("💡")) {
                             const cleanText = text.replace(/^(💡\s*)?(Why This Was Chosen:\s*)?(XAI Decision Rationale:\s*)?/i, "").trim();
                             return (
@@ -2173,6 +2455,19 @@ export default function InteractiveTourCustomizer() {
                           }
                           return <li className="ml-4 list-disc text-[#6E6759] my-1" {...props}>{children}</li>;
                         },
+                        blockquote: ({ children }: { children?: React.ReactNode }) => (
+                          <blockquote className="my-4 p-4 rounded-2xl bg-gradient-to-r from-[#FFF7ED] to-[#FEF3C7] border-l-4 border-[#FF8B50] shadow-2xs">
+                            <div className="flex items-center gap-2 mb-1">
+                              <RobotOutlined className="text-[#FF8B50] text-sm" />
+                              <span className="text-[10px] font-black uppercase tracking-wider text-[#9A3412]">
+                                Travel Intelligence Note
+                              </span>
+                            </div>
+                            <div className="text-xs text-[#78350F] font-semibold leading-relaxed">
+                              {children}
+                            </div>
+                          </blockquote>
+                        ),
                         table: ({ children }: { children?: React.ReactNode }) => (
                           <div className="overflow-x-auto my-4 rounded-2xl border border-[#F0E7D8] bg-white shadow-sm">
                             <table className="w-full text-left text-xs">{children}</table>
