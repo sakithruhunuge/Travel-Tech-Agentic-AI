@@ -1451,7 +1451,7 @@ export default function InteractiveTourCustomizer() {
                   </div>
                 </div>
                 <span className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#25A5FE] text-white text-[9px] font-black rounded-full uppercase tracking-[0.16em] self-start sm:self-center shadow-md shadow-[#25A5FE]/30">
-                  <ThunderboltOutlined /> 3-Agent AI Engine
+                  <ThunderboltOutlined /> 4-Agent Autonomous AI Engine
                 </span>
               </div>
             </motion.button>
