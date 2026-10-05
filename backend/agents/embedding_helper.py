@@ -34,17 +34,22 @@ class EmbeddingHelper:
 
     def __new__(cls):
         if cls._instance is None:
-            print("🔄 Loading embedding model...")
             cls._instance = super(EmbeddingHelper, cls).__new__(cls)
-            cls._model = SentenceTransformer("all-MiniLM-L6-v2")
-            print("✅ Embedding model ready.")
         return cls._instance
+
+    @property
+    def model(self):
+        if self._model is None:
+            print("🔄 Loading embedding model...")
+            self._model = SentenceTransformer("all-MiniLM-L6-v2")
+            print("✅ Embedding model ready.")
+        return self._model
 
     def encode(self, text: str) -> List[float]:
         """Encodes a single string into a 384-dimensional dense vector as a plain Python list of floats."""
         if not text:
             text = ""
-        embedding = self._model.encode(text, show_progress_bar=False)
+        embedding = self.model.encode(text, show_progress_bar=False)
         if hasattr(embedding, "tolist"):
             embedding = embedding.tolist()
         return [float(x) for x in embedding]
@@ -53,7 +58,7 @@ class EmbeddingHelper:
         """Encodes a list of strings into a list of 384-dimensional dense vectors."""
         if not texts:
             return []
-        embeddings = self._model.encode(texts, show_progress_bar=False)
+        embeddings = self.model.encode(texts, show_progress_bar=False)
         result: List[List[float]] = []
         for emb in embeddings:
             if hasattr(emb, "tolist"):
@@ -62,7 +67,7 @@ class EmbeddingHelper:
         return result
 
 
-# Initialize module-level singleton instance on first import
+# Module-level singleton instance
 _embedding_singleton = EmbeddingHelper()
 
 

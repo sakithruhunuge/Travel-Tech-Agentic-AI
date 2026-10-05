@@ -14,20 +14,28 @@ if str(PROJECT_ROOT) not in sys.path:
 if str(CURRENT_DIR.parent) not in sys.path:
     sys.path.insert(0, str(CURRENT_DIR.parent))
 
-from backend.api.models import (
-    ItineraryRequest,
-    ItineraryResponse,
-    SaveItineraryRequest,
-    Agent1ProcessRequest,
-    Agent1ProcessResponse,
-)
-
 try:
+    from backend.api.models import (
+        ItineraryRequest,
+        ItineraryResponse,
+        SaveItineraryRequest,
+        Agent1ProcessRequest,
+        Agent1ProcessResponse,
+    )
     from backend.db.mongo_client import main_db
     from backend.agents.agent1_triage import parse_user_query
-except ImportError:
-    from mongo_client import main_db
+    from backend.agents.orchestrator import run_agent_pipeline
+except (ImportError, ModuleNotFoundError):
+    from api.models import (
+        ItineraryRequest,
+        ItineraryResponse,
+        SaveItineraryRequest,
+        Agent1ProcessRequest,
+        Agent1ProcessResponse,
+    )
+    from db.mongo_client import main_db
     from agents.agent1_triage import parse_user_query
+    from agents.orchestrator import run_agent_pipeline
 
 router = APIRouter(prefix="/api/v1", tags=["Itineraries"])
 agent_router = APIRouter(tags=["Agents"])
@@ -80,47 +88,35 @@ async def process_agent1(request: Agent1ProcessRequest) -> Agent1ProcessResponse
     return Agent1ProcessResponse(**result)
 
 
-@router.post(
+@agent_router.post(
     "/generate-itinerary",
     response_model=ItineraryResponse,
     summary="Generate personalized travel itinerary",
 )
+@router.post(
+    "/generate-itinerary",
+    response_model=ItineraryResponse,
+    summary="Generate personalized travel itinerary (API v1)",
+)
 async def generate_itinerary(request: ItineraryRequest) -> ItineraryResponse:
     """Generates a complete multi-day itinerary using the 4-agent pipeline."""
-    try:
-        try:
-            from backend.agents.orchestrator import run_agent_pipeline
-        except ImportError:
-            from agents.orchestrator import run_agent_pipeline
+    # Ensure destination and budget context are preserved
+    if request.custom_vibe and request.destination.lower() in request.custom_vibe.lower():
+        prompt = request.custom_vibe
+    elif request.custom_vibe:
+        prompt = f"{request.duration_days} days in {request.destination}, budget ${request.budget_usd}, {request.custom_vibe}"
+    else:
+        prompt = f"{request.duration_days} days in {request.destination}, budget ${request.budget_usd}"
 
-        interests_str = ", ".join(request.interests) if request.interests else "general sightseeing"
-        prompt_parts = [
-            f"{request.duration_days} days in {request.destination}",
-            f"during {request.travel_dates}",
-            f"budget ${request.budget_usd}",
-            f"party size of {request.party_size}",
-            f"interested in {interests_str}",
-        ]
-        if request.custom_vibe:
-            prompt_parts.append(f"vibe: {request.custom_vibe}")
+    result = run_agent_pipeline(prompt)
 
-        raw_prompt = ", ".join(prompt_parts)
-        result = run_agent_pipeline(raw_prompt)
-
-        if "error" in result:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Agent pipeline error: {result['error']}",
-            )
-
-        return ItineraryResponse(**result)
-    except HTTPException:
-        raise
-    except Exception as e:
+    if "error" in result:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate itinerary: {str(e)}",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result["error"],
         )
+
+    return ItineraryResponse(**result)
 
 
 @router.post(
