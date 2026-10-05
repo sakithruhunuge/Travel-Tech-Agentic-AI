@@ -165,11 +165,144 @@ def _normalize_output(data: dict) -> dict:
     return data
 
 
+def _rule_based_fallback(raw_prompt: str) -> dict:
+    """Deterministic fallback parser for when LLM is unavailable or unconfigured."""
+    text = raw_prompt.strip().lower()
+
+    # 1. Security / adversarial injection checks
+    injection_patterns = [
+        r"ignore\s+(all\s+)?previous",
+        r"disregard\s+(all\s+)?instructions",
+        r"you\s+are\s+now",
+        r"jailbreak",
+        r"reveal\s+.*(system\s+prompt|prompt|instructions)",
+        r"system\s+prompt",
+        r"api\s*key",
+    ]
+    for pattern in injection_patterns:
+        if re.search(pattern, text):
+            return {"error": "invalid_query"}
+
+    # 2. Off-topic check
+    travel_keywords = [
+        "travel", "trip", "tour", "vacation", "holiday", "itinerary", "visit", "day", "days",
+        "week", "budget", "hotel", "resort", "beach", "stay", "flight", "explore", "guide",
+        "sri lanka", "galle", "colombo", "kandy", "ella", "bentota", "nuwara eliya",
+        "trincomalee", "mirissa", "sigiriya", "yala", "negombo", "jaffna", "dambulla",
+    ]
+    if not any(k in text for k in travel_keywords):
+        return {"error": "off_topic"}
+
+    # 3. Destination extraction
+    dest_coords = {
+        "colombo": (6.9271, 79.8612),
+        "galle": (6.0535, 80.2209),
+        "kandy": (7.2906, 80.6337),
+        "ella": (6.8667, 81.0466),
+        "bentota": (6.4282, 80.0125),
+        "nuwara eliya": (6.9497, 80.7891),
+        "trincomalee": (8.5922, 81.2152),
+        "mirissa": (5.9483, 80.4716),
+        "sigiriya": (7.9570, 80.7603),
+        "yala": (6.3725, 81.4011),
+        "negombo": (7.2008, 79.8737),
+        "jaffna": (9.6615, 80.0255),
+        "anuradhapura": (8.3114, 80.4037),
+        "dambulla": (7.8742, 80.6511),
+        "arugam bay": (6.8415, 81.8340),
+    }
+
+    found_dest = "Galle"
+    found_coords = {"lat": 6.0535, "lng": 80.2209}
+    for d_name, (lat, lng) in dest_coords.items():
+        if re.search(r"\b" + re.escape(d_name) + r"\b", text):
+            found_dest = d_name.title()
+            found_coords = {"lat": lat, "lng": lng}
+            break
+
+    # 4. Duration
+    duration = 5
+    dur_match = re.search(r"(\d+)\s*(?:-|–)?\s*(?:day|days)", text)
+    if dur_match:
+        duration = int(dur_match.group(1))
+    elif "week" in text:
+        duration = 7
+
+    # 5. Budget
+    budget = 500.0
+    budget_match = re.search(r"\$\s*(\d+(?:\.\d+)?)", text)
+    if budget_match:
+        budget = float(budget_match.group(1))
+    else:
+        b_num = re.search(r"budget\s*(?:of|is|:)?\s*(\d+)", text)
+        if b_num:
+            budget = float(b_num.group(1))
+        elif "cheap" in text or "budget" in text and "low" in text:
+            budget = 200.0
+        elif "luxury" in text:
+            budget = 1500.0
+
+    # 6. Party size
+    party_size = 2
+    fam_match = re.search(r"family\s+of\s+(\d+)", text)
+    if fam_match:
+        party_size = int(fam_match.group(1))
+    else:
+        party_match = re.search(r"(\d+)\s*(?:people|persons|travelers|travellers|guests|adults)", text)
+        if party_match:
+            party_size = int(party_match.group(1))
+        elif "couple" in text:
+            party_size = 2
+        elif "solo" in text or "alone" in text:
+            party_size = 1
+
+    # 7. Interests
+    interests = []
+    if any(w in text for w in ["beach", "beaches", "coast", "ocean", "sea"]):
+        interests.append("Beach")
+    if any(w in text for w in ["history", "historical", "fort", "heritage", "temple", "ruins"]):
+        interests.append("Historical")
+    if any(w in text for w in ["nature", "wildlife", "safari", "forest", "jungle"]):
+        interests.append("Nature")
+    if any(w in text for w in ["adventure", "hiking", "climb", "trek", "surf"]):
+        interests.append("Adventure")
+    if any(w in text for w in ["food", "dining", "cuisine", "seafood", "culinary", "restaurant"]):
+        interests.append("Food")
+    if any(w in text for w in ["photo", "photography", "scenic", "view"]):
+        interests.append("Photography")
+    if any(w in text for w in ["urban", "city", "shopping", "nightlife"]):
+        interests.append("Urban")
+
+    # 8. Travel Dates
+    date_match = re.search(r"(?:in\s+)?(january|february|march|april|may|june|july|august|september|october|november|december)(?:\s+\d{1,2}(?:-\d{1,2})?)?(?:\s*,\s*\d{4})?", text)
+    travel_dates = date_match.group(0).title() if date_match else "Upcoming Dates"
+
+    data = {
+        "destination": found_dest,
+        "destination_coords": found_coords,
+        "travel_dates": travel_dates,
+        "duration_days": duration,
+        "duration": duration,
+        "budget_max_usd": budget,
+        "budget": budget,
+        "party_size": party_size,
+        "travellers": party_size,
+        "interests": interests,
+        "custom_vibe": raw_prompt,
+    }
+    return _normalize_output(data)
+
+
 def parse_user_query(raw_prompt: str) -> dict:
+    cleaned_prompt = (raw_prompt or "").strip()
+    if not cleaned_prompt:
+        return {"error": "invalid_query"}
+
     try:
-        raw_output = chain.invoke({"input": raw_prompt})
-    except Exception as e:
-        return {"error": "llm_invocation_failed", "details": str(e)}
+        raw_output = chain.invoke({"input": cleaned_prompt})
+    except Exception:
+        # Graceful fallback to rule-based parser when LLM provider is unreachable
+        return _rule_based_fallback(cleaned_prompt)
 
     cleaned_output = raw_output.strip()
 
@@ -200,7 +333,11 @@ def parse_user_query(raw_prompt: str) -> dict:
         except Exception:
             pass
 
-    # 3. If still fails, return parse_failed error
+    # 3. If LLM produced unparseable output, fallback to rule-based parser
+    fallback = _rule_based_fallback(cleaned_prompt)
+    if "error" not in fallback:
+        return fallback
+
     return {"error": "parse_failed", "raw_output": raw_output}
 
 

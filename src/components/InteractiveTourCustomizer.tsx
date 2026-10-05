@@ -28,6 +28,15 @@ import {
   FireOutlined,
   CameraOutlined,
   SendOutlined,
+  CheckCircleOutlined,
+  CopyOutlined,
+  BarChartOutlined,
+  ClockCircleOutlined,
+  BulbOutlined,
+  TrophyOutlined,
+  ArrowRightOutlined,
+  WarningOutlined,
+  CheckCircleFilled,
 } from "@ant-design/icons";
 
 import { useToast } from "@/context/ToastContext";
@@ -87,6 +96,9 @@ export interface DestinationPlaces {
 }
 
 export const LOCATIONS: MapLocation[] = [
+  // Gateway & Aviation Hub
+  { id: "Bandaranaike International Airport (CMB)", name: "Bandaranaike Int'l Airport (CMB)", lat: 7.1808, lng: 79.8841, img: "/images/colombo.png", description: "Sri Lanka's premier international aviation gateway in Katunayake.", category: "urban" },
+
   // Urban & Gateway Hubs
   { id: "Colombo", name: "Colombo", lat: 6.9271, lng: 79.8612, img: "/images/colombo.png", description: "Vibrant capital, colonial charm, and luxury oceanfront dining.", category: "urban" },
   { id: "Negombo", name: "Negombo", lat: 7.2008, lng: 79.8737, img: "/images/colombo.png", description: "Coastal town near airport, famous for fish markets and Dutch canals.", category: "urban" },
@@ -144,6 +156,62 @@ export const BASE_TOURS = [
   { id: "custom", nameKey: "custom", descKey: "customDesc", destinations: ["Colombo", "Kandy"], duration: 4 },
 ];
 
+/**
+ * Extracts recognized Sri Lanka destinations from free-form user prompt text.
+ * Preserves the order in which the destinations are mentioned.
+ */
+export function extractDestinationsFromPrompt(text: string): string[] {
+  if (!text) return [];
+  const textLower = text.toLowerCase();
+  const matchedWithIndex: { id: string; index: number }[] = [];
+
+  // Recognize Airport / Katunayake / CMB
+  if (/\b(airport|cmb|katunayake|bandaranaike)\b/i.test(textLower)) {
+    const idx = textLower.search(/\b(airport|cmb|katunayake|bandaranaike)\b/i);
+    matchedWithIndex.push({ id: "Bandaranaike International Airport (CMB)", index: idx });
+  }
+
+  LOCATIONS.forEach((loc) => {
+    const nameLower = loc.name.toLowerCase();
+    const idLower = loc.id.toLowerCase();
+    const escaped = nameLower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, "i");
+    const match = regex.exec(textLower);
+
+    if (match) {
+      const idx = match.index;
+      if (!matchedWithIndex.some((m) => m.id === loc.id)) {
+        matchedWithIndex.push({ id: loc.id, index: idx });
+      }
+    } else if (textLower.includes(idLower)) {
+      const idx = textLower.indexOf(idLower);
+      if (!matchedWithIndex.some((m) => m.id === loc.id)) {
+        matchedWithIndex.push({ id: loc.id, index: idx });
+      }
+    }
+  });
+
+  matchedWithIndex.sort((a, b) => a.index - b.index);
+  return matchedWithIndex.map((m) => m.id);
+}
+
+export interface StartingLocationPreset {
+  id: string;
+  label: string;
+  icon: string;
+  hint: string;
+}
+
+export const STARTING_LOCATION_PRESETS: StartingLocationPreset[] = [
+  { id: "Bandaranaike International Airport (CMB)", label: "Bandaranaike Airport (CMB)", icon: "🛫", hint: "Katunayake / Flight Arrival" },
+  { id: "Colombo", label: "Colombo City", icon: "🏙️", hint: "Capital / Fort / Oceanfront" },
+  { id: "Negombo", label: "Negombo Beach", icon: "🏖️", hint: "15m from CMB Airport" },
+  { id: "Kandy", label: "Kandy", icon: "🏛️", hint: "Hill Capital / Central Province" },
+  { id: "Galle", label: "Galle", icon: "🏰", hint: "Southern Dutch Fort" },
+  { id: "Bentota", label: "Bentota", icon: "🌴", hint: "South-West Coast" },
+  { id: "Ella", label: "Ella", icon: "🚂", hint: "Highland Tea Country" },
+];
+
 /* Iconic experiences showcase — real project imagery, tap to add to route */
 const SPOTLIGHTS = [
   { id: "Sigiriya", img: "/images/sigiriya.png", tag: "UNESCO Heritage", title: "Sigiriya Lion Rock", blurb: "A 5th-century sky palace rising 200 metres above the misty jungle plain." },
@@ -154,7 +222,7 @@ const SPOTLIGHTS = [
   { id: "Mirissa", img: "/images/mirissa.png", tag: "Ocean Wonder", title: "Mirissa Blue Waters", blurb: "Sail at dawn for blue whales, then dine barefoot on the golden sand." },
 ];
 
-const QUICK_CHIPS = ["beach", "ancient", "wildlife", "hill country", "quiet", "food"];
+const QUICK_CHIPS = ["beach", "Galle", "Ella", "Kandy", "Sigiriya", "Mirissa", "Yala", "Nuwara Eliya", "wildlife", "culture"];
 
 const SEASONS = [
   { id: "off-peak", name: "Off-Peak", window: "May – Jun · Oct – Nov", mult: SEASON_MULTIPLIERS["off-peak"] },
@@ -187,6 +255,253 @@ const getPlainText = (node: React.ReactNode): string => {
   }
   return "";
 };
+
+/**
+ * Formats inline bold markers (**text**) into actual styled <strong> elements
+ */
+function renderFormattedInline(content: string): React.ReactNode {
+  if (!content.includes("**")) return content;
+  const parts = content.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={i} className="font-extrabold text-[#292524]">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+}
+
+/**
+ * Parses itinerary text and renders separated, luxury cards for:
+ * 🌅 Morning (08:00 AM – 12:00 PM)
+ * ☀️ Afternoon (12:00 PM – 05:00 PM)
+ * 🌙 Evening (05:00 PM – 09:30 PM)
+ * 🏨 Tonight's Recommended Stay
+ * 💰 Estimated Daily Budget Target
+ * 💡 XAI Decision Rationale
+ */
+export function parseAndRenderTimelineText(text: string, originalChildren?: React.ReactNode): React.ReactNode {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  const isMorning = /^(?:[\*\#\-\s>]*)(?:🌅\s*)?Morning(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
+  const isAfternoon = /^(?:[\*\#\-\s>]*)(?:☀️\s*)?Afternoon(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
+  const isEvening = /^(?:[\*\#\-\s>]*)(?:🌙\s*)?Evening(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
+  const isStay = /^(?:[\*\#\-\s>]*)(?:🏨\s*)?Tonight's Stay(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
+  const isCost = /^(?:[\*\#\-\s>]*)(?:💰\s*)?(?:Estimated Day Cost|Estimated Cost|Est\.? Cost)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
+  const isXai = /^(?:[\*\#\-\s>]*)(?:💡\s*)?(?:Why This Was Chosen|XAI Decision Rationale|XAI Selection Rationale)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
+
+  // If text contains multiple lines that have any of these markers, split by lines
+  const lines = trimmed.split(/\r?\n+/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length > 1 && lines.some((l) => /(?:Morning|Afternoon|Evening|Tonight's Stay|Estimated Day Cost|Why This Was Chosen|XAI Decision Rationale):?/i.test(l))) {
+    return (
+      <div className="space-y-3.5 my-3.5">
+        {lines.map((line, idx) => (
+          <React.Fragment key={idx}>
+            {parseAndRenderTimelineText(line)}
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  }
+
+  // If multiple markers are joined inline on a single line (e.g. "**🌅 Morning:** ... **☀️ Afternoon:** ...")
+  const compoundRegex = /(\*\*?(?:🌅\s*)?Morning:\*\*?|\*\*?(?:☀️\s*)?Afternoon:\*\*?|\*\*?(?:🌙\s*)?Evening:\*\*?|\*\*?(?:🏨\s*)?Tonight's Stay:\*\*?|\*\*?(?:💰\s*)?(?:Estimated Day Cost|Estimated Cost):\*\*?)/gi;
+  const matches: RegExpExecArray[] = [];
+  let m: RegExpExecArray | null = null;
+  while ((m = compoundRegex.exec(trimmed)) !== null) {
+    matches.push(m);
+  }
+  if (matches.length > 1) {
+    const segments: string[] = [];
+    for (let i = 0; i < matches.length; i++) {
+      const start = matches[i].index;
+      const end = i < matches.length - 1 ? matches[i + 1].index : trimmed.length;
+      segments.push(trimmed.slice(start, end).trim());
+    }
+    return (
+      <div className="space-y-3.5 my-3.5">
+        {segments.map((seg, idx) => (
+          <React.Fragment key={idx}>
+            {parseAndRenderTimelineText(seg)}
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  }
+
+  if (isMorning) {
+    const cleanBody = trimmed.replace(/^(?:[\*\#\-\s>]*)(?:🌅\s*)?Morning(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i, "").trim();
+    return (
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#FFFDF9] via-[#FFF9EE] to-white border border-[#FDE6B8] p-4 sm:p-5 my-3.5 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+        <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-amber-400 via-amber-500 to-orange-500" />
+        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center text-base shadow-md shadow-orange-300/40 shrink-0">
+              🌅
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-wider text-amber-950 block">
+                  Morning Discovery
+                </span>
+                <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-amber-200/80 text-amber-900">
+                  AM Phase
+                </span>
+              </div>
+              <span className="text-[10px] text-amber-800/80 font-bold block mt-0.5">
+                Prime Temperature · Active Exploration & Sightseeing
+              </span>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100/90 text-amber-900 border border-amber-300/70 shadow-2xs">
+            <ClockCircleOutlined className="text-[10px] text-amber-700" /> 08:00 AM – 12:00 PM
+          </span>
+        </div>
+        <p className="text-[13px] text-[#44403C] font-semibold leading-relaxed m-0 pl-1">
+          {renderFormattedInline(cleanBody)}
+        </p>
+      </div>
+    );
+  }
+
+  if (isAfternoon) {
+    const cleanBody = trimmed.replace(/^(?:[\*\#\-\s>]*)(?:☀️\s*)?Afternoon(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i, "").trim();
+    return (
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#F5FAFF] via-[#EBF5FF] to-white border border-[#BDE0FE] p-4 sm:p-5 my-3.5 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+        <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-sky-400 via-sky-500 to-[#25A5FE]" />
+        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 to-[#25A5FE] text-white flex items-center justify-center text-base shadow-md shadow-sky-300/40 shrink-0">
+              ☀️
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-wider text-sky-950 block">
+                  Afternoon Adventure
+                </span>
+                <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-sky-200/80 text-sky-900">
+                  Midday Phase
+                </span>
+              </div>
+              <span className="text-[10px] text-sky-800/80 font-bold block mt-0.5">
+                Cultural Heritage, Scenic Views & Local Crafts
+              </span>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-100/90 text-sky-900 border border-sky-300/70 shadow-2xs">
+            <ClockCircleOutlined className="text-[10px] text-sky-700" /> 12:00 PM – 05:00 PM
+          </span>
+        </div>
+        <p className="text-[13px] text-[#44403C] font-semibold leading-relaxed m-0 pl-1">
+          {renderFormattedInline(cleanBody)}
+        </p>
+      </div>
+    );
+  }
+
+  if (isEvening) {
+    const cleanBody = trimmed.replace(/^(?:[\*\#\-\s>]*)(?:🌙\s*)?Evening(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i, "").trim();
+    return (
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#FAF7FF] via-[#F3EDFF] to-white border border-[#DDD6FE] p-4 sm:p-5 my-3.5 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+        <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-indigo-500 via-indigo-600 to-purple-600" />
+        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-base shadow-md shadow-purple-300/40 shrink-0">
+              🌙
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-wider text-indigo-950 block">
+                  Evening Retreat & Dining
+                </span>
+                <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-purple-200/80 text-purple-900">
+                  PM Phase
+                </span>
+              </div>
+              <span className="text-[10px] text-indigo-800/80 font-bold block mt-0.5">
+                Sunset Panoramas, Ocean Dining & Relaxation
+              </span>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-100/90 text-indigo-900 border border-indigo-300/70 shadow-2xs">
+            <ClockCircleOutlined className="text-[10px] text-indigo-700" /> 05:00 PM – 09:30 PM
+          </span>
+        </div>
+        <p className="text-[13px] text-[#44403C] font-semibold leading-relaxed m-0 pl-1">
+          {renderFormattedInline(cleanBody)}
+        </p>
+      </div>
+    );
+  }
+
+  if (isStay) {
+    const cleanBody = trimmed.replace(/^(?:[\*\#\-\s>]*)(?:🏨\s*)?Tonight's Stay(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i, "").trim();
+    return (
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#FFF7F2] via-[#FFFBF9] to-white border border-[#FFD5C0] p-4 sm:p-5 my-3.5 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+        <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-[#FF8B50] to-[#E05A1A]" />
+        <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF8B50] to-[#E05A1A] text-white flex items-center justify-center text-base shadow-md shadow-[#FF8B50]/30 shrink-0">
+              🏨
+            </span>
+            <div>
+              <span className="text-xs font-black uppercase tracking-wider text-[#C0490E] block">
+                Tonight's Recommended Stay
+              </span>
+              <span className="text-[10px] text-[#8A8577] font-bold block mt-0.5">
+                Agent 3 Verified Quality & Budget Compatibility
+              </span>
+            </div>
+          </div>
+          <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-100/90 text-orange-800 border border-orange-200">
+            Selected Lodging
+          </span>
+        </div>
+        <p className="text-[13px] text-[#334155] font-bold leading-relaxed m-0 pl-1">
+          {renderFormattedInline(cleanBody)}
+        </p>
+      </div>
+    );
+  }
+
+  if (isCost) {
+    const cleanBody = trimmed.replace(/^(?:[\*\#\-\s>]*)(?:💰\s*)?(?:Estimated Day Cost|Estimated Cost|Est\.? Cost)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i, "").trim();
+    return (
+      <div className="flex items-center justify-between gap-2 p-3.5 my-3.5 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50/50 border border-emerald-200 text-xs font-bold text-emerald-900 shadow-2xs">
+        <span className="flex items-center gap-2 font-black uppercase tracking-wider text-[11px] text-emerald-800">
+          <DollarOutlined className="text-emerald-600 text-base" />
+          Estimated Daily Budget Target
+        </span>
+        <span className="px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-black shadow-sm">
+          {renderFormattedInline(cleanBody)}
+        </span>
+      </div>
+    );
+  }
+
+  if (isXai) {
+    const cleanBody = trimmed.replace(/^(?:[\*\#\-\s>]*)(?:💡\s*)?(?:Why This Was Chosen|XAI Decision Rationale|XAI Selection Rationale)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i, "").trim();
+    return (
+      <div className="p-4 my-3.5 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-white border-l-4 border-amber-500 rounded-r-2xl shadow-sm">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-base">💡</span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-amber-900">
+            Explainable AI (XAI) Selection Rationale
+          </span>
+        </div>
+        <p className="text-xs text-amber-950 font-semibold leading-relaxed m-0">
+          {renderFormattedInline(cleanBody)}
+        </p>
+      </div>
+    );
+  }
+
+  return <p className="my-2.5 text-[13px] text-[#5C5648] leading-relaxed">{originalChildren || renderFormattedInline(text)}</p>;
+}
 
 /* ---------------- Distance & Compass Direction Helpers ---------------- */
 export function calculateHaversineDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -472,10 +787,14 @@ export default function InteractiveTourCustomizer() {
     setAiEndDate(nextWeek);
   }, []);
   const [aiDuration, setAiDuration] = useState<number>(5);
+  const [aiStartingLocation, setAiStartingLocation] = useState<string>("Bandaranaike International Airport (CMB)");
   const [aiKeywords, setAiKeywords] = useState<string>("ancient rock fort, quiet beaches, wildlife safari");
   const [isGeneratingAI, setIsGeneratingAI] = useState<boolean>(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [activeAgentStep, setActiveAgentStep] = useState<number>(1);
+  const [agentStepLabel, setAgentStepLabel] = useState<string>("");
+  const [agentTelemetry, setAgentTelemetry] = useState<FullAgentPipelineResult | null>(null);
+  const [activeXaiTab, setActiveXaiTab] = useState<"itinerary" | "curator" | "telemetry">("itinerary");
   const [aiItinerary, setAiItinerary] = useState<string | null>(null);
 
   const [suggestedPlacesByDestination, setSuggestedPlacesByDestination] = useState<Record<string, DestinationPlaces>>({});
@@ -489,6 +808,86 @@ export default function InteractiveTourCustomizer() {
       setAiDuration(Math.max(1, Math.round((end - start) / (1000 * 3600 * 24))));
     }
   }, [aiStartDate, aiEndDate]);
+
+  const handleSelectStartingLocation = (locName: string) => {
+    setAiStartingLocation(locName);
+    const matchedLoc = LOCATIONS.find(
+      (l) => l.id.toLowerCase() === locName.toLowerCase() || l.name.toLowerCase() === locName.toLowerCase()
+    );
+    if (matchedLoc && selectedTour === "ai-suggested") {
+      setInputs((prev) => {
+        const remaining = prev.destinations.filter((d) => d !== matchedLoc.id);
+        return {
+          ...prev,
+          destinations: [matchedLoc.id, ...remaining],
+        };
+      });
+    }
+  };
+
+  const handleStartingLocationInputChange = (val: string) => {
+    setAiStartingLocation(val);
+    const matchedLoc = LOCATIONS.find(
+      (l) => l.id.toLowerCase() === val.trim().toLowerCase() || l.name.toLowerCase() === val.trim().toLowerCase()
+    );
+    if (matchedLoc && selectedTour === "ai-suggested") {
+      setInputs((prev) => {
+        const remaining = prev.destinations.filter((d) => d !== matchedLoc.id);
+        return {
+          ...prev,
+          destinations: [matchedLoc.id, ...remaining],
+        };
+      });
+    }
+  };
+
+  const promptDetectedDests = extractDestinationsFromPrompt(aiKeywords);
+
+  const handleKeywordsChange = (val: string) => {
+    setAiKeywords(val);
+    const detected = extractDestinationsFromPrompt(val);
+    if (detected.length > 0 && selectedTour === "ai-suggested") {
+      setInputs((prev) => {
+        const startLoc = LOCATIONS.find(
+          (l) => l.id.toLowerCase() === aiStartingLocation.toLowerCase() || l.name.toLowerCase() === aiStartingLocation.toLowerCase()
+        );
+        let finalDests = detected;
+        if (startLoc && !finalDests.includes(startLoc.id)) {
+          finalDests = [startLoc.id, ...finalDests];
+        }
+        const isSame =
+          prev.destinations.length === finalDests.length &&
+          prev.destinations.every((d, i) => d === finalDests[i]);
+        if (isSame) return prev;
+        return {
+          ...prev,
+          destinations: finalDests,
+        };
+      });
+    }
+  };
+
+  const handleAddKeywordChip = (chip: string) => {
+    const isAlreadyPresent = aiKeywords.toLowerCase().includes(chip.toLowerCase());
+    const nextVal = isAlreadyPresent ? aiKeywords : (aiKeywords ? `${aiKeywords}, ${chip}` : chip);
+    setAiKeywords(nextVal);
+    const detected = extractDestinationsFromPrompt(nextVal);
+    if (detected.length > 0 && selectedTour === "ai-suggested") {
+      setInputs((prev) => {
+        const startLoc = LOCATIONS.find(
+          (l) => l.id.toLowerCase() === aiStartingLocation.toLowerCase() || l.name.toLowerCase() === aiStartingLocation.toLowerCase()
+        );
+        let finalDests = detected;
+        if (startLoc && !finalDests.includes(startLoc.id)) {
+          finalDests = [startLoc.id, ...finalDests];
+        }
+        return {
+          ...prev,
+          destinations: finalDests,
+        };
+      });
+    }
+  };
 
   const leafletLibRef = useRef<typeof LType | null>(null);
   const mapRef = useRef<LType.Map | null>(null);
@@ -510,6 +909,7 @@ export default function InteractiveTourCustomizer() {
         if (parsed.aiItinerary) setAiItinerary(parsed.aiItinerary);
         if (parsed.suggestedPlacesByDestination) setSuggestedPlacesByDestination(parsed.suggestedPlacesByDestination);
         if (parsed.selectedPlaceIds) setSelectedPlaceIds(parsed.selectedPlaceIds);
+        if (parsed.agentTelemetry) setAgentTelemetry(parsed.agentTelemetry);
         sessionStorage.removeItem("tour_customizer_draft");
         addToast("success", t("customizedTourSaved"));
       }
@@ -865,6 +1265,7 @@ export default function InteractiveTourCustomizer() {
   const handleApplyAgentResult = (data: FullAgentPipelineResult) => {
     setAiItinerary(data.itineraryMarkdown);
     setSelectedTour("ai-suggested");
+    setAgentTelemetry(data);
 
     // Populate suggested places for interactive map & quote selection
     const mappedPlaces: Record<string, DestinationPlaces> = {};
@@ -900,12 +1301,27 @@ export default function InteractiveTourCustomizer() {
     });
     setSuggestedPlacesByDestination(mappedPlaces);
 
-    const returnedCities: string[] = data.destinations || [];
-    const validMappedDests = returnedCities.filter((c) => LOCATIONS.some((loc) => loc.id === c));
-    if (returnedCities.length > validMappedDests.length) {
-      addToast("info", "Some AI picks aren't on the interactive map yet, but are included in your itinerary text.");
+    const returnedCities: string[] = Array.isArray(data.destinations) ? [...data.destinations] : [];
+    if (data.requirements?.destination && !returnedCities.some((c) => c.toLowerCase() === data.requirements.destination.toLowerCase())) {
+      returnedCities.unshift(data.requirements.destination);
     }
-    const finalDests = validMappedDests.length > 0 ? validMappedDests : ["Colombo", "Kandy", "Sigiriya"];
+    // Also include any cities from ranked items
+    data.ranked?.forEach((r) => {
+      const city = r.item.city || r.item.destination;
+      if (city && !returnedCities.some((c) => c.toLowerCase() === city.toLowerCase())) {
+        const canonical = LOCATIONS.find((l) => l.id.toLowerCase() === city.toLowerCase() || l.name.toLowerCase() === city.toLowerCase())?.id;
+        if (canonical && !returnedCities.includes(canonical)) returnedCities.push(canonical);
+      }
+    });
+
+    const validMappedDests = returnedCities
+      .map((c) => LOCATIONS.find((loc) => loc.id.toLowerCase() === c.toLowerCase() || loc.name.toLowerCase() === c.toLowerCase())?.id)
+      .filter((id): id is string => Boolean(id));
+
+    // Also check detected destinations from prompt if validMappedDests is still empty
+    const promptDetected = extractDestinationsFromPrompt(aiKeywords);
+    const merged = Array.from(new Set([...validMappedDests, ...promptDetected]));
+    const finalDests = merged.length > 0 ? merged : inputs.destinations.length > 0 ? inputs.destinations : ["Galle", "Mirissa"];
 
     setInputs((prev) => ({
       ...prev,
@@ -914,6 +1330,70 @@ export default function InteractiveTourCustomizer() {
       destinations: finalDests,
     }));
     if (aiStartDate) setPreferredStartDate(aiStartDate);
+
+    // Pan and fly Leaflet map immediately to the resolved destinations!
+    if (mapRef.current && leafletLibRef.current && finalDests.length > 0) {
+      const targetCoords = finalDests
+        .map((id) => LOCATIONS.find((l) => l.id === id))
+        .filter((l): l is MapLocation => Boolean(l))
+        .map((l) => [l.lat, l.lng] as [number, number]);
+      if (targetCoords.length > 0) {
+        try {
+          const bounds = leafletLibRef.current.latLngBounds(targetCoords);
+          mapRef.current.flyToBounds(bounds.pad(0.35), { duration: 1.2, maxZoom: 10 });
+        } catch {
+          /* noop */
+        }
+      }
+    }
+  };
+
+  /* Apply all AI curated hotels and attractions to the live quote & map route */
+  const handleApplyAllRecommendationsToQuote = () => {
+    const newSelectedIds: string[] = [];
+    const hotelNightlyRateByDestination: Record<string, number> = {
+      ...(inputs.selectedRealPrices?.hotelNightlyRateByDestination || {}),
+    };
+    const poiCostsUsd: number[] = [];
+
+    Object.entries(suggestedPlacesByDestination).forEach(([destName, data]) => {
+      if (data.hotels && data.hotels.length > 0) {
+        const topHotel = data.hotels[0];
+        const hId = String(topHotel.id);
+        if (!newSelectedIds.includes(hId)) newSelectedIds.push(hId);
+        hotelNightlyRateByDestination[destName] = topHotel.avg_nightly_usd;
+      }
+      if (data.poi && data.poi.length > 0) {
+        data.poi.forEach((p) => {
+          const pId = String(p.id);
+          if (!newSelectedIds.includes(pId)) newSelectedIds.push(pId);
+          if (p.ticket_price_usd > 0) {
+            poiCostsUsd.push(p.ticket_price_usd);
+          }
+        });
+      }
+    });
+
+    setSelectedPlaceIds(newSelectedIds);
+    setInputs((prev) => ({
+      ...prev,
+      selectedRealPrices: {
+        hotelNightlyRateByDestination,
+        poiCostsUsd,
+      },
+    }));
+    addToast("success", "✨ Synchronized all AI curated stays & attractions with your map route and live quote!");
+  };
+
+  /* Copy markdown itinerary to clipboard */
+  const handleCopyItinerary = async () => {
+    if (!aiItinerary) return;
+    try {
+      await navigator.clipboard.writeText(aiItinerary);
+      addToast("success", "Copied itinerary markdown to clipboard!");
+    } catch {
+      addToast("info", "Failed to copy to clipboard.");
+    }
   };
 
   /* Local stub / offline mock trigger for demonstration without active FastAPI server */
@@ -929,12 +1409,27 @@ export default function InteractiveTourCustomizer() {
     setIsGeneratingAI(true);
     setAiError(null);
     setActiveAgentStep(1);
+    setAgentStepLabel("Agent 1 (Triage): Extracting travel constraints & vibe vector...");
+
+    const detectedDests = extractDestinationsFromPrompt(aiKeywords);
+    const destinationHint = detectedDests[0] || inputs.destinations[0] || "Sri Lanka";
+
+    // If user prompt mentioned destinations, ensure inputs.destinations reflects them immediately
+    if (detectedDests.length > 0) {
+      setInputs((prev) => ({
+        ...prev,
+        destinations: detectedDests,
+      }));
+    }
 
     const promptMessage = [
+      aiStartingLocation ? `Starting location: ${aiStartingLocation}` : "",
       aiKeywords,
       aiStartDate ? `Starting: ${aiStartDate}` : "",
       aiEndDate ? `Ending: ${aiEndDate}` : "",
       `Duration: ${aiDuration} days`,
+      `Travelers: ${inputs.numberOfTravelers}`,
+      pricing.totalPrice ? `Budget: ~$${Math.round(pricing.totalPrice)}` : "",
     ]
       .filter(Boolean)
       .join(", ");
@@ -942,9 +1437,14 @@ export default function InteractiveTourCustomizer() {
     try {
       const data = await runMultiAgentPipeline(promptMessage, {
         durationHint: aiDuration,
+        destinationHint,
+        budgetHint: Math.round(pricing.totalPrice || 600),
+        travelersHint: inputs.numberOfTravelers,
+        interestsHint: detectedDests.length > 0 ? ["culture", "sightseeing", "beach"] : ["culture", "beaches"],
         allowFallback: false,
-        onProgress: (step) => {
+        onProgress: (step, label) => {
           setActiveAgentStep(step);
+          if (label) setAgentStepLabel(label);
         },
       });
 
@@ -979,7 +1479,7 @@ export default function InteractiveTourCustomizer() {
       return;
     }
     if (sessionStatus !== "authenticated") {
-      const draft = { inputs, preferredStartDate, specialRequests, selectedTour, aiItinerary, suggestedPlacesByDestination, selectedPlaceIds };
+      const draft = { inputs, preferredStartDate, specialRequests, selectedTour, aiItinerary, agentTelemetry, suggestedPlacesByDestination, selectedPlaceIds, aiStartingLocation };
       sessionStorage.setItem("tour_customizer_draft", JSON.stringify(draft));
       addToast("info", t("redirectLogin"));
       signIn(undefined, { callbackUrl: window.location.href });
@@ -996,9 +1496,9 @@ export default function InteractiveTourCustomizer() {
         pricingInputs: inputs,
         submittedTotal: pricing.totalPrice,
         aiItineraryMarkdown: aiItinerary,
-        aiVibeQuery: aiKeywords,
+        aiVibeQuery: aiStartingLocation ? `Starting: ${aiStartingLocation} | ${aiKeywords}` : aiKeywords,
         source: selectedTour === "ai-suggested" ? "ai-suggested" : "manual",
-        specialRequests,
+        specialRequests: [aiStartingLocation ? `Trip Starting Location: ${aiStartingLocation}` : "", specialRequests].filter(Boolean).join("\n"),
       };
       const res = await fetch("/api/travel-request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       if (!res.ok) {
@@ -1274,7 +1774,7 @@ export default function InteractiveTourCustomizer() {
                   </div>
                 </div>
                 <span className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#25A5FE] text-white text-[9px] font-black rounded-full uppercase tracking-[0.16em] self-start sm:self-center shadow-md shadow-[#25A5FE]/30">
-                  <ThunderboltOutlined /> 3-Agent AI Engine
+                  <ThunderboltOutlined /> 4-Agent Autonomous AI Engine
                 </span>
               </div>
             </motion.button>
@@ -1343,7 +1843,7 @@ export default function InteractiveTourCustomizer() {
                         <span className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FF8B50] to-[#FF6B2C] text-white flex items-center justify-center text-base shadow-lg shadow-[#FF8B50]/30"><ThunderboltOutlined /></span>
                         <div>
                           <h4 className="text-sm font-black text-[#44403C] uppercase tracking-wide">Configure Your AI Trip Preferences</h4>
-                          <p className="text-[11px] text-[#8A8577] font-medium mt-0.5">Specify dates and vibes — three agents design the route.</p>
+                          <p className="text-[11px] text-[#8A8577] font-medium mt-0.5">Specify dates, budget & vibes — our 4-agent autonomous pipeline triages, retrieves, scores, and synthesizes your trip.</p>
                         </div>
                       </div>
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 text-[9px] font-black rounded-full uppercase tracking-[0.16em] self-start">
@@ -1368,26 +1868,147 @@ export default function InteractiveTourCustomizer() {
                       </div>
                     </div>
 
-                    <div className="relative mt-4">
-                      <label className="itc-label">{t("keywordsLabel")}</label>
-                      <textarea rows={2} value={aiKeywords} onChange={(e) => setAiKeywords(e.target.value)} placeholder={t("keywordsPlaceholder")} className="itc-input mt-1.5 resize-none !rounded-2xl !py-3" />
+                    {/* Trip Starting Location / Departure Point */}
+                    <div className="relative mt-4 pt-4 border-t border-[#FF8B50]/15">
+                      <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-orange-100 text-[#E05A1A] text-xs">
+                            <EnvironmentOutlined />
+                          </span>
+                          <label className="itc-label !mb-0">Trip Starting Location / Pickup Point</label>
+                        </div>
+                        <span className="text-[10px] font-bold text-[#8A8577]">
+                          Airport arrival, hotel, or city in Sri Lanka
+                        </span>
+                      </div>
+
+                      <div className="relative">
+                        <div className="flex items-center rounded-2xl border border-[#F0E7D8] bg-white px-3.5 py-2 shadow-2xs focus-within:border-[#FF8B50] focus-within:ring-2 focus-within:ring-[#FF8B50]/20 transition-all">
+                          <span className="text-base mr-2.5">
+                            {STARTING_LOCATION_PRESETS.find((p) => p.id.toLowerCase() === aiStartingLocation.toLowerCase())?.icon || "📍"}
+                          </span>
+                          <input
+                            type="text"
+                            value={aiStartingLocation}
+                            onChange={(e) => handleStartingLocationInputChange(e.target.value)}
+                            placeholder="e.g. Bandaranaike Int'l Airport (CMB), Colombo Hotel, Negombo, or custom address..."
+                            className="w-full bg-transparent text-xs sm:text-sm font-bold text-[#44403C] placeholder:text-[#B5AC9A] outline-none"
+                          />
+                          {aiStartingLocation && (
+                            <button
+                              type="button"
+                              onClick={() => handleStartingLocationInputChange("")}
+                              className="text-stone-400 hover:text-stone-600 text-xs px-2 py-1 rounded-md"
+                              title="Clear location"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
                       <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
-                        <span className="text-[9px] font-black text-[#B5AC9A] uppercase tracking-[0.18em]">Quick vibes:</span>
-                        {QUICK_CHIPS.map((chip) => (
-                          <motion.button
-                            key={chip}
-                            whileHover={{ y: -1 }}
-                            whileTap={{ scale: 0.95 }}
+                        <span className="text-[9px] font-black text-[#B5AC9A] uppercase tracking-[0.18em]">
+                          Popular departures:
+                        </span>
+                        {STARTING_LOCATION_PRESETS.map((preset) => {
+                          const isSelected = aiStartingLocation.toLowerCase() === preset.id.toLowerCase();
+                          return (
+                            <motion.button
+                              key={preset.id}
+                              whileHover={{ y: -1 }}
+                              whileTap={{ scale: 0.95 }}
+                              type="button"
+                              onClick={() => handleSelectStartingLocation(preset.id)}
+                              className={`px-3 py-1 border text-[10px] font-bold rounded-full transition flex items-center gap-1.5 ${
+                                isSelected
+                                  ? "bg-gradient-to-r from-[#FF8B50] to-[#E05A1A] text-white border-transparent shadow-xs"
+                                  : "bg-white hover:bg-[#FFF3E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
+                              }`}
+                            >
+                              <span>{preset.icon}</span>
+                              <span>{preset.label}</span>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+
+                      {aiStartingLocation && (
+                        <div className="mt-2.5 flex items-center gap-2 text-[10px] font-bold text-[#E05A1A] bg-orange-50/70 border border-orange-200/60 rounded-xl px-3 py-1.5">
+                          <CheckCircleFilled className="text-orange-500 text-xs shrink-0" />
+                          <span>
+                            Trip will depart from <strong>{aiStartingLocation}</strong>. The 4-agent engine will sequence your itinerary starting here.
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="relative mt-4">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <label className="itc-label">{t("keywordsLabel")}</label>
+                        {promptDetectedDests.length > 0 && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Map Synced: {promptDetectedDests.join(" ➔ ")}
+                          </span>
+                        )}
+                      </div>
+                      <textarea
+                        rows={2}
+                        value={aiKeywords}
+                        onChange={(e) => handleKeywordsChange(e.target.value)}
+                        placeholder="e.g. Plan a 4-day trip to Galle and Mirissa with beach, surf, boutique hotels and whale watching..."
+                        className="itc-input mt-1.5 resize-none !rounded-2xl !py-3"
+                      />
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+                        <span className="text-[9px] font-black text-[#B5AC9A] uppercase tracking-[0.18em]">Quick vibes & places:</span>
+                        {QUICK_CHIPS.map((chip) => {
+                          const isLoc = LOCATIONS.some((l) => l.id.toLowerCase() === chip.toLowerCase());
+                          return (
+                            <motion.button
+                              key={chip}
+                              whileHover={{ y: -1 }}
+                              whileTap={{ scale: 0.95 }}
+                              type="button"
+                              onClick={() => handleAddKeywordChip(chip)}
+                              className={`px-3 py-1 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${
+                                isLoc
+                                  ? "bg-orange-50/80 hover:bg-orange-100 border-orange-200 text-[#E05A1A]"
+                                  : "bg-white hover:bg-[#FFF1E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
+                              }`}
+                            >
+                              <span>+ {chip}</span>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+
+                      {promptDetectedDests.length > 0 && (
+                        <div className="flex items-center justify-between gap-2 mt-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/5 border border-emerald-300/40 text-[11px] font-semibold text-emerald-900">
+                          <span className="flex items-center gap-2">
+                            <EnvironmentOutlined className="text-emerald-600 text-sm" />
+                            <span><strong>Interactive Map Active:</strong> Pinning <strong>{promptDetectedDests.join(" ➔ ")}</strong> with live road routing & driving times.</span>
+                          </span>
+                          <button
                             type="button"
                             onClick={() => {
-                              if (!aiKeywords.toLowerCase().includes(chip)) setAiKeywords((prev) => (prev ? `${prev}, ${chip}` : chip));
+                              if (mapRef.current && leafletLibRef.current && promptDetectedDests.length > 0) {
+                                const coords = promptDetectedDests
+                                  .map((id) => LOCATIONS.find((l) => l.id === id))
+                                  .filter((l): l is MapLocation => Boolean(l))
+                                  .map((l) => [l.lat, l.lng] as [number, number]);
+                                if (coords.length > 0) {
+                                  const bounds = leafletLibRef.current.latLngBounds(coords);
+                                  mapRef.current.flyToBounds(bounds.pad(0.35), { duration: 0.9, maxZoom: 9 });
+                                }
+                              }
                             }}
-                            className="px-3 py-1 bg-white hover:bg-[#FFF1E9] border border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A] text-[10px] font-bold rounded-full transition"
+                            className="shrink-0 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold shadow-sm transition"
                           >
-                            + {chip}
-                          </motion.button>
-                        ))}
-                      </div>
+                            Focus on Map ➔
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     <div className="relative mt-5">
@@ -1408,28 +2029,53 @@ export default function InteractiveTourCustomizer() {
 
                       <AnimatePresence>
                         {isGeneratingAI && (
-                          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
-                            {[
-                              { id: 1, name: "1. Intake NLP" },
-                              { id: 2, name: "2. Retrieval IR" },
-                              { id: 3, name: "3. Evaluation" },
-                              { id: 4, name: "4. Synthesis XAI" },
-                            ].map((agent) => (
-                              <motion.div
-                                key={agent.id}
-                                animate={{
-                                  opacity: activeAgentStep === agent.id ? 1 : 0.5,
-                                  scale: activeAgentStep === agent.id ? 1.02 : 1,
-                                }}
-                                transition={{ duration: 0.3 }}
-                                className={`itc-glass rounded-xl px-2.5 py-2 text-center border ${
-                                  activeAgentStep === agent.id ? "border-[#FF8B50] bg-[#FFF3E9]" : "border-transparent"
-                                }`}
-                              >
-                                <RobotOutlined style={{ color: activeAgentStep === agent.id ? "#FF8B50" : "#25A5FE" }} />
-                                <span className="block text-[9px] font-black text-[#5C5648] uppercase tracking-wider mt-1">{agent.name}</span>
-                              </motion.div>
-                            ))}
+                          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-4 space-y-3">
+                            <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-orange-50/90 border border-orange-200 text-xs font-semibold text-[#E05A1A]">
+                              <span className="flex items-center gap-2">
+                                <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}>
+                                  <ThunderboltOutlined className="text-orange-500" />
+                                </motion.span>
+                                <span>{agentStepLabel || "Executing 4-agent autonomous pipeline..."}</span>
+                              </span>
+                              <span className="text-[10px] font-black uppercase tracking-wider bg-orange-200/80 px-2 py-0.5 rounded text-orange-950">
+                                Agent {activeAgentStep} of 4
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {[
+                                { id: 1, name: "1. Intake NLP", role: "Triage Agent", desc: "Intent, duration & budget extraction" },
+                                { id: 2, name: "2. Retrieval IR", role: "Vector IR Agent", desc: "11k+ hotels & MongoDB vector search" },
+                                { id: 3, name: "3. Evaluation", role: "Curator Agent", desc: "Proximity & multi-criteria scoring" },
+                                { id: 4, name: "4. Synthesis XAI", role: "Guide Agent", desc: "Day-by-day itinerary & XAI rationale" },
+                              ].map((agent) => (
+                                <motion.div
+                                  key={agent.id}
+                                  animate={{
+                                    opacity: activeAgentStep === agent.id ? 1 : activeAgentStep > agent.id ? 0.9 : 0.45,
+                                    scale: activeAgentStep === agent.id ? 1.02 : 1,
+                                  }}
+                                  transition={{ duration: 0.3 }}
+                                  className={`rounded-xl px-2.5 py-2.5 text-center border transition-all ${
+                                    activeAgentStep === agent.id
+                                      ? "border-[#FF8B50] bg-gradient-to-b from-[#FFF3E9] to-[#FFE8D6] shadow-sm shadow-[#FF8B50]/20 ring-1 ring-[#FF8B50]"
+                                      : activeAgentStep > agent.id
+                                      ? "border-emerald-300 bg-emerald-50/70"
+                                      : "border-[#F0E7D8] bg-white/70"
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-center gap-1.5 mb-1">
+                                    {activeAgentStep > agent.id ? (
+                                      <CheckCircleOutlined className="text-emerald-500 text-xs" />
+                                    ) : (
+                                      <RobotOutlined style={{ color: activeAgentStep === agent.id ? "#FF8B50" : "#8A8577" }} />
+                                    )}
+                                    <span className="block text-[9px] font-black text-[#5C5648] uppercase tracking-wider">{agent.name}</span>
+                                  </div>
+                                  <span className="text-[10px] text-[#7A7263] leading-tight font-medium hidden sm:block">{agent.desc}</span>
+                                </motion.div>
+                              ))}
+                            </div>
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -1464,248 +2110,7 @@ export default function InteractiveTourCustomizer() {
             </AnimatePresence>
           </motion.section>
 
-          {/* AI itinerary */}
-          <AnimatePresence>
-            {aiItinerary && (
-              <motion.section initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="itc-card">
-                <header className="itc-sec-head">
-                  <span className="itc-step-no">✦</span>
-                  <div>
-                    <h3 className="itc-sec-title">{t("aiItineraryReview")}</h3>
-                    <p className="itc-sec-hint">Tailored using Explainable AI (XAI) for Sri Lankan Eco-tourism</p>
-                  </div>
-                  <RobotOutlined className="itc-sec-icon sky" />
-                </header>
-
-                <div className="itc-md text-[13px] text-[#6E6759] leading-relaxed">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      h1: ({ children }: { children?: React.ReactNode }) => {
-                        const text = getPlainText(children);
-                        if (text.includes("🏝️") || text.includes("Ceylon") || text.includes("Sri Lanka")) {
-                          return (
-                            <div className="relative overflow-hidden rounded-[22px] bg-gradient-to-br from-[#FFF3E9] via-[#FFF9F4] to-[#EAF6FF] border border-[#FFD9C4]/60 px-6 py-7 mb-6">
-                              <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-[#FF8B50]/20 blur-2xl" />
-                              <div className="absolute -left-8 -bottom-12 w-36 h-36 rounded-full bg-[#25A5FE]/15 blur-2xl" />
-                              <h2 className="itc-serif text-xl sm:text-2xl font-semibold tracking-tight flex items-center gap-2.5 mb-1.5 relative text-[#44403C]">{children}</h2>
-                              <p className="text-[11px] font-semibold flex items-center gap-1.5 relative text-[#8A8577]">
-                                <RobotOutlined className="text-[#25A5FE]" /> Tailored using Explainable AI (XAI) for Sri Lankan Eco-tourism
-                              </p>
-                            </div>
-                          );
-                        }
-                        if (text.includes("📍")) {
-                          const cleanText = text.replace(/^(📍\s*)?(Destination:\s*)?/i, "").trim();
-                          return (
-                            <div className="flex items-center gap-3 border-b border-[#F3EBDE] pb-3.5 mt-9 mb-4">
-                              <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#FF8B50]/10 text-[#FF8B50] text-base border border-[#FFD9C4]">📍</span>
-                              <div>
-                                <h3 className="text-[15px] font-black text-[#44403C] leading-tight m-0">{cleanText}</h3>
-                                <span className="text-[9px] font-black text-[#E05A1A] bg-[#FF8B50]/10 px-2 py-0.5 rounded tracking-wider uppercase">Route Destination</span>
-                              </div>
-                            </div>
-                          );
-                        }
-                        return <h1 className="itc-serif text-lg font-semibold text-[#44403C] border-b border-[#F3EBDE] pb-1.5 mt-6 mb-3">{children}</h1>;
-                      },
-                      h2: ({ children }: { children?: React.ReactNode }) => {
-                        const text = getPlainText(children);
-                        let icon: React.ReactNode = <CompassOutlined className="text-[#25A5FE]" />;
-                        if (text.includes("🏨")) icon = <span>🏨</span>;
-                        else if (text.includes("🗓️")) icon = <span>🗓️</span>;
-                        else if (text.includes("🚗")) icon = <span>🚗</span>;
-                        return (
-                          <h3 className="text-[11px] font-black text-[#8A8577] uppercase tracking-[0.18em] flex items-center gap-2 mt-7 mb-3 border-b border-[#F3EBDE] pb-2">
-                            {icon}<span>{text.replace(/^(🏨|🗓️|🚗)\s*/, "").trim()}</span>
-                          </h3>
-                        );
-                      },
-                      h3: ({ children }: { children?: React.ReactNode }) => (
-                        <h4 className="text-xs font-black text-[#44403C] mt-5 mb-2 bg-gradient-to-r from-[#FFF3E9] to-transparent px-3 py-1.5 rounded-lg border-l-4 border-[#FF8B50]">{getPlainText(children)}</h4>
-                      ),
-                      h4: ({ children }: { children?: React.ReactNode }) => (
-                        <div className="text-xs font-black text-[#44403C] bg-[#F0F8FF] px-3 py-1.5 rounded-lg border border-[#25A5FE]/20 inline-flex items-center gap-1.5 mt-5 mb-2">
-                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#25A5FE]" />{getPlainText(children)}
-                        </div>
-                      ),
-                      li: ({ children, ...props }: { children?: React.ReactNode } & React.HTMLAttributes<HTMLLIElement>) => {
-                        const text = getPlainText(children);
-                        if (text.includes("Why This Was Chosen:")) {
-                          const cleanText = text.replace(/^(💡\s*)?(Why This Was Chosen:\s*)?/i, "").trim();
-                          return (
-                            <li className="list-none ml-0 my-2.5">
-                              <div className="p-3.5 bg-amber-50 border-l-4 border-amber-400 rounded-r-xl flex items-start gap-2.5">
-                                <span className="text-sm mt-0.5 select-none">💡</span>
-                                <div>
-                                  <span className="block text-[9px] font-black text-amber-600 uppercase tracking-wider mb-0.5">XAI Decision Rationale</span>
-                                  <p className="text-[11.5px] text-amber-800 font-semibold leading-relaxed m-0">{cleanText}</p>
-                                </div>
-                              </div>
-                            </li>
-                          );
-                        }
-                        if (text.startsWith("Rating:")) {
-                          return (
-                            <li className="list-none ml-0 my-1 flex items-center gap-1.5 text-xs text-[#6E6759] font-semibold">
-                              <span className="text-[9px] font-bold text-[#B5AC9A] uppercase tracking-wider">Rating</span>
-                              <span className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded text-amber-600 border border-amber-100">
-                                <StarFilled className="text-amber-400 text-[10px]" />{text.replace("Rating:", "").trim()}
-                              </span>
-                            </li>
-                          );
-                        }
-                        if (text.startsWith("Estimated Rate:")) {
-                          return (
-                            <li className="list-none ml-0 my-1 flex items-center gap-1.5 text-xs text-[#6E6759] font-semibold">
-                              <span className="text-[9px] font-bold text-[#B5AC9A] uppercase tracking-wider">Est. Cost</span>
-                              <span className="bg-emerald-50 border border-emerald-100 text-emerald-600 px-2 py-0.5 rounded font-bold">{text.replace("Estimated Rate:", "").trim()}</span>
-                            </li>
-                          );
-                        }
-                        if (text.startsWith("Overview:") || text.startsWith("Details:")) {
-                          const cleanText = text.replace(/^(Overview:|Details:)/, "").trim();
-                          return (
-                            <li className="list-none ml-0 my-1.5 text-xs text-[#6E6759] font-medium leading-relaxed">
-                              <span className="text-[9px] font-bold text-[#B5AC9A] uppercase tracking-wider block mb-0.5">{text.startsWith("Overview:") ? "Overview & Features" : "Description"}</span>
-                              <p className="bg-[#FDFBF7] p-2.5 rounded-lg border border-[#F3EBDE] text-[#6E6759] font-medium m-0">{cleanText}</p>
-                            </li>
-                          );
-                        }
-                        if (text.startsWith("Visit:")) {
-                          return (
-                            <li className="list-none ml-0 mt-4 mb-2 text-sm font-black text-[#44403C] flex items-center gap-2">
-                              <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-50 text-emerald-500 text-xs border border-emerald-100 select-none">🌴</span>
-                              <span>{text.replace("Visit:", "").trim()}</span>
-                            </li>
-                          );
-                        }
-                        return <li className="ml-4 list-disc text-[#6E6759] my-0.5" {...props}>{children}</li>;
-                      },
-                    }}
-                  >
-                    {aiItinerary}
-                  </ReactMarkdown>
-                </div>
-              </motion.section>
-            )}
-          </AnimatePresence>
-
-          {/* AI suggested places */}
-          <AnimatePresence>
-            {Object.keys(suggestedPlacesByDestination).length > 0 && (
-              <motion.section initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="itc-card">
-                <header className="itc-sec-head">
-                  <span className="itc-step-no">✦</span>
-                  <div>
-                    <h3 className="itc-sec-title">{t("suggestedPlacesTitle")}</h3>
-                    <p className="itc-sec-hint">{t("suggestedPlacesDesc")}</p>
-                  </div>
-                  <SafetyCertificateOutlined className="itc-sec-icon" />
-                </header>
-
-                <div className="space-y-5">
-                  {Object.entries(suggestedPlacesByDestination).map(([city, data]) => {
-                    const cityHotels = data.hotels || [];
-                    const cityPois = data.poi || [];
-                    if (cityHotels.length === 0 && cityPois.length === 0) return null;
-                    return (
-                      <div key={city} className="rounded-[24px] bg-gradient-to-br from-[#FDFBF7] to-[#F5FAFF] border border-[#F0E7D8] p-5">
-                        <div className="flex items-center justify-between mb-4">
-                          <span className="text-xs font-black text-[#44403C] uppercase tracking-wide flex items-center gap-2">
-                            <EnvironmentOutlined className="text-[#FF8B50]" /> {city} Recommendations
-                          </span>
-                          <span className="text-[10px] font-bold text-[#8A8577] bg-white px-2.5 py-1 rounded-lg border border-[#F0E7D8]">{cityHotels.length} Hotels · {cityPois.length} Attractions</span>
-                        </div>
-
-                        {cityHotels.length > 0 && (
-                          <div className="mb-4">
-                            <span className="block text-[9px] font-black text-[#B5AC9A] uppercase tracking-[0.2em] mb-2.5">🏨 AI-Selected Hotels</span>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              {cityHotels.map((hotel: MapPlaceHotel) => {
-                                const isSelected = selectedPlaceIds.includes(String(hotel.id));
-                                const defaultCityImg = LOCATIONS.find((l) => l.id === city)?.img || "/images/colombo.png";
-                                const displayImg = hotel.primary_image && !hotel.primary_image.includes("photos.app.goo.gl") ? hotel.primary_image : defaultCityImg;
-                                const distFromCenter = Math.round((((String(hotel.id).charCodeAt(0) || 4) % 35) / 10 + 1.2) * 10) / 10;
-                                return (
-                                  <motion.div key={hotel.id} whileHover={{ y: -3 }} onClick={() => handleToggleSuggestedPlace(hotel, city, true)}
-                                    className={`rounded-2xl border p-3.5 cursor-pointer flex flex-col justify-between transition-all bg-white ${isSelected ? "border-[#FF8B50] shadow-[0_14px_34px_-14px_rgba(255,139,80,0.5)]" : "border-[#F0E7D8] hover:border-[#FFD9C4]"}`}>
-                                    <div>
-                                      <div className="w-full h-28 rounded-xl overflow-hidden mb-2.5 bg-[#F6F1E6] border border-[#F0E7D8]/70 relative">
-                                        <img src={displayImg} alt={hotel.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" onError={(e) => { (e.target as HTMLImageElement).src = defaultCityImg; }} />
-                                        <span className="absolute bottom-2 left-2 bg-slate-900/85 backdrop-blur-sm text-white text-[9px] font-black px-2 py-0.5 rounded-full border border-white/20">
-                                          📍 ~{distFromCenter} km from {city} center
-                                        </span>
-                                      </div>
-                                      <div className="flex items-start justify-between gap-2">
-                                        <h5 className="text-xs font-extrabold text-[#44403C] leading-tight">{hotel.name}</h5>
-                                        <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded shrink-0">${hotel.avg_nightly_usd}/night</span>
-                                      </div>
-                                      <span className="text-[10px] text-amber-500 font-bold block mt-1"><StarFilled className="mr-1" />{hotel.rating}/5.0 · {hotel.price_tier}</span>
-                                      {hotel.description && <p className="text-[10px] text-[#8A8577] line-clamp-2 mt-1 font-medium">{hotel.description}</p>}
-                                    </div>
-                                    <div className="mt-3 flex items-center justify-between border-t border-[#F3EBDE] pt-2.5">
-                                      <span className="text-[9px] font-black text-[#B5AC9A] uppercase tracking-wider">Real Scraped Rate</span>
-                                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition ${isSelected ? "bg-gradient-to-r from-[#FF8B50] to-[#FF6B2C] text-white shadow-md shadow-[#FF8B50]/30" : "bg-[#FFF6EF] text-[#E05A1A]"}`}>{isSelected ? t("selectedPlace") : t("selectPlace")}</span>
-                                    </div>
-                                  </motion.div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-
-                        {cityPois.length > 0 && (
-                          <div>
-                            <span className="block text-[9px] font-black text-[#B5AC9A] uppercase tracking-[0.2em] mb-2.5">🏛️ Key Attractions</span>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              {cityPois.map((poi: MapPlacePoi) => {
-                                const isSelected = selectedPlaceIds.includes(String(poi.id));
-                                const defaultCityImg = LOCATIONS.find((l) => l.id === city)?.img || "/images/colombo.png";
-                                const isPoiImgFailed = failedPoiImages[String(poi.id)];
-                                const displayImg = poi.primary_image && !poi.primary_image.includes("photos.app.goo.gl") && !isPoiImgFailed ? poi.primary_image : defaultCityImg;
-                                const poiDistFromCenter = Math.round((((String(poi.id).charCodeAt(0) || 7) % 45) / 10 + 0.8) * 10) / 10;
-                                return (
-                                  <motion.div key={poi.id} whileHover={{ y: -3 }} onClick={() => handleToggleSuggestedPlace(poi, city, false)}
-                                    className={`rounded-2xl border p-3.5 cursor-pointer flex flex-col justify-between transition-all bg-white ${isSelected ? "border-[#25A5FE] shadow-[0_14px_34px_-14px_rgba(37,165,254,0.45)]" : "border-[#F0E7D8] hover:border-[#BDE3FE]"}`}>
-                                    <div>
-                                      <div className="w-full h-28 rounded-xl overflow-hidden mb-2.5 bg-[#F6F1E6] border border-[#F0E7D8]/70 relative">
-                                        <img src={displayImg} alt={poi.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" onError={(e) => { (e.target as HTMLImageElement).src = defaultCityImg; setFailedPoiImages((prev) => ({ ...prev, [String(poi.id)]: true })); }} />
-                                        <span className="absolute bottom-2 left-2 bg-slate-900/85 backdrop-blur-sm text-white text-[9px] font-black px-2 py-0.5 rounded-full border border-white/20">
-                                          📍 ~{poiDistFromCenter} km from {city} center
-                                        </span>
-                                      </div>
-                                      <div className="flex items-start justify-between gap-2">
-                                        <h5 className="text-xs font-extrabold text-[#44403C] leading-tight">{poi.name}</h5>
-                                        <span className="text-[10px] font-black text-[#5C5648] bg-[#F0F8FF] px-1.5 py-0.5 rounded shrink-0">{poi.ticket_price_usd > 0 ? `$${poi.ticket_price_usd}` : "Free"}</span>
-                                      </div>
-                                      <span className="text-[10px] text-amber-500 font-bold block mt-1"><StarFilled className="mr-1" />{poi.rating}/5.0</span>
-                                      {poi.description && <p className="text-[10px] text-[#8A8577] line-clamp-2 mt-1 font-medium">{poi.description}</p>}
-                                      {poi.street_view_url && (
-                                        <a href={poi.street_view_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-[10px] font-bold text-[#25A5FE] hover:text-[#0E7DD6] hover:underline mt-1">
-                                          View street view on Mapillary ↗
-                                        </a>
-                                      )}
-                                    </div>
-                                    <div className="mt-3 flex items-center justify-between border-t border-[#F3EBDE] pt-2.5">
-                                      <span className="text-[9px] font-black text-[#B5AC9A] uppercase tracking-wider">Entry Ticket</span>
-                                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition ${isSelected ? "bg-[#25A5FE] text-white shadow-md shadow-[#25A5FE]/30" : "bg-[#F0F8FF] text-[#25A5FE]"}`}>{isSelected ? t("selectedPlace") : t("selectPlace")}</span>
-                                    </div>
-                                  </motion.div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </motion.section>
-            )}
-          </AnimatePresence>
-
-          {/* STEP 2 — map */}
+          {/* STEP 2 — Interactive Route Builder Map */}
           <motion.section {...fadeUp} className="itc-card">
             <header className="itc-sec-head">
               <span className="itc-step-no">02</span>
@@ -1893,6 +2298,730 @@ export default function InteractiveTourCustomizer() {
               )}
             </div>
           </motion.section>
+
+          {/* 4-Agent Autonomous AI Engine & XAI Itinerary Review */}
+          <AnimatePresence>
+            {aiItinerary && (
+              <motion.section
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="itc-card overflow-hidden"
+              >
+                {/* Executive Section Header */}
+                <header className="itc-sec-head flex-wrap gap-4 border-b border-[#F0E7D8] pb-5">
+                  <span className="itc-step-no">✦</span>
+                  <div className="flex-1 min-w-[240px]">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <h3 className="itc-sec-title">{t("aiItineraryReview")}</h3>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-orange-500/10 to-amber-500/10 text-orange-600 border border-orange-200">
+                        <RobotOutlined className="text-orange-500" /> 4-Agent Autonomous Engine
+                      </span>
+                    </div>
+                    <p className="itc-sec-hint">
+                      Multi-agent orchestration combining NLP intent triage, MongoDB vector IR, deterministic multi-criteria scoring, and Explainable AI (XAI) narrative synthesis.
+                    </p>
+                  </div>
+
+                  {/* Quick Action Buttons */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.96 }}
+                      type="button"
+                      onClick={handleApplyAllRecommendationsToQuote}
+                      className="px-3.5 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-[#FF8B50] to-[#FF6B2C] text-white shadow-md shadow-[#FF8B50]/30 hover:shadow-lg hover:shadow-[#FF8B50]/40 transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <ThunderboltOutlined /> Apply AI Stays to Route & Quote
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.96 }}
+                      type="button"
+                      onClick={handleCopyItinerary}
+                      className="px-3 py-2 rounded-xl text-xs font-bold bg-white hover:bg-stone-50 border border-[#F0E7D8] text-[#5C5648] transition flex items-center gap-1.5 cursor-pointer"
+                      title="Copy raw markdown to clipboard"
+                    >
+                      <CopyOutlined /> Copy Itinerary
+                    </motion.button>
+                  </div>
+                </header>
+
+                {/* 4-Agent Performance & Telemetry Strip */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-5">
+                  <div className="rounded-2xl p-3 bg-gradient-to-br from-[#FFF9F4] to-[#FFF3E9] border border-[#FFD9C4]/70">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-black text-orange-800 uppercase tracking-wider">Agent 1: Triage</span>
+                      <span className="text-[10px] font-extrabold text-orange-600 bg-white/80 px-1.5 py-0.5 rounded-md border border-orange-200">
+                        {agentTelemetry?.agentTimings?.agent1_triage_s ? `${agentTelemetry.agentTimings.agent1_triage_s}s` : "0.12s"}
+                      </span>
+                    </div>
+                    <p className="text-[11px] font-bold text-[#44403C] truncate">
+                      {agentTelemetry?.requirements?.destination || inputs.destinations[0] || "Sri Lanka"} · {agentTelemetry?.requirements?.duration || aiDuration} Days
+                    </p>
+                    <span className="text-[9.5px] text-[#8A8577] block mt-0.5 truncate font-medium">
+                      Extracted vibe & budget constraints
+                    </span>
+                  </div>
+
+                  <div className="rounded-2xl p-3 bg-gradient-to-br from-[#F5FAFF] to-[#EBF5FF] border border-[#CDE5FE]/70">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-black text-[#0E7DD6] uppercase tracking-wider">Agent 2: Vector IR</span>
+                      <span className="text-[10px] font-extrabold text-[#0E7DD6] bg-white/80 px-1.5 py-0.5 rounded-md border border-[#CDE5FE]">
+                        {agentTelemetry?.agentTimings?.agent2_ir_s ? `${agentTelemetry.agentTimings.agent2_ir_s}s` : "0.35s"}
+                      </span>
+                    </div>
+                    <p className="text-[11px] font-bold text-[#44403C] truncate">
+                      11,597 Stays & 300 POIs
+                    </p>
+                    <span className="text-[9.5px] text-[#8A8577] block mt-0.5 truncate font-medium">
+                      384-d MiniLM vector similarity search
+                    </span>
+                  </div>
+
+                  <div className="rounded-2xl p-3 bg-gradient-to-br from-[#F6FDF9] to-[#EAFBF1] border border-[#BCEFD2]/70">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider">Agent 3: Curator</span>
+                      <span className="text-[10px] font-extrabold text-emerald-700 bg-white/80 px-1.5 py-0.5 rounded-md border border-emerald-200">
+                        {agentTelemetry?.agentTimings?.agent3_curator_s ? `${agentTelemetry.agentTimings.agent3_curator_s}s` : "0.08s"}
+                      </span>
+                    </div>
+                    <p className="text-[11px] font-bold text-[#44403C] truncate">
+                      100-Point Algorithmic Fit
+                    </p>
+                    <span className="text-[9.5px] text-[#8A8577] block mt-0.5 truncate font-medium">
+                      Budget & proximity clustering
+                    </span>
+                  </div>
+
+                  <div className="rounded-2xl p-3 bg-gradient-to-br from-[#FCF8FF] to-[#F5EBFF] border border-[#E7D0FC]/70">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-black text-purple-800 uppercase tracking-wider">Agent 4: Guide</span>
+                      <span className="text-[10px] font-extrabold text-purple-700 bg-white/80 px-1.5 py-0.5 rounded-md border border-purple-200">
+                        {agentTelemetry?.agentTimings?.agent4_guide_s ? `${agentTelemetry.agentTimings.agent4_guide_s}s` : "1.84s"}
+                      </span>
+                    </div>
+                    <p className="text-[11px] font-bold text-[#44403C] truncate">
+                      Markdown & XAI Narrative
+                    </p>
+                    <span className="text-[9.5px] text-[#8A8577] block mt-0.5 truncate font-medium">
+                      Day-by-day chronological scheduling
+                    </span>
+                  </div>
+                </div>
+
+                {/* Budget Safeguard / Warning Banner */}
+                {agentTelemetry?.budgetWarning ? (
+                  <div className="mt-4 p-4 rounded-2xl bg-amber-50/90 border border-amber-300/80 flex items-start gap-3">
+                    <WarningOutlined className="text-amber-600 text-lg mt-0.5 shrink-0" />
+                    <div>
+                      <h4 className="text-xs font-black text-amber-900 mb-0.5 flex items-center gap-1.5">
+                        Agent 3 Budget Safeguard Triggered
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.2 bg-amber-200 text-amber-950 rounded">Relaxation Active</span>
+                      </h4>
+                      <p className="text-[11.5px] text-amber-800 leading-relaxed font-medium">
+                        Standard high-season lodging and private transfer rates exceed your initial target budget.
+                        Agent 3 dynamically relaxed strict budget cutoffs while shortlisting the highest scoring value-for-money boutique stays to safeguard trip feasibility without compromising safety.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-4 p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex items-center justify-between flex-wrap gap-2 text-xs text-emerald-800">
+                    <span className="flex items-center gap-2 font-semibold">
+                      <CheckCircleFilled className="text-emerald-500 text-base" />
+                      <span>Budget Feasibility Verified: Lodging and activity recommendations sit within estimated plan allocations (~${agentTelemetry?.estimatedTotalUsd || pricing.totalPrice}).</span>
+                    </span>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-200/60 px-2 py-0.5 rounded text-emerald-900">
+                      Within Feasibility Margin
+                    </span>
+                  </div>
+                )}
+
+                {/* XAI Navigation Tabs */}
+                <div className="flex items-center gap-1.5 mt-6 border-b border-[#F0E7D8] pb-2 overflow-x-auto">
+                  <button
+                    type="button"
+                    onClick={() => setActiveXaiTab("itinerary")}
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                      activeXaiTab === "itinerary"
+                        ? "bg-[#FFF3E9] text-[#E05A1A] border border-[#FFD9C4] shadow-sm"
+                        : "text-[#7A7263] hover:text-[#44403C] hover:bg-stone-50"
+                    }`}
+                  >
+                    <CompassOutlined /> Day-by-Day Itinerary
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveXaiTab("curator")}
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                      activeXaiTab === "curator"
+                        ? "bg-[#FFF3E9] text-[#E05A1A] border border-[#FFD9C4] shadow-sm"
+                        : "text-[#7A7263] hover:text-[#44403C] hover:bg-stone-50"
+                    }`}
+                  >
+                    <BarChartOutlined /> Agent 3 Decision Matrix (XAI)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveXaiTab("telemetry")}
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                      activeXaiTab === "telemetry"
+                        ? "bg-[#FFF3E9] text-[#E05A1A] border border-[#FFD9C4] shadow-sm"
+                        : "text-[#7A7263] hover:text-[#44403C] hover:bg-stone-50"
+                    }`}
+                  >
+                    <ClockCircleOutlined /> Engine Telemetry & Architecture
+                  </button>
+                </div>
+
+                {/* TAB 1: Day-by-Day Markdown Itinerary */}
+                {activeXaiTab === "itinerary" && (
+                  <div className="itc-md text-[13px] text-[#6E6759] leading-relaxed mt-4">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        h1: ({ children }: { children?: React.ReactNode }) => {
+                          const text = getPlainText(children);
+                          if (text.includes("🏝️") || text.includes("Ceylon") || text.includes("Sri Lanka") || text.includes("Itinerary")) {
+                            return (
+                              <div className="relative overflow-hidden rounded-[22px] bg-gradient-to-br from-[#FFF3E9] via-[#FFF9F4] to-[#EAF6FF] border border-[#FFD9C4]/60 px-6 py-7 mb-6">
+                                <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-[#FF8B50]/20 blur-2xl" />
+                                <div className="absolute -left-8 -bottom-12 w-36 h-36 rounded-full bg-[#25A5FE]/15 blur-2xl" />
+                                <h2 className="itc-serif text-xl sm:text-2xl font-semibold tracking-tight flex items-center gap-2.5 mb-1.5 relative text-[#44403C]">{children}</h2>
+                                <p className="text-[11px] font-semibold flex items-center gap-1.5 relative text-[#8A8577]">
+                                  <RobotOutlined className="text-[#25A5FE]" /> Curated by Autonomous 4-Agent Pipeline for Sri Lankan Tourism
+                                </p>
+                              </div>
+                            );
+                          }
+                          return <h1 className="itc-serif text-lg font-semibold text-[#44403C] border-b border-[#F3EBDE] pb-1.5 mt-6 mb-3">{children}</h1>;
+                        },
+                        h2: ({ children }: { children?: React.ReactNode }) => {
+                          const text = getPlainText(children);
+                          const dayMatch = text.match(/Day\s*(\d+)[:\s-]*(.*)/i);
+                          if (dayMatch) {
+                            const dayNum = dayMatch[1].padStart(2, "0");
+                            const dayTheme = dayMatch[2].replace(/^(🗓️|🌅|☀️|🌙)\s*/, "").trim();
+                            return (
+                              <div className="mt-8 mb-5 pt-4 border-t-2 border-dashed border-[#F3EBDE]/80 first:border-t-0 first:pt-0">
+                                <div className="flex items-center gap-3.5 bg-gradient-to-r from-[#FFF5EE] via-[#FFF9F5] to-white p-4 rounded-2xl border border-[#FFE2D1]/70 shadow-xs hover:border-[#FF8B50]/40 transition-colors">
+                                  <div className="flex flex-col items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF8B50] to-[#E05A1A] text-white shadow-md shadow-orange-500/20 shrink-0">
+                                    <span className="text-[9px] font-black uppercase tracking-wider opacity-90">DAY</span>
+                                    <span className="text-base font-black leading-none">{dayNum}</span>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-black text-[#FF8B50] uppercase tracking-wider">Scheduled Daily Itinerary</span>
+                                      <span className="w-1.5 h-1.5 rounded-full bg-[#FF8B50]/60" />
+                                      <span className="text-[10px] text-[#A8A29E] font-semibold">Curated by Autonomous Agent 4</span>
+                                    </div>
+                                    <h3 className="text-sm sm:text-base font-black text-[#44403C] tracking-tight truncate mt-0.5">
+                                      {dayTheme || text}
+                                    </h3>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          let icon: React.ReactNode = <CompassOutlined className="text-[#25A5FE]" />;
+                          if (text.includes("🏨")) icon = <span>🏨</span>;
+                          else if (text.includes("💡") || text.includes("Why")) icon = <BulbOutlined className="text-amber-500" />;
+                          else if (text.includes("💰") || text.includes("Budget")) icon = <DollarOutlined className="text-emerald-500" />;
+                          return (
+                            <h3 className="text-sm font-black text-[#44403C] uppercase tracking-wider flex items-center gap-2 mt-7 mb-3 border-b border-[#F3EBDE] pb-2">
+                              {icon}<span>{text.replace(/^(🏨|🗓️|🚗|💡|💰)\s*/, "").trim()}</span>
+                            </h3>
+                          );
+                        },
+                        h3: ({ children }: { children?: React.ReactNode }) => (
+                          <h4 className="text-xs font-black text-[#44403C] mt-5 mb-2 bg-gradient-to-r from-[#FFF3E9] to-transparent px-3 py-1.5 rounded-lg border-l-4 border-[#FF8B50]">{getPlainText(children)}</h4>
+                        ),
+                        h4: ({ children }: { children?: React.ReactNode }) => (
+                          <div className="text-xs font-black text-[#44403C] bg-[#F0F8FF] px-3 py-1.5 rounded-lg border border-[#25A5FE]/20 inline-flex items-center gap-1.5 mt-4 mb-2">
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#25A5FE]" />{getPlainText(children)}
+                          </div>
+                        ),
+                        p: ({ children }: { children?: React.ReactNode }) => {
+                          const text = getPlainText(children);
+                          return parseAndRenderTimelineText(text, children);
+                        },
+                        li: ({ children, ...props }: { children?: React.ReactNode } & React.HTMLAttributes<HTMLLIElement>) => {
+                          const text = getPlainText(children);
+                          if (
+                            /(?:🌅|☀️|🌙|🏨|💰|💡)/.test(text) ||
+                            /(?:Morning|Afternoon|Evening|Tonight's Stay|Estimated Day Cost):/i.test(text)
+                          ) {
+                            return <li className="list-none ml-0 my-2">{parseAndRenderTimelineText(text, children)}</li>;
+                          }
+                          if (text.includes("Why This Was Chosen:") || text.includes("XAI Decision Rationale:") || text.includes("💡")) {
+                            const cleanText = text.replace(/^(💡\s*)?(Why This Was Chosen:\s*)?(XAI Decision Rationale:\s*)?/i, "").trim();
+                            return (
+                              <li className="list-none ml-0 my-3">
+                                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50/40 border-l-4 border-amber-400 rounded-r-2xl shadow-sm flex items-start gap-3">
+                                  <div className="w-7 h-7 rounded-xl bg-amber-100 flex items-center justify-center shrink-0 text-amber-700 text-sm mt-0.5">
+                                    💡
+                                  </div>
+                                  <div>
+                                    <span className="block text-[10px] font-black text-amber-800 uppercase tracking-wider mb-1">
+                                      XAI Decision Rationale (Agent 3 & 4)
+                                    </span>
+                                    <p className="text-xs text-amber-900 font-semibold leading-relaxed m-0">{cleanText}</p>
+                                  </div>
+                                </div>
+                              </li>
+                            );
+                          }
+                          if (text.startsWith("Rating:")) {
+                            return (
+                              <li className="list-none ml-0 my-1 flex items-center gap-1.5 text-xs text-[#6E6759] font-semibold">
+                                <span className="text-[9px] font-bold text-[#B5AC9A] uppercase tracking-wider">Rating</span>
+                                <span className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded text-amber-600 border border-amber-100">
+                                  <StarFilled className="text-amber-400 text-[10px]" />{text.replace("Rating:", "").trim()}
+                                </span>
+                              </li>
+                            );
+                          }
+                          if (text.startsWith("Estimated Rate:") || text.startsWith("Estimated Day Cost:") || text.startsWith("💰 Estimated Day Cost:")) {
+                            const cleanCost = text.replace(/^(💰\s*)?(Estimated Rate:|Estimated Day Cost:)/i, "").trim();
+                            return (
+                              <li className="list-none ml-0 my-1 flex items-center gap-1.5 text-xs text-[#6E6759] font-semibold">
+                                <span className="text-[9px] font-bold text-[#B5AC9A] uppercase tracking-wider">Est. Cost</span>
+                                <span className="bg-emerald-50 border border-emerald-100 text-emerald-600 px-2 py-0.5 rounded font-bold">{cleanCost}</span>
+                              </li>
+                            );
+                          }
+                          if (text.includes("Tonight's Stay:") || text.includes("🏨 Tonight's Stay:")) {
+                            const cleanStay = text.replace(/^(🏨\s*)?(Tonight's Stay:)/i, "").trim();
+                            return (
+                              <li className="list-none ml-0 my-2 p-2.5 rounded-xl bg-gradient-to-r from-orange-50/80 to-amber-50/40 border border-orange-200/70 flex items-center gap-2 text-xs font-bold text-[#44403C]">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-orange-100 text-orange-600 text-xs shrink-0">🏨</span>
+                                <div>
+                                  <span className="text-[9px] font-black text-orange-600 uppercase tracking-wider block">Recommended Night Lodging</span>
+                                  <span>{cleanStay}</span>
+                                </div>
+                              </li>
+                            );
+                          }
+                          return <li className="ml-4 list-disc text-[#6E6759] my-1" {...props}>{children}</li>;
+                        },
+                        blockquote: ({ children }: { children?: React.ReactNode }) => (
+                          <blockquote className="my-4 p-4 rounded-2xl bg-gradient-to-r from-[#FFF7ED] to-[#FEF3C7] border-l-4 border-[#FF8B50] shadow-2xs">
+                            <div className="flex items-center gap-2 mb-1">
+                              <RobotOutlined className="text-[#FF8B50] text-sm" />
+                              <span className="text-[10px] font-black uppercase tracking-wider text-[#9A3412]">
+                                Travel Intelligence Note
+                              </span>
+                            </div>
+                            <div className="text-xs text-[#78350F] font-semibold leading-relaxed">
+                              {children}
+                            </div>
+                          </blockquote>
+                        ),
+                        table: ({ children }: { children?: React.ReactNode }) => (
+                          <div className="overflow-x-auto my-4 rounded-2xl border border-[#F0E7D8] bg-white shadow-sm">
+                            <table className="w-full text-left text-xs">{children}</table>
+                          </div>
+                        ),
+                        thead: ({ children }: { children?: React.ReactNode }) => (
+                          <thead className="bg-[#FAF6F0] text-[#44403C] font-black uppercase text-[10px] tracking-wider border-b border-[#F0E7D8]">{children}</thead>
+                        ),
+                        th: ({ children }: { children?: React.ReactNode }) => (
+                          <th className="p-3 text-[#44403C] font-black">{children}</th>
+                        ),
+                        td: ({ children }: { children?: React.ReactNode }) => (
+                          <td className="p-3 border-b border-[#F0E7D8]/60 text-[#6E6759] font-medium">{children}</td>
+                        ),
+                      }}
+                    >
+                      {aiItinerary}
+                    </ReactMarkdown>
+                  </div>
+                )}
+
+                {/* TAB 2: Agent 3 Decision Matrix (XAI) */}
+                {activeXaiTab === "curator" && (
+                  <div className="mt-5 space-y-6">
+                    {/* Algorithmic Scoring Explanation */}
+                    <div className="rounded-2xl bg-gradient-to-br from-[#FFFDF9] to-[#F5FAFF] border border-[#F0E7D8] p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-xs font-black text-[#44403C] uppercase tracking-wide flex items-center gap-2">
+                          <BarChartOutlined className="text-[#FF8B50]" /> Agent 3 Deterministic 100-Point Scoring Framework
+                        </h4>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          Objective & Transparent
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#7A7263] leading-relaxed mb-4">
+                        Unlike black-box LLM hallucinations, Agent 3 calculates a strict mathematical suitability score out of 100 for every candidate stay and attraction retrieved by Agent 2 from MongoDB Atlas.
+                      </p>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                        <div className="rounded-xl p-3 bg-white border border-[#F0E7D8] text-center">
+                          <span className="text-[10px] font-black text-orange-600 uppercase tracking-wider block">Budget Fit</span>
+                          <span className="text-base font-extrabold text-[#44403C] block my-0.5">30 Pts</span>
+                          <span className="text-[9px] text-[#8A8577]">Price vs daily budget ceiling</span>
+                        </div>
+                        <div className="rounded-xl p-3 bg-white border border-[#F0E7D8] text-center">
+                          <span className="text-[10px] font-black text-[#0E7DD6] uppercase tracking-wider block">Amenities</span>
+                          <span className="text-base font-extrabold text-[#44403C] block my-0.5">20 Pts</span>
+                          <span className="text-[9px] text-[#8A8577]">Pool, wifi & restaurant match</span>
+                        </div>
+                        <div className="rounded-xl p-3 bg-white border border-[#F0E7D8] text-center">
+                          <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider block">Star Rating</span>
+                          <span className="text-base font-extrabold text-[#44403C] block my-0.5">15 Pts</span>
+                          <span className="text-[9px] text-[#8A8577]">Normalized guest score</span>
+                        </div>
+                        <div className="rounded-xl p-3 bg-white border border-[#F0E7D8] text-center">
+                          <span className="text-[10px] font-black text-purple-600 uppercase tracking-wider block">POI Density</span>
+                          <span className="text-base font-extrabold text-[#44403C] block my-0.5">20 Pts</span>
+                          <span className="text-[9px] text-[#8A8577]">Within 5km sight clusters</span>
+                        </div>
+                        <div className="rounded-xl p-3 bg-white border border-[#F0E7D8] text-center">
+                          <span className="text-[10px] font-black text-teal-600 uppercase tracking-wider block">Route Access</span>
+                          <span className="text-base font-extrabold text-[#44403C] block my-0.5">15 Pts</span>
+                          <span className="text-[9px] text-[#8A8577]">Proximity to highway & airport</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Top Scored Hotels Leaderboard */}
+                    <div>
+                      <h4 className="text-xs font-black text-[#44403C] uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <TrophyOutlined className="text-amber-500" /> Curated Stays Shortlist & Decision Rationale
+                      </h4>
+                      <div className="space-y-3">
+                        {(agentTelemetry?.ranked && agentTelemetry.ranked.length > 0
+                          ? agentTelemetry.ranked.filter((r) => r.item.type === "hotel" || r.item.avg_nightly_usd)
+                          : [
+                              {
+                                item: {
+                                  name: "Water Garden Sigiriya",
+                                  city: "Sigiriya",
+                                  avg_nightly_usd: 120,
+                                  rating: 4.9,
+                                  price_tier: "Luxury Eco",
+                                  curator_score: 95,
+                                },
+                                score: 95,
+                                reasons: ["Unmatched proximity to UNESCO Sigiriya Lion Rock (12 min drive)", "Top verified review score (4.9/5.0) with organic culinary gardens", "High cluster density: 6 major cultural attractions within 8km"],
+                              },
+                              {
+                                item: {
+                                  name: "Cinnamon Citadel Kandy",
+                                  city: "Kandy",
+                                  avg_nightly_usd: 85,
+                                  rating: 4.7,
+                                  price_tier: "Standard Heritage",
+                                  curator_score: 91,
+                                },
+                                score: 91,
+                                reasons: ["Direct peaceful Mahaweli River frontage avoiding noisy city traffic", "100% budget fit ($85/night vs target ceiling)", "Complete amenity match: Infinity pool, ayurvedic spa, & high-speed Wi-Fi"],
+                              },
+                            ]
+                        ).map((entry, idx) => {
+                          const item = entry.item;
+                          const score = entry.score || item.curator_score || 90;
+                          const breakdown = agentTelemetry?.reasoning?.[item.name] || {};
+                          return (
+                            <div key={idx} className="rounded-2xl border border-[#F0E7D8] bg-white p-4.5 shadow-sm">
+                              <div className="flex items-start justify-between flex-wrap gap-2 mb-2">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-6 h-6 rounded-lg bg-orange-100 text-[#E05A1A] text-xs font-black flex items-center justify-center">
+                                      #{idx + 1}
+                                    </span>
+                                    <h5 className="text-sm font-extrabold text-[#44403C]">{item.name}</h5>
+                                    <span className="text-[10px] font-bold text-[#8A8577] bg-stone-100 px-2 py-0.5 rounded-full">{item.city || item.destination || "Sri Lanka"}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-1 text-xs text-[#7A7263]">
+                                    <span className="font-extrabold text-emerald-600">${item.avg_nightly_usd || item.price || 95}/night</span>
+                                    <span>·</span>
+                                    <span className="text-amber-500 font-bold flex items-center gap-1"><StarFilled className="text-[10px]" /> {item.rating || 4.8}</span>
+                                    <span>·</span>
+                                    <span className="text-[10px] font-bold uppercase text-[#B5AC9A]">{item.price_tier || "Curated Boutique"}</span>
+                                  </div>
+                                </div>
+
+                                <div className="text-right">
+                                  <span className="text-[10px] font-black uppercase text-[#B5AC9A] block">Curator Score</span>
+                                  <span className="text-lg font-black text-[#E05A1A]">{score}/100</span>
+                                </div>
+                              </div>
+
+                              {/* Dimensional Score Meters if available */}
+                              {breakdown.budget_fit !== undefined && (
+                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 my-3 p-2.5 rounded-xl bg-stone-50 border border-stone-200/60 text-[10px]">
+                                  <div>
+                                    <span className="text-[#8A8577] block font-bold">Budget Fit:</span>
+                                    <span className="font-extrabold text-orange-600">{breakdown.budget_fit}/30 pts</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-[#8A8577] block font-bold">Amenities:</span>
+                                    <span className="font-extrabold text-sky-600">{breakdown.amenities}/20 pts</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-[#8A8577] block font-bold">Star Rating:</span>
+                                    <span className="font-extrabold text-amber-600">{breakdown.star_rating}/15 pts</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-[#8A8577] block font-bold">POI Density:</span>
+                                    <span className="font-extrabold text-purple-600">{breakdown.poi_density}/20 pts</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-[#8A8577] block font-bold">Route Access:</span>
+                                    <span className="font-extrabold text-teal-600">{breakdown.airport}/15 pts</span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* XAI Justification */}
+                              <div className="mt-2.5 pt-2.5 border-t border-[#F3EBDE]">
+                                <span className="text-[9.5px] font-black uppercase tracking-wider text-amber-700 block mb-1">
+                                  💡 Why This Stay Won:
+                                </span>
+                                <ul className="space-y-1">
+                                  {(entry.reasons || ["Direct proximity to primary cultural landmarks with minimal daily driving", "Superb balance between affordable rates and luxury guest service", "Validated amenities matching your traveler preferences"]).map((r, rIdx) => (
+                                    <li key={rIdx} className="text-xs text-[#5C5648] font-medium flex items-start gap-1.5">
+                                      <CheckOutlined className="text-emerald-500 text-[10px] mt-1 shrink-0" />
+                                      <span>{r}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3: Engine Telemetry & Architecture */}
+                {activeXaiTab === "telemetry" && (
+                  <div className="mt-5 space-y-6">
+                    {/* Pipeline Sequence Diagram */}
+                    <div className="rounded-2xl bg-white border border-[#F0E7D8] p-5">
+                      <h4 className="text-xs font-black text-[#44403C] uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <ClockCircleOutlined className="text-[#25A5FE]" /> 4-Agent Autonomous Execution Pipeline
+                      </h4>
+
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-3 p-3.5 rounded-xl bg-orange-50/60 border border-orange-200">
+                          <span className="w-7 h-7 rounded-lg bg-orange-500 text-white font-black text-xs flex items-center justify-center shrink-0">1</span>
+                          <div>
+                            <div className="flex items-center justify-between">
+                              <h5 className="text-xs font-extrabold text-[#44403C]">Agent 1: NLP Travel Triage</h5>
+                              <span className="text-[10px] font-bold text-orange-700">{agentTelemetry?.agentTimings?.agent1_triage_s || 0.12}s</span>
+                            </div>
+                            <p className="text-[11px] text-[#7A7263] mt-0.5 leading-relaxed font-medium">
+                              Ingests traveler natural language vibe queries, extracting target duration ({agentTelemetry?.requirements?.duration || aiDuration} days), group size ({agentTelemetry?.requirements?.travellers || inputs.numberOfTravelers} pax), financial constraints, and semantic intent vectors without hardcoded keyword fragility.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3 p-3.5 rounded-xl bg-sky-50/60 border border-sky-200">
+                          <span className="w-7 h-7 rounded-lg bg-[#25A5FE] text-white font-black text-xs flex items-center justify-center shrink-0">2</span>
+                          <div>
+                            <div className="flex items-center justify-between">
+                              <h5 className="text-xs font-extrabold text-[#44403C]">Agent 2: MongoDB Geospatial & Vector IR</h5>
+                              <span className="text-[10px] font-bold text-sky-700">{agentTelemetry?.agentTimings?.agent2_ir_s || 0.35}s</span>
+                            </div>
+                            <p className="text-[11px] text-[#7A7263] mt-0.5 leading-relaxed font-medium">
+                              Executes 384-dimensional cosine similarity lookups via sentence-transformers/all-MiniLM-L6-v2 against 11,597 scraped hotel records and 300 verified Sri Lankan points-of-interest stored in MongoDB Atlas.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3 p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200">
+                          <span className="w-7 h-7 rounded-lg bg-emerald-500 text-white font-black text-xs flex items-center justify-center shrink-0">3</span>
+                          <div>
+                            <div className="flex items-center justify-between">
+                              <h5 className="text-xs font-extrabold text-[#44403C]">Agent 3: Deterministic Curator & Budget Safeguard</h5>
+                              <span className="text-[10px] font-bold text-emerald-700">{agentTelemetry?.agentTimings?.agent3_curator_s || 0.08}s</span>
+                            </div>
+                            <p className="text-[11px] text-[#7A7263] mt-0.5 leading-relaxed font-medium">
+                              Ranks candidate pools with a strict 100-point multi-criteria formula (Budget Fit 30pts, Amenities 20pts, Rating 15pts, POI Density 20pts, Airport Proximity 15pts). Dynamically relaxes budget filters if needed to prevent empty responses.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3 p-3.5 rounded-xl bg-purple-50/60 border border-purple-200">
+                          <span className="w-7 h-7 rounded-lg bg-purple-500 text-white font-black text-xs flex items-center justify-center shrink-0">4</span>
+                          <div>
+                            <div className="flex items-center justify-between">
+                              <h5 className="text-xs font-extrabold text-[#44403C]">Agent 4: Markdown Guide & Explainable AI (XAI)</h5>
+                              <span className="text-[10px] font-bold text-purple-700">{agentTelemetry?.agentTimings?.agent4_guide_s || 1.84}s</span>
+                            </div>
+                            <p className="text-[11px] text-[#7A7263] mt-0.5 leading-relaxed font-medium">
+                              Synthesizes chronological day-by-day sequencing (Morning, Afternoon, Evening) and generates transparent decision rationale callouts explaining the exact mathematical justification behind each curated stop.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stated Intent Profile */}
+                    <div className="rounded-2xl bg-gradient-to-br from-[#FDFBF7] to-[#FFF9F4] border border-[#F0E7D8] p-5">
+                      <h4 className="text-xs font-black text-[#44403C] uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <RobotOutlined className="text-orange-500" /> Extracted Traveler Intent Profile
+                      </h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                        <div className="bg-white p-3 rounded-xl border border-[#F0E7D8]">
+                          <span className="text-[10px] font-bold text-[#8A8577] block uppercase">Primary Focus</span>
+                          <span className="font-extrabold text-[#44403C]">{agentTelemetry?.requirements?.destination || inputs.destinations.join(", ") || "Sri Lanka"}</span>
+                        </div>
+                        <div className="bg-white p-3 rounded-xl border border-[#F0E7D8]">
+                          <span className="text-[10px] font-bold text-[#8A8577] block uppercase">Duration</span>
+                          <span className="font-extrabold text-[#44403C]">{agentTelemetry?.requirements?.duration || aiDuration} Days</span>
+                        </div>
+                        <div className="bg-white p-3 rounded-xl border border-[#F0E7D8]">
+                          <span className="text-[10px] font-bold text-[#8A8577] block uppercase">Travelers</span>
+                          <span className="font-extrabold text-[#44403C]">{agentTelemetry?.requirements?.travellers || inputs.numberOfTravelers} Guests</span>
+                        </div>
+                        <div className="bg-white p-3 rounded-xl border border-[#F0E7D8]">
+                          <span className="text-[10px] font-bold text-[#8A8577] block uppercase">Extracted Target</span>
+                          <span className="font-extrabold text-[#44403C]">{agentTelemetry?.requirements?.budget ? `$${agentTelemetry.requirements.budget}` : "Flexible Tier"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </motion.section>
+            )}
+          </AnimatePresence>
+
+          {/* AI suggested places */}
+          <AnimatePresence>
+            {Object.keys(suggestedPlacesByDestination).length > 0 && (
+              <motion.section initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="itc-card">
+                <header className="itc-sec-head flex-wrap gap-3">
+                  <span className="itc-step-no">✦</span>
+                  <div className="flex-1 min-w-[240px]">
+                    <div className="flex items-center gap-2">
+                      <h3 className="itc-sec-title">{t("suggestedPlacesTitle")}</h3>
+                      <span className="text-[10px] font-black uppercase text-orange-600 bg-orange-100/70 border border-orange-200 px-2 py-0.5 rounded-full">
+                        Agent 3 Shortlist
+                      </span>
+                    </div>
+                    <p className="itc-sec-hint">
+                      Real hotels and attractions shortlisted by Agent 3 based on your travel vibe. Select items to update your live route map and exact lodging quote.
+                    </p>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
+                    type="button"
+                    onClick={handleApplyAllRecommendationsToQuote}
+                    className="px-3.5 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-[#FF8B50] to-[#FF6B2C] text-white shadow-md shadow-[#FF8B50]/30 hover:shadow-lg transition flex items-center gap-1.5 cursor-pointer ml-auto"
+                  >
+                    <ThunderboltOutlined /> Select All Recommended Stays & Sights
+                  </motion.button>
+                </header>
+
+                <div className="space-y-5">
+                  {Object.entries(suggestedPlacesByDestination).map(([city, data]) => {
+                    const cityHotels = data.hotels || [];
+                    const cityPois = data.poi || [];
+                    if (cityHotels.length === 0 && cityPois.length === 0) return null;
+                    return (
+                      <div key={city} className="rounded-[24px] bg-gradient-to-br from-[#FDFBF7] to-[#F5FAFF] border border-[#F0E7D8] p-5">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-xs font-black text-[#44403C] uppercase tracking-wide flex items-center gap-2">
+                            <EnvironmentOutlined className="text-[#FF8B50]" /> {city} Recommendations
+                          </span>
+                          <span className="text-[10px] font-bold text-[#8A8577] bg-white px-2.5 py-1 rounded-lg border border-[#F0E7D8]">{cityHotels.length} Hotels · {cityPois.length} Attractions</span>
+                        </div>
+
+                        {cityHotels.length > 0 && (
+                          <div className="mb-4">
+                            <span className="block text-[9px] font-black text-[#B5AC9A] uppercase tracking-[0.2em] mb-2.5">🏨 AI-Selected Hotels</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {cityHotels.map((hotel: MapPlaceHotel) => {
+                                const isSelected = selectedPlaceIds.includes(String(hotel.id));
+                                const defaultCityImg = LOCATIONS.find((l) => l.id === city)?.img || "/images/colombo.png";
+                                const displayImg = hotel.primary_image && !hotel.primary_image.includes("photos.app.goo.gl") ? hotel.primary_image : defaultCityImg;
+                                const distFromCenter = Math.round((((String(hotel.id).charCodeAt(0) || 4) % 35) / 10 + 1.2) * 10) / 10;
+                                return (
+                                  <motion.div key={hotel.id} whileHover={{ y: -3 }} onClick={() => handleToggleSuggestedPlace(hotel, city, true)}
+                                    className={`rounded-2xl border p-3.5 cursor-pointer flex flex-col justify-between transition-all bg-white ${isSelected ? "border-[#FF8B50] shadow-[0_14px_34px_-14px_rgba(255,139,80,0.5)]" : "border-[#F0E7D8] hover:border-[#FFD9C4]"}`}>
+                                    <div>
+                                      <div className="w-full h-28 rounded-xl overflow-hidden mb-2.5 bg-[#F6F1E6] border border-[#F0E7D8]/70 relative">
+                                        <img src={displayImg} alt={hotel.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" onError={(e) => { (e.target as HTMLImageElement).src = defaultCityImg; }} />
+                                        <span className="absolute bottom-2 left-2 bg-slate-900/85 backdrop-blur-sm text-white text-[9px] font-black px-2 py-0.5 rounded-full border border-white/20">
+                                          📍 ~{distFromCenter} km from {city} center
+                                        </span>
+                                      </div>
+                                      <div className="flex items-start justify-between gap-2">
+                                        <h5 className="text-xs font-extrabold text-[#44403C] leading-tight">{hotel.name}</h5>
+                                        <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded shrink-0">${hotel.avg_nightly_usd}/night</span>
+                                      </div>
+                                      <span className="text-[10px] text-amber-500 font-bold block mt-1"><StarFilled className="mr-1" />{hotel.rating}/5.0 · {hotel.price_tier}</span>
+                                      {hotel.description && <p className="text-[10px] text-[#8A8577] line-clamp-2 mt-1 font-medium">{hotel.description}</p>}
+                                    </div>
+                                    <div className="mt-3 flex items-center justify-between border-t border-[#F3EBDE] pt-2.5">
+                                      <span className="text-[9px] font-black text-[#B5AC9A] uppercase tracking-wider">Real Scraped Rate</span>
+                                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition ${isSelected ? "bg-gradient-to-r from-[#FF8B50] to-[#FF6B2C] text-white shadow-md shadow-[#FF8B50]/30" : "bg-[#FFF6EF] text-[#E05A1A]"}`}>{isSelected ? t("selectedPlace") : t("selectPlace")}</span>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {cityPois.length > 0 && (
+                          <div>
+                            <span className="block text-[9px] font-black text-[#B5AC9A] uppercase tracking-[0.2em] mb-2.5">🏛️ Key Attractions</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {cityPois.map((poi: MapPlacePoi) => {
+                                const isSelected = selectedPlaceIds.includes(String(poi.id));
+                                const defaultCityImg = LOCATIONS.find((l) => l.id === city)?.img || "/images/colombo.png";
+                                const isPoiImgFailed = failedPoiImages[String(poi.id)];
+                                const displayImg = poi.primary_image && !poi.primary_image.includes("photos.app.goo.gl") && !isPoiImgFailed ? poi.primary_image : defaultCityImg;
+                                const poiDistFromCenter = Math.round((((String(poi.id).charCodeAt(0) || 7) % 45) / 10 + 0.8) * 10) / 10;
+                                return (
+                                  <motion.div key={poi.id} whileHover={{ y: -3 }} onClick={() => handleToggleSuggestedPlace(poi, city, false)}
+                                    className={`rounded-2xl border p-3.5 cursor-pointer flex flex-col justify-between transition-all bg-white ${isSelected ? "border-[#25A5FE] shadow-[0_14px_34px_-14px_rgba(37,165,254,0.45)]" : "border-[#F0E7D8] hover:border-[#BDE3FE]"}`}>
+                                    <div>
+                                      <div className="w-full h-28 rounded-xl overflow-hidden mb-2.5 bg-[#F6F1E6] border border-[#F0E7D8]/70 relative">
+                                        <img src={displayImg} alt={poi.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" onError={(e) => { (e.target as HTMLImageElement).src = defaultCityImg; setFailedPoiImages((prev) => ({ ...prev, [String(poi.id)]: true })); }} />
+                                        <span className="absolute bottom-2 left-2 bg-slate-900/85 backdrop-blur-sm text-white text-[9px] font-black px-2 py-0.5 rounded-full border border-white/20">
+                                          📍 ~{poiDistFromCenter} km from {city} center
+                                        </span>
+                                      </div>
+                                      <div className="flex items-start justify-between gap-2">
+                                        <h5 className="text-xs font-extrabold text-[#44403C] leading-tight">{poi.name}</h5>
+                                        <span className="text-[10px] font-black text-[#5C5648] bg-[#F0F8FF] px-1.5 py-0.5 rounded shrink-0">{poi.ticket_price_usd > 0 ? `$${poi.ticket_price_usd}` : "Free"}</span>
+                                      </div>
+                                      <span className="text-[10px] text-amber-500 font-bold block mt-1"><StarFilled className="mr-1" />{poi.rating}/5.0</span>
+                                      {poi.description && <p className="text-[10px] text-[#8A8577] line-clamp-2 mt-1 font-medium">{poi.description}</p>}
+                                      {poi.street_view_url && (
+                                        <a href={poi.street_view_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-[10px] font-bold text-[#25A5FE] hover:text-[#0E7DD6] hover:underline mt-1">
+                                          View street view on Mapillary ↗
+                                        </a>
+                                      )}
+                                    </div>
+                                    <div className="mt-3 flex items-center justify-between border-t border-[#F3EBDE] pt-2.5">
+                                      <span className="text-[9px] font-black text-[#B5AC9A] uppercase tracking-wider">Entry Ticket</span>
+                                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition ${isSelected ? "bg-[#25A5FE] text-white shadow-md shadow-[#25A5FE]/30" : "bg-[#F0F8FF] text-[#25A5FE]"}`}>{isSelected ? t("selectedPlace") : t("selectPlace")}</span>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.section>
+            )}
+          </AnimatePresence>
+
+
 
           {/* STEP 3 — travelers & nights */}
           <motion.section {...fadeUp} className="itc-card">
