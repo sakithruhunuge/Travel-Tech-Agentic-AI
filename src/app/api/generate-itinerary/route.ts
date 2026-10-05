@@ -6,13 +6,10 @@ export const maxDuration = 120; // 120 seconds for long agent pipelines
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Session check via NextAuth
+    // 1. Optional session check (guests can explore AI customized tours)
     const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: "Authentication required to generate itineraries." },
-        { status: 401 }
-      );
+    if (session?.user) {
+      // Authenticated traveler
     }
 
     // 2. Parse request body
