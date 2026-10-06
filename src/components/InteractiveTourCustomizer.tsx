@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
@@ -484,6 +484,78 @@ export const STARTING_LOCATION_PRESETS: StartingLocationPreset[] = [
   { id: "Bentota", label: "Bentota", icon: "🌴", hint: "South-West Coast" },
   { id: "Ella", label: "Ella", icon: "🚂", hint: "Highland Tea Country" },
 ];
+
+/**
+ * Resolves a raw starting location string to a canonical MapLocation object in Sri Lanka.
+ */
+export function resolveStartingLocationObject(locNameOrId: string): MapLocation | undefined {
+  if (!locNameOrId) return undefined;
+  const clean = locNameOrId.trim().toLowerCase();
+
+  // 1. Direct match by id or name
+  const direct = LOCATIONS.find(
+    (l) => l.id.toLowerCase() === clean || l.name.toLowerCase() === clean
+  );
+  if (direct) return direct;
+
+  // 2. Preset match
+  const preset = STARTING_LOCATION_PRESETS.find(
+    (p) => p.id.toLowerCase() === clean || p.label.toLowerCase() === clean
+  );
+  if (preset) {
+    const matched = LOCATIONS.find((l) => l.id === preset.id);
+    if (matched) return matched;
+  }
+
+  // 3. Airport / Aviation keywords
+  if (/\b(?:airport|cmb|katunayake|flight|aviation|terminal)\b/i.test(clean)) {
+    return LOCATIONS.find((l) => l.id === "Bandaranaike International Airport (CMB)");
+  }
+
+  // 4. Typo map
+  if (DESTINATION_TYPO_MAP[clean]) {
+    const canonical = DESTINATION_TYPO_MAP[clean];
+    const matched = LOCATIONS.find(
+      (l) => l.id.toLowerCase() === canonical.toLowerCase() || l.name.toLowerCase() === canonical.toLowerCase()
+    );
+    if (matched) return matched;
+  }
+
+  // 5. Substring match
+  return LOCATIONS.find(
+    (l) => l.id.toLowerCase().includes(clean) || clean.includes(l.id.toLowerCase())
+  );
+}
+
+/**
+ * Extracts explicit departure/pickup starting points from prompt text,
+ * e.g. "starting from Negombo", "depart from Colombo", "from Airport to Kandy".
+ * Avoids false triggers on general statements like "first i want to go to Kandy".
+ */
+export function extractStartingLocationFromPrompt(text: string): string | null {
+  if (!text) return null;
+
+  // Patterns like "starting from X", "start from X", "depart from X", "departing from X", "pickup from/at X", "leaving from X"
+  const startRegex = /\b(?:starting\s+(?:from|at)|start\s+(?:from|at)|departing\s+(?:from|at)|depart\s+(?:from|at)|pickup\s+(?:from|at)|leaving\s+(?:from|at))\s+([a-zA-Z\s'()]+?)(?:\.|\band\b|\bthen\b|,|$)/i;
+  const match = text.match(startRegex);
+  if (match && match[1]) {
+    const target = match[1].trim();
+    const resolved = resolveStartingLocationObject(target);
+    if (resolved) return resolved.name;
+  }
+
+  // Pattern: "from X to Y" (e.g. "from Colombo to Kandy")
+  const fromToRegex = /\bfrom\s+([a-zA-Z\s'()]+?)\s+to\s+/i;
+  const fromToMatch = text.match(fromToRegex);
+  if (fromToMatch && fromToMatch[1]) {
+    const target = fromToMatch[1].trim();
+    const resolved = resolveStartingLocationObject(target);
+    if (resolved) return resolved.name;
+  }
+
+  return null;
+}
+
 
 /* Iconic experiences showcase — real project imagery, tap to add to route */
 const SPOTLIGHTS = [
@@ -1119,34 +1191,14 @@ export default function InteractiveTourCustomizer() {
 
   const handleSelectStartingLocation = (locName: string) => {
     setAiStartingLocation(locName);
-    const matchedLoc = LOCATIONS.find(
-      (l) => l.id.toLowerCase() === locName.toLowerCase() || l.name.toLowerCase() === locName.toLowerCase()
-    );
-    if (matchedLoc && selectedTour === "ai-suggested") {
-      setInputs((prev) => {
-        const remaining = prev.destinations.filter((d) => d !== matchedLoc.id);
-        return {
-          ...prev,
-          destinations: [matchedLoc.id, ...remaining],
-        };
-      });
+    const resolved = resolveStartingLocationObject(locName);
+    if (resolved) {
+      addToast("success", `Trip departure set to ${resolved.name}. Interactive route re-anchored!`);
     }
   };
 
   const handleStartingLocationInputChange = (val: string) => {
     setAiStartingLocation(val);
-    const matchedLoc = LOCATIONS.find(
-      (l) => l.id.toLowerCase() === val.trim().toLowerCase() || l.name.toLowerCase() === val.trim().toLowerCase()
-    );
-    if (matchedLoc && selectedTour === "ai-suggested") {
-      setInputs((prev) => {
-        const remaining = prev.destinations.filter((d) => d !== matchedLoc.id);
-        return {
-          ...prev,
-          destinations: [matchedLoc.id, ...remaining],
-        };
-      });
-    }
   };
 
   const promptDetectedDests = extractDestinationsFromPrompt(aiKeywords);
@@ -1167,11 +1219,12 @@ export default function InteractiveTourCustomizer() {
           destinations: detected,
         };
       });
+    }
 
-      // If user typed "first i want to go kany" or "start from ...", sync starting location
-      if (detected.length > 0 && /\b(?:first|from|start|depart)\b/i.test(val)) {
-        setAiStartingLocation(detected[0]);
-      }
+    // Only update starting location if user explicitly typed a departure phrase (e.g. "start from colombo", "departing from airport")
+    const promptStart = extractStartingLocationFromPrompt(val);
+    if (promptStart) {
+      setAiStartingLocation(promptStart);
     }
   };
 
@@ -1294,9 +1347,32 @@ export default function InteractiveTourCustomizer() {
   const totalNights = inputs.duration + inputs.extraNights;
   const perTraveler = Math.round(pricing.totalPrice / Math.max(1, inputs.numberOfTravelers));
 
-  const selectedRouteLocations = inputs.destinations
-    .map((id) => LOCATIONS.find((loc) => loc.id === id))
-    .filter((loc): loc is MapLocation => !!loc);
+  // Resolve starting location object (e.g. Bandaranaike International Airport, Colombo, Negombo, etc.)
+  const startingLocObject = useMemo(() => {
+    return (
+      resolveStartingLocationObject(aiStartingLocation) ||
+      LOCATIONS.find((loc) => loc.id === "Bandaranaike International Airport (CMB)") ||
+      LOCATIONS[0]
+    );
+  }, [aiStartingLocation]);
+
+  // Unified interactive route: strictly starts from the user's selected departure point
+  const selectedRouteLocations: MapLocation[] = useMemo(() => {
+    const rawDestLocs = inputs.destinations
+      .map((id) => LOCATIONS.find((loc) => loc.id === id))
+      .filter((loc): loc is MapLocation => !!loc);
+
+    if (!startingLocObject) return rawDestLocs;
+    if (rawDestLocs.length === 0) return [startingLocObject];
+
+    // If first destination is already the starting location, use directly
+    if (rawDestLocs[0].id === startingLocObject.id) {
+      return rawDestLocs;
+    }
+
+    // Otherwise, anchor route origin to the starting location
+    return [startingLocObject, ...rawDestLocs];
+  }, [inputs.destinations, startingLocObject]);
 
   const routeLegs: RouteLeg[] = [];
   let totalRouteKm = 0;
@@ -1318,18 +1394,14 @@ export default function InteractiveTourCustomizer() {
   useEffect(() => {
     let cancelled = false;
     const loadRealRoutes = async () => {
-      const selectedLocs = inputs.destinations
-        .map((id) => LOCATIONS.find((loc) => loc.id === id))
-        .filter((loc): loc is MapLocation => !!loc);
-
-      if (selectedLocs.length < 2) {
+      if (selectedRouteLocations.length < 2) {
         setRealLegsData([]);
         return;
       }
 
       const promises: Promise<RealRoadLegResult>[] = [];
-      for (let i = 0; i < selectedLocs.length - 1; i++) {
-        promises.push(fetchRealRoadRoute(selectedLocs[i], selectedLocs[i + 1]));
+      for (let i = 0; i < selectedRouteLocations.length - 1; i++) {
+        promises.push(fetchRealRoadRoute(selectedRouteLocations[i], selectedRouteLocations[i + 1]));
       }
 
       const results = await Promise.all(promises);
@@ -1342,9 +1414,9 @@ export default function InteractiveTourCustomizer() {
     return () => {
       cancelled = true;
     };
-  }, [inputs.destinations]);
+  }, [selectedRouteLocations]);
 
-  const activeLegs = realLegsData.length > 0 && realLegsData.length === inputs.destinations.length - 1
+  const activeLegs = realLegsData.length > 0 && realLegsData.length === selectedRouteLocations.length - 1
     ? realLegsData.map((rl) => ({
         from: rl.from,
         to: rl.to,
@@ -1466,17 +1538,25 @@ export default function InteractiveTourCustomizer() {
     LOCATIONS.forEach((loc) => {
       const marker = markersRef.current[loc.id];
       if (!marker) return;
-      const orderIdx = inputs.destinations.indexOf(loc.id);
-      const isSelected = orderIdx !== -1;
+
+      const routeIdx = selectedRouteLocations.findIndex((l) => l.id === loc.id);
+      const isRouteOrigin = routeIdx === 0;
+      const isSelected = routeIdx !== -1 || inputs.destinations.includes(loc.id);
+
+      let pinHtml = `<div class="itc-pin"></div>`;
+      if (isRouteOrigin) {
+        pinHtml = `<div class="itc-pin sel start-pin" style="background: linear-gradient(135deg, #0284C7, #0369A1); border: 2.5px solid #E0F2FE; box-shadow: 0 4px 18px rgba(2, 132, 199, 0.6);"><span style="font-size: 13px;">🛫</span><i class="itc-pin-pulse" style="border-color: #38BDF8;"></i></div>`;
+      } else if (isSelected) {
+        const stopLabel = routeIdx > 0 ? routeIdx : inputs.destinations.indexOf(loc.id) + 1;
+        pinHtml = `<div class="itc-pin sel"><span>${stopLabel}</span><i class="itc-pin-pulse"></i></div>`;
+      }
 
       marker.setIcon(
         L.divIcon({
           className: "itc-pin-wrap",
-          html: isSelected
-            ? `<div class="itc-pin sel"><span>${orderIdx + 1}</span><i class="itc-pin-pulse"></i></div>`
-            : `<div class="itc-pin"></div>`,
-          iconSize: [30, 30],
-          iconAnchor: [15, 15],
+          html: pinHtml,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
           popupAnchor: [0, -14],
         })
       );
@@ -1487,28 +1567,32 @@ export default function InteractiveTourCustomizer() {
         if (content) {
           const btn = content.querySelector("button");
           if (btn) {
-            btn.innerText = isSelected ? t("removeFromRoute") : t("addToRoute");
-            btn.style.cssText =
-              "margin-top:10px;padding:8px 0;width:100%;border:none;border-radius:12px;font-weight:800;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;";
-            if (isSelected) {
-              btn.style.background = "#FFF1E9";
-              btn.style.color = "#E05A1A";
-              btn.style.border = "1px solid #FFD9C4";
+            if (isRouteOrigin) {
+              btn.innerText = "🛫 Trip Departure Point";
+              btn.style.cssText =
+                "margin-top:10px;padding:8px 0;width:100%;border:none;border-radius:12px;font-weight:800;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:default;font-family:'Inter',sans-serif;background:#E0F2FE;color:#0284C7;border:1px solid #BAE6FD;";
+              btn.onclick = null;
             } else {
-              btn.style.background = "linear-gradient(100deg,#FF8B50,#FF6B2C)";
-              btn.style.color = "#fff";
-              btn.style.boxShadow = "0 8px 20px -8px rgba(255,139,80,.7)";
+              btn.innerText = isSelected ? t("removeFromRoute") : t("addToRoute");
+              btn.style.cssText =
+                "margin-top:10px;padding:8px 0;width:100%;border:none;border-radius:12px;font-weight:800;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;";
+              if (isSelected) {
+                btn.style.background = "#FFF1E9";
+                btn.style.color = "#E05A1A";
+                btn.style.border = "1px solid #FFD9C4";
+              } else {
+                btn.style.background = "linear-gradient(100deg,#FF8B50,#FF6B2C)";
+                btn.style.color = "#fff";
+                btn.style.boxShadow = "0 8px 20px -8px rgba(255,139,80,.7)";
+              }
+              btn.onclick = () => handleToggleLocation(loc.id);
             }
-            btn.onclick = () => handleToggleLocation(loc.id);
           }
         }
       }
     });
 
-    const selectedLocs = inputs.destinations
-      .map((id) => LOCATIONS.find((loc) => loc.id === id))
-      .filter((loc): loc is MapLocation => !!loc);
-    const selectedCoords = selectedLocs.map((loc) => [loc.lat, loc.lng] as [number, number]);
+    const selectedCoords = selectedRouteLocations.map((loc) => [loc.lat, loc.lng] as [number, number]);
     const allRoadCoords: [number, number][] = activeLegs.flatMap((leg) => leg.pathCoords);
 
     if (polylineRef.current) {
@@ -1526,10 +1610,11 @@ export default function InteractiveTourCustomizer() {
       const mid = path[midIdx] || calculateMidpoint(leg.from.lat, leg.from.lng, leg.to.lat, leg.to.lng);
 
       if (mapRef.current) {
+        const isFromStart = i === 0 && startingLocObject && leg.from.id === startingLocObject.id;
         const badgeIcon = L.divIcon({
           className: "itc-route-leg-midpoint-badge",
-          html: `<div style="background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(8px); color: #FFFFFF; border: 1.5px solid #FF8B50; padding: 4px 10px; border-radius: 12px; font-size: 10px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 6px 18px rgba(0,0,0,0.4); font-family: 'Inter', sans-serif; white-space: nowrap;">
-            <span style="color: #FF8B50; font-size: 12px;">${leg.direction.arrow}</span>
+          html: `<div style="background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(8px); color: #FFFFFF; border: 1.5px solid ${isFromStart ? "#38BDF8" : "#FF8B50"}; padding: 4px 10px; border-radius: 12px; font-size: 10px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 6px 18px rgba(0,0,0,0.4); font-family: 'Inter', sans-serif; white-space: nowrap;">
+            <span style="color: ${isFromStart ? "#38BDF8" : "#FF8B50"}; font-size: 12px;">${leg.direction.arrow}</span>
             <span>Leg ${i + 1}: ${leg.distanceKm} km</span>
             <span style="color: #94A3B8; font-size: 9px;">(${leg.direction.code})</span>
           </div>`,
@@ -1539,8 +1624,8 @@ export default function InteractiveTourCustomizer() {
         const badgeMarker = L.marker(mid, { icon: badgeIcon, zIndexOffset: 450 }).addTo(mapRef.current);
         badgeMarker.bindPopup(`
           <div style="font-family:'Inter',sans-serif; padding: 4px; color: #334155;">
-            <div style="font-size: 10px; font-weight: 800; color: #FF8B50; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">
-              Leg ${i + 1} Real Road Path
+            <div style="font-size: 10px; font-weight: 800; color: ${isFromStart ? "#0284C7" : "#FF8B50"}; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">
+              ${isFromStart ? "🛫 Departure Leg 1" : `Leg ${i + 1}`} Real Road Path
             </div>
             <div style="font-size: 13px; font-weight: 800; color: #0F172A; margin-bottom: 6px;">
               ${leg.from.name} ${leg.direction.arrow} ${leg.to.name}
@@ -1564,7 +1649,7 @@ export default function InteractiveTourCustomizer() {
         /* noop */
       }
     }
-  }, [activeLegs, inputs.destinations, mapLoaded, t, handleToggleLocation]);
+  }, [activeLegs, selectedRouteLocations, startingLocObject, mapLoaded, t, handleToggleLocation]);
 
   /* Helper to apply structured 4-agent output to InteractiveTourCustomizer state */
   const handleApplyAgentResult = (data: FullAgentPipelineResult) => {
@@ -1638,10 +1723,11 @@ export default function InteractiveTourCustomizer() {
 
     // Pan and fly Leaflet map immediately to the resolved destinations!
     if (mapRef.current && leafletLibRef.current && finalDests.length > 0) {
-      const targetCoords = finalDests
-        .map((id) => LOCATIONS.find((l) => l.id === id))
-        .filter((l): l is MapLocation => Boolean(l))
-        .map((l) => [l.lat, l.lng] as [number, number]);
+      const targetLocations = [
+        ...(startingLocObject && !finalDests.includes(startingLocObject.id) ? [startingLocObject] : []),
+        ...finalDests.map((id) => LOCATIONS.find((l) => l.id === id)).filter((l): l is MapLocation => Boolean(l)),
+      ];
+      const targetCoords = targetLocations.map((l) => [l.lat, l.lng] as [number, number]);
       if (targetCoords.length > 0) {
         try {
           const bounds = leafletLibRef.current.latLngBounds(targetCoords);
@@ -2293,7 +2379,17 @@ export default function InteractiveTourCustomizer() {
                                   <EnvironmentOutlined className="text-[#E05A1A]" /> Sequential Route:
                                 </span>
                                 <div className="flex items-center gap-1 flex-wrap">
-                                  {promptDetectedDests.map((dest, i) => (
+                                  {startingLocObject && (
+                                    <>
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-sky-50 border border-sky-300 text-[#0284C7] font-extrabold text-[11px] shadow-2xs">
+                                        <span className="text-[10px]">🛫</span>
+                                        <span>{startingLocObject.name}</span>
+                                        <span className="text-[8px] uppercase tracking-wider bg-sky-200/60 px-1 py-0.2 rounded font-black text-sky-800">Start</span>
+                                      </span>
+                                      <span className="text-sky-400 font-black text-xs">➔</span>
+                                    </>
+                                  )}
+                                  {promptDetectedDests.filter((d) => !startingLocObject || d !== startingLocObject.id).map((dest, i) => (
                                     <React.Fragment key={dest}>
                                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-orange-200 text-[#E05A1A] font-extrabold text-[11px] shadow-2xs">
                                         <span className="w-3.5 h-3.5 rounded-full bg-[#E05A1A] text-white text-[9px] flex items-center justify-center font-black">
@@ -2301,7 +2397,7 @@ export default function InteractiveTourCustomizer() {
                                         </span>
                                         {dest}
                                       </span>
-                                      {i < promptDetectedDests.length - 1 && (
+                                      {i < promptDetectedDests.filter((d) => !startingLocObject || d !== startingLocObject.id).length - 1 && (
                                         <span className="text-orange-400 font-black text-xs">➔</span>
                                       )}
                                     </React.Fragment>
@@ -2311,11 +2407,12 @@ export default function InteractiveTourCustomizer() {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  if (mapRef.current && leafletLibRef.current && promptDetectedDests.length > 0) {
-                                    const coords = promptDetectedDests
-                                      .map((id) => LOCATIONS.find((l) => l.id === id))
-                                      .filter((l): l is MapLocation => Boolean(l))
-                                      .map((l) => [l.lat, l.lng] as [number, number]);
+                                  if (mapRef.current && leafletLibRef.current && (promptDetectedDests.length > 0 || startingLocObject)) {
+                                    const allTargetDests = [
+                                      ...(startingLocObject ? [startingLocObject] : []),
+                                      ...promptDetectedDests.map((id) => LOCATIONS.find((l) => l.id === id)).filter((l): l is MapLocation => Boolean(l)),
+                                    ];
+                                    const coords = allTargetDests.map((l) => [l.lat, l.lng] as [number, number]);
                                     if (coords.length > 0) {
                                       const bounds = leafletLibRef.current.latLngBounds(coords);
                                       mapRef.current.flyToBounds(bounds.pad(0.35), { duration: 0.9, maxZoom: 9 });
@@ -2650,18 +2747,57 @@ export default function InteractiveTourCustomizer() {
 
             {/* active route ribbon */}
             <div className="mt-5 pt-5 border-t border-[#F3EBDE]">
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#B5AC9A]">{t("activeRoute")}</span>
-              <div className="itc-scroll flex items-center gap-2 mt-3 overflow-x-auto pb-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#B5AC9A]">{t("activeRoute")}</span>
+                {startingLocObject && (
+                  <span className="text-[10px] font-bold text-[#0284C7] bg-[#E0F2FE] border border-[#BAE6FD] px-2.5 py-0.5 rounded-full">
+                    🛫 Starts at: {startingLocObject.name}
+                  </span>
+                )}
+              </div>
+              <div className="itc-scroll flex items-center gap-2 mt-2 overflow-x-auto pb-2">
                 <AnimatePresence>
-                  {inputs.destinations.map((d, i) => (
-                    <motion.div key={d} layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ type: "spring", stiffness: 380, damping: 26 }} className="flex items-center gap-2 shrink-0">
-                      <span className="itc-glass flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-black text-[#44403C] shadow-sm">
-                        <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[#FF8B50] to-[#FF6B2C] text-white text-[9px] font-black flex items-center justify-center">{i + 1}</span>
-                        {d}
-                      </span>
-                      {i < inputs.destinations.length - 1 && <span className="text-[#FF8B50] font-black">→</span>}
-                    </motion.div>
-                  ))}
+                  {selectedRouteLocations.map((loc, i) => {
+                    const isStart = i === 0;
+                    return (
+                      <motion.div
+                        key={`${loc.id}-${i}`}
+                        layout
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ type: "spring", stiffness: 380, damping: 26 }}
+                        className="flex items-center gap-2 shrink-0"
+                      >
+                        <span
+                          className={`itc-glass flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-black shadow-sm ${
+                            isStart
+                              ? "text-[#0369A1] border-[#BAE6FD] bg-gradient-to-r from-[#F0F9FF] to-[#E0F2FE]"
+                              : "text-[#44403C]"
+                          }`}
+                        >
+                          <span
+                            className={`w-5 h-5 rounded-full text-white text-[9px] font-black flex items-center justify-center ${
+                              isStart
+                                ? "bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] shadow-sm"
+                                : "bg-gradient-to-br from-[#FF8B50] to-[#FF6B2C]"
+                            }`}
+                          >
+                            {isStart ? "🛫" : i}
+                          </span>
+                          <span>{loc.name}</span>
+                          {isStart && (
+                            <span className="text-[8px] font-black uppercase tracking-wider text-[#0284C7] bg-white/80 px-1.5 py-0.5 rounded">
+                              Start
+                            </span>
+                          )}
+                        </span>
+                        {i < selectedRouteLocations.length - 1 && (
+                          <span className="text-[#FF8B50] font-black">→</span>
+                        )}
+                      </motion.div>
+                    );
+                  })}
                 </AnimatePresence>
               </div>
             </div>
@@ -3892,6 +4028,8 @@ const ITC_CSS = `
 .itc-pin { position:relative; width:15px; height:15px; border-radius:9999px; background:#fff; border:2.5px solid #FF8B50; box-shadow:0 2px 8px rgba(255,107,44,.4); margin:7px; transition:transform .2s; }
 .itc-pin:hover { transform:scale(1.25); }
 .itc-pin.sel { width:30px; height:30px; margin:0; background:linear-gradient(135deg,#FF8B50,#FF6B2C); border:2.5px solid #fff; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px; font-family:'Inter',sans-serif; box-shadow:0 4px 14px rgba(255,107,44,.5); }
+.itc-pin.sel.start-pin { width:32px; height:32px; background:linear-gradient(135deg,#0284C7,#0369A1) !important; border:2.5px solid #E0F2FE !important; box-shadow:0 4px 18px rgba(2,132,199,.6) !important; }
+.itc-pin.sel.start-pin .itc-pin-pulse { border-color:#38BDF8 !important; }
 .itc-pin-pulse { position:absolute; inset:-8px; border-radius:9999px; border:2px solid #FF8B50; opacity:.5; animation:itcPulse 2s ease-out infinite; pointer-events:none; }
 @keyframes itcPulse { 0% { transform:scale(.5); opacity:.75; } 100% { transform:scale(1.35); opacity:0; } }
 
