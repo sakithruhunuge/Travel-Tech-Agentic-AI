@@ -1441,7 +1441,7 @@ export default function InteractiveTourCustomizer() {
         budgetHint: Math.round(pricing.totalPrice || 600),
         travelersHint: inputs.numberOfTravelers,
         interestsHint: detectedDests.length > 0 ? ["culture", "sightseeing", "beach"] : ["culture", "beaches"],
-        allowFallback: false,
+        allowFallback: true,
         onProgress: (step, label) => {
           setActiveAgentStep(step);
           if (label) setAgentStepLabel(label);
