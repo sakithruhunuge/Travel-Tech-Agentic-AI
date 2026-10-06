@@ -110,15 +110,20 @@ def _build_user_message(curated_data: Dict[str, Any], user_params: Dict[str, Any
         interests_str = str(interests)
     custom_vibe = user_params.get("custom_vibe", "Authentic, relaxing, and memorable")
 
+    destinations_list = user_params.get("destinations") or ([destination] if destination else ["Sri Lanka"])
+    destinations_str = " ➔ ".join(destinations_list)
+
     user_summary = (
         f"USER TRAVEL PARAMETERS:\n"
-        f"- Destination: {destination}\n"
+        f"- Primary Destination: {destination}\n"
+        f"- Ordered Multi-Stop Route: {destinations_str}\n"
         f"- Duration: {duration_days} Day(s)\n"
         f"- Travel Dates: {travel_dates}\n"
         f"- Total Budget: ${budget_usd}\n"
         f"- Party Size: {party_size} traveler(s)\n"
         f"- Preferred Interests: {interests_str}\n"
         f"- Travel Vibe & Preferences: {custom_vibe}\n"
+        f"Please sequence the days across the user's requested route: {destinations_str}.\n"
     )
 
     # b) curated_data["hotels"] (top 3) formatted as a numbered list with key fields
@@ -193,6 +198,8 @@ def _build_user_message(curated_data: Dict[str, Any], user_params: Dict[str, Any
 def _generate_template_itinerary(curated_data: dict, user_params: dict) -> str:
     """Deterministic fallback synthesis following exact SYSTEM_PROMPT format."""
     destination = user_params.get("destination", "Sri Lanka")
+    destinations = user_params.get("destinations") or ([destination] if destination else ["Sri Lanka"])
+    destinations_str = " ➔ ".join(destinations)
     duration = int(user_params.get("duration_days") or user_params.get("duration") or 5)
     party_size = int(user_params.get("party_size") or user_params.get("travellers") or 2)
     budget = user_params.get("budget_max_usd") or user_params.get("budget") or 500.0
@@ -211,28 +218,31 @@ def _generate_template_itinerary(curated_data: dict, user_params: dict) -> str:
     activities_total = round(len(pois) * 8.0, 2)
 
     lines = [
-        f"# 🌴 Your Sri Lanka Itinerary: {destination} ({duration} Days)\n",
+        f"# 🌴 Your Sri Lanka Itinerary: {destinations_str} ({duration} Days)\n",
         "## Overview",
-        f"Welcome to your handcrafted {duration}-day journey through {destination}! Specially tailored for {party_size} traveler{'s' if party_size > 1 else ''} with a focus on {interests_str}, this plan balances iconic landmarks, leisure, and memorable local dining perfectly aligned with your ${budget} budget.\n",
+        f"Welcome to your handcrafted {duration}-day journey across {destinations_str}! Specially tailored for {party_size} traveler{'s' if party_size > 1 else ''} with a focus on {interests_str}, this plan balances iconic landmarks, leisure, and memorable local dining perfectly aligned with your ${budget} budget.\n",
         "---\n",
     ]
 
-    # Day-by-day plan
+    # Day-by-day plan distributed across requested multi-destinations
     for day in range(1, duration + 1):
-        poi_morning = pois[(day * 2 - 2) % len(pois)] if pois else {"name": f"{destination} Coastal Promenade"}
-        poi_afternoon = pois[(day * 2 - 1) % len(pois)] if pois else {"name": f"Historic {destination} Quarters"}
+        dest_idx = min(int((day - 1) * len(destinations) / duration), len(destinations) - 1)
+        current_dest = destinations[dest_idx]
 
-        m_name = poi_morning.get("name", "Local Sightseeing")
-        a_name = poi_afternoon.get("name", "Cultural Exploration")
+        poi_morning = pois[(day * 2 - 2) % len(pois)] if pois else {"name": f"{current_dest} Highlights"}
+        poi_afternoon = pois[(day * 2 - 1) % len(pois)] if pois else {"name": f"Historic {current_dest} Quarters"}
+
+        m_name = poi_morning.get("name", f"{current_dest} Sightseeing")
+        a_name = poi_afternoon.get("name", f"{current_dest} Exploration")
 
         day_cost = round((hotel_price + 25.0) / max(party_size, 1), 1)
 
         lines.extend([
-            f"## Day {day}: Exploring {m_name} & Heritage Trails",
-            f"**🌅 Morning:** Visit **{m_name}** to enjoy comfortable morning temperatures and stunning vistas matching your love for {interests_str}.",
-            f"**☀️ Afternoon:** Head over to **{a_name}** (~2-3 hours). Experience the local charm, authentic street food, and vibrant crafts.",
-            f"**🌙 Evening:** Savor freshly caught seafood and tropical refreshments at a seaside bistro while watching the sun set over the Indian Ocean.",
-            f"**🏨 Tonight's Stay:** **{hotel_name}** — Selected for its prime proximity to attractions and outstanding value at ${hotel_price:.0f}/night.",
+            f"## Day {day}: {current_dest} — Exploring {m_name} & Heritage Trails",
+            f"**🌅 Morning:** Visit **{m_name}** in {current_dest} to enjoy comfortable morning temperatures and stunning vistas matching your love for {interests_str}.",
+            f"**☀️ Afternoon:** Head over to **{a_name}** (~2-3 hours). Experience the local charm, authentic street food, and vibrant crafts of {current_dest}.",
+            f"**🌙 Evening:** Savor freshly prepared local delicacies and tropical refreshments at a scenic bistro while soaking up the evening ambiance of {current_dest}.",
+            f"**🏨 Tonight's Stay:** **{hotel_name}** ({current_dest}) — Selected for its prime proximity to attractions and outstanding value at ${hotel_price:.0f}/night.",
             f"**💰 Estimated Day Cost:** ~${day_cost} per person\n",
         ])
 

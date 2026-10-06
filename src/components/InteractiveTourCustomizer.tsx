@@ -157,20 +157,177 @@ export const BASE_TOURS = [
 ];
 
 /**
+ * Common typo and phonetic alias map for Sri Lankan destinations.
+ * Allows conversational inputs like "kany" -> "Kandy", "colambo" -> "Colombo", "gale" -> "Galle".
+ */
+export const DESTINATION_TYPO_MAP: Record<string, string> = {
+  // Kandy
+  kany: "Kandy",
+  kandi: "Kandy",
+  kande: "Kandy",
+  kandee: "Kandy",
+  kandie: "Kandy",
+  kandyy: "Kandy",
+  kendy: "Kandy",
+  candy: "Kandy",
+  mahanuwara: "Kandy",
+  "maha nuwara": "Kandy",
+
+  // Colombo
+  colambo: "Colombo",
+  columbo: "Colombo",
+  kolombo: "Colombo",
+  kolambo: "Colombo",
+
+  // Galle
+  gal: "Galle",
+  gale: "Galle",
+  gaale: "Galle",
+  gall: "Galle",
+  "galle fort": "Galle",
+  gallefort: "Galle",
+
+  // Nuwara Eliya
+  nuwara: "Nuwara Eliya",
+  nuwaraeliya: "Nuwara Eliya",
+  "nuwera eliya": "Nuwara Eliya",
+  nuwareliya: "Nuwara Eliya",
+  "little england": "Nuwara Eliya",
+
+  // Sigiriya
+  sigiri: "Sigiriya",
+  sigirya: "Sigiriya",
+  seegiriya: "Sigiriya",
+  seegiri: "Sigiriya",
+  "lion rock": "Sigiriya",
+
+  // Dambulla
+  dambula: "Dambulla",
+  dambulle: "Dambulla",
+  "dambulla cave": "Dambulla",
+
+  // Ella
+  ela: "Ella",
+  ellla: "Ella",
+  "nine arch": "Ella",
+
+  // Mirissa
+  mirisa: "Mirissa",
+  merissa: "Mirissa",
+
+  // Bentota
+  benthota: "Bentota",
+  bentotta: "Bentota",
+
+  // Yala
+  yalla: "Yala",
+
+  // Negombo
+  negambo: "Negombo",
+
+  // Anuradhapura
+  anuradapura: "Anuradhapura",
+  anuradhapuraya: "Anuradhapura",
+
+  // Polonnaruwa
+  polonnaru: "Polonnaruwa",
+  pulathisipura: "Polonnaruwa",
+
+  // Trincomalee
+  trinco: "Trincomalee",
+  trincomale: "Trincomalee",
+
+  // Arugam Bay
+  arugam: "Arugam Bay",
+  arugambay: "Arugam Bay",
+
+  // Weligama
+  welgama: "Weligama",
+  weligame: "Weligama",
+
+  // Unawatuna
+  unawatune: "Unawatuna",
+  unawathuna: "Unawatuna",
+
+  // Hikkaduwa
+  hikkaduwe: "Hikkaduwa",
+  hikkaduva: "Hikkaduwa",
+
+  // Tangalle
+  tangale: "Tangalle",
+  tangalla: "Tangalle",
+
+  // Udawalawe
+  udawalawa: "Udawalawe",
+  "uda walawe": "Udawalawe",
+
+  // Wilpattu
+  wilpaththu: "Wilpattu",
+
+  // Sinharaja
+  singharaja: "Sinharaja",
+
+  // Horton Plains
+  "hortan plains": "Horton Plains",
+  "worlds end": "Horton Plains",
+
+  // Knuckles Range
+  knukles: "Knuckles Range",
+  knuckles: "Knuckles Range",
+
+  // Pinnawala
+  pinnawale: "Pinnawala",
+  "elephant orphanage": "Pinnawala",
+};
+
+/**
+ * Fast Levenshtein distance calculation for fuzzy token matching.
+ */
+function calcLevenshtein(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  if (Math.abs(m - n) > 2) return 99;
+  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] =
+        a[i - 1] === b[j - 1]
+          ? dp[i - 1][j - 1]
+          : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+  return dp[m][n];
+}
+
+/**
  * Extracts recognized Sri Lanka destinations from free-form user prompt text.
- * Preserves the order in which the destinations are mentioned.
+ * Preserves the exact chronological sequence the user mentions (e.g. "first kany then galle finally colombo").
+ * Employs typo tolerance & Levenshtein distance fallback.
  */
 export function extractDestinationsFromPrompt(text: string): string[] {
   if (!text) return [];
   const textLower = text.toLowerCase();
   const matchedWithIndex: { id: string; index: number }[] = [];
 
-  // Recognize Airport / Katunayake / CMB
-  if (/\b(airport|cmb|katunayake|bandaranaike)\b/i.test(textLower)) {
-    const idx = textLower.search(/\b(airport|cmb|katunayake|bandaranaike)\b/i);
-    matchedWithIndex.push({ id: "Bandaranaike International Airport (CMB)", index: idx });
+  const addMatch = (destId: string, idx: number) => {
+    const canonical = LOCATIONS.find((l) => l.id.toLowerCase() === destId.toLowerCase() || l.name.toLowerCase() === destId.toLowerCase())?.id || destId;
+    const existing = matchedWithIndex.find((m) => m.id === canonical);
+    if (!existing) {
+      matchedWithIndex.push({ id: canonical, index: idx });
+    } else if (idx < existing.index) {
+      existing.index = idx;
+    }
+  };
+
+  // 1. Recognize Airport / Katunayake / CMB
+  if (/\b(airport|katunayake|bandaranaike)\b/i.test(textLower)) {
+    const idx = textLower.search(/\b(airport|katunayake|bandaranaike)\b/i);
+    addMatch("Bandaranaike International Airport (CMB)", idx);
   }
 
+  // 2. Exact match against canonical LOCATIONS
   LOCATIONS.forEach((loc) => {
     const nameLower = loc.name.toLowerCase();
     const idLower = loc.id.toLowerCase();
@@ -179,20 +336,136 @@ export function extractDestinationsFromPrompt(text: string): string[] {
     const match = regex.exec(textLower);
 
     if (match) {
-      const idx = match.index;
-      if (!matchedWithIndex.some((m) => m.id === loc.id)) {
-        matchedWithIndex.push({ id: loc.id, index: idx });
-      }
+      addMatch(loc.id, match.index);
     } else if (textLower.includes(idLower)) {
-      const idx = textLower.indexOf(idLower);
-      if (!matchedWithIndex.some((m) => m.id === loc.id)) {
-        matchedWithIndex.push({ id: loc.id, index: idx });
-      }
+      addMatch(loc.id, textLower.indexOf(idLower));
     }
   });
 
+  // 3. Typo and phonetic alias lookup (handles "kany", "colambo", "gale", etc.)
+  Object.entries(DESTINATION_TYPO_MAP).forEach(([alias, canonical]) => {
+    const escaped = alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, "gi");
+    let m: RegExpExecArray | null;
+    while ((m = regex.exec(textLower)) !== null) {
+      addMatch(canonical, m.index);
+    }
+  });
+
+  // 4. Fuzzy Levenshtein scan for single-word prompt tokens (distance <= 1)
+  const wordsRegex = /\b[a-z]{4,}\b/g;
+  let wordMatch: RegExpExecArray | null;
+  const commonStopWords = new Set([
+    "first", "then", "finally", "after", "before", "want", "went", "like", "love",
+    "need", "from", "with", "into", "stay", "visit", "trip", "tour", "travel",
+    "hotel", "beach", "city", "days", "night", "nights", "will", "would", "could",
+    "some", "good", "best", "more", "also", "next", "last", "start", "depart"
+  ]);
+
+  while ((wordMatch = wordsRegex.exec(textLower)) !== null) {
+    const token = wordMatch[0];
+    if (commonStopWords.has(token)) continue;
+
+    for (const loc of LOCATIONS) {
+      const targetWord = loc.id.toLowerCase().split(" ")[0];
+      if (
+        Math.abs(token.length - targetWord.length) <= 1 &&
+        calcLevenshtein(token, targetWord) <= 1
+      ) {
+        addMatch(loc.id, wordMatch.index);
+        break;
+      }
+    }
+  }
+
   matchedWithIndex.sort((a, b) => a.index - b.index);
   return matchedWithIndex.map((m) => m.id);
+}
+
+export interface DetectedVibe {
+  id: string;
+  label: string;
+  icon: string;
+}
+
+export const KNOWN_VIBES: { id: string; label: string; icon: string; regex: RegExp }[] = [
+  { id: "beach", label: "Beach & Coastal", icon: "🏖️", regex: /\b(beach|beaches|coast|coastal|ocean|sea|surf|surfing|snorkel|snorkeling|scuba)\b/i },
+  { id: "culture", label: "Culture & Heritage", icon: "🏛️", regex: /\b(culture|cultural|history|historical|heritage|temple|temples|fort|ruins|ancient|buddha)\b/i },
+  { id: "nature", label: "Nature & Highlands", icon: "🌿", regex: /\b(nature|waterfall|waterfalls|hills|tea|mountain|mountains|valley|forest|scenic)\b/i },
+  { id: "safari", label: "Wildlife Safari", icon: "🐆", regex: /\b(wildlife|safari|leopard|leopards|elephant|elephants|whale|whales|birds|yala|udawalawe)\b/i },
+  { id: "adventure", label: "Adventure & Hiking", icon: "🧗", regex: /\b(adventure|hiking|hike|trek|trekking|rafting|camp|camping|zipline)\b/i },
+  { id: "train", label: "Scenic Train", icon: "🚂", regex: /\b(train|railway|rail|nine arch|train ride)\b/i },
+  { id: "food", label: "Food & Culinary", icon: "🍲", regex: /\b(food|cuisine|culinary|dining|seafood|street food|curry|spices)\b/i },
+  { id: "wellness", label: "Wellness & Relax", icon: "🧘", regex: /\b(relax|relaxing|relaxation|wellness|ayurveda|spa|peaceful|quiet|serene|calm)\b/i },
+  { id: "romance", label: "Romance & Honeymoon", icon: "❤️", regex: /\b(romantic|romance|honeymoon|couple)\b/i },
+  { id: "luxury", label: "Luxury & Boutique", icon: "💎", regex: /\b(luxury|5[- ]?star|boutique|villa|resort|premium|high[- ]end)\b/i },
+  { id: "budget", label: "Smart Budget", icon: "🎒", regex: /\b(budget|cheap|affordable|backpacker|hostel|low[- ]?cost)\b/i },
+  { id: "nightlife", label: "Nightlife & City", icon: "🌆", regex: /\b(nightlife|bars?|clubs?|party|city|urban|shopping)\b/i },
+];
+
+export function extractVibesFromPrompt(text: string): DetectedVibe[] {
+  if (!text) return [];
+  return KNOWN_VIBES
+    .filter((v) => v.regex.test(text))
+    .map(({ id, label, icon }) => ({ id, label, icon }));
+}
+
+export interface DetectedPreference {
+  key: string;
+  label: string;
+  value: string;
+  icon: string;
+}
+
+export function extractPreferencesFromPrompt(text: string): DetectedPreference[] {
+  if (!text) return [];
+  const prefs: DetectedPreference[] = [];
+
+  // Duration
+  const durMatch = text.match(/\b(\d+)\s*(?:-|–)?\s*(?:day|days|night|nights)\b/i);
+  if (durMatch) {
+    prefs.push({ key: "duration", label: "Duration", value: `${durMatch[1]} Days`, icon: "⏱️" });
+  } else if (/\b1\s*week\b/i.test(text)) {
+    prefs.push({ key: "duration", label: "Duration", value: "7 Days (1 Week)", icon: "⏱️" });
+  } else if (/\b2\s*weeks\b/i.test(text)) {
+    prefs.push({ key: "duration", label: "Duration", value: "14 Days (2 Weeks)", icon: "⏱️" });
+  }
+
+  // Budget
+  const budgetMatch = text.match(/(?:\$|usd\s*)\s*(\d+(?:\.\d+)?)/i) || text.match(/\bbudget\s*(?:of|is|:)?\s*\$?(\d+)/i);
+  if (budgetMatch) {
+    prefs.push({ key: "budget", label: "Budget", value: `$${budgetMatch[1]}`, icon: "💰" });
+  }
+
+  // Travelers / Party
+  const partyMatch = text.match(/\bfamily\s+of\s+(\d+)\b/i);
+  if (partyMatch) {
+    prefs.push({ key: "party", label: "Party", value: `Family of ${partyMatch[1]}`, icon: "👨‍👩‍👧‍👦" });
+  } else if (/\bcouple\b/i.test(text)) {
+    prefs.push({ key: "party", label: "Party", value: "Couple (2 Travelers)", icon: "👫" });
+  } else if (/\bsolo\b/i.test(text)) {
+    prefs.push({ key: "party", label: "Party", value: "Solo Traveler", icon: "🎒" });
+  } else {
+    const adultsMatch = text.match(/\b(\d+)\s*(?:people|persons|travelers|travellers|guests|adults)\b/i);
+    if (adultsMatch) {
+      prefs.push({ key: "party", label: "Party", value: `${adultsMatch[1]} Travelers`, icon: "👥" });
+    }
+  }
+
+  // Hotel class
+  if (/\b(5[- ]star|luxury|boutique|villa|resort)\b/i.test(text)) {
+    const hit = text.match(/\b(5[- ]star|luxury|boutique|villa|resort)\b/i)![0];
+    prefs.push({ key: "stay", label: "Stay", value: hit.charAt(0).toUpperCase() + hit.slice(1), icon: "🏨" });
+  }
+
+  // Transport
+  if (/\b(private driver|private car|driver|chauffeur)\b/i.test(text)) {
+    prefs.push({ key: "transport", label: "Transport", value: "Private Driver", icon: "🚗" });
+  } else if (/\btrain\b/i.test(text)) {
+    prefs.push({ key: "transport", label: "Transport", value: "Scenic Train", icon: "🚂" });
+  }
+
+  return prefs;
 }
 
 export interface StartingLocationPreset {
@@ -220,6 +493,41 @@ const SPOTLIGHTS = [
   { id: "Yala", img: "/images/yala.png", tag: "Wild Safari", title: "Yala Leopard Kingdom", blurb: "The highest density of wild leopards on Earth, at golden-hour jeep range." },
   { id: "Galle", img: "/images/galle.png", tag: "Colonial Charm", title: "Galle Dutch Fort", blurb: "Cobblestone ramparts, sunset walks and boutique café culture since 1663." },
   { id: "Mirissa", img: "/images/mirissa.png", tag: "Ocean Wonder", title: "Mirissa Blue Waters", blurb: "Sail at dawn for blue whales, then dine barefoot on the golden sand." },
+];
+
+const QUICK_LOCATIONS = [
+  "Kandy",
+  "Galle",
+  "Colombo",
+  "Sigiriya",
+  "Ella",
+  "Mirissa",
+  "Nuwara Eliya",
+  "Yala",
+  "Bentota",
+  "Trincomalee",
+];
+
+const QUICK_VIBES = [
+  { id: "beach", label: "Beach & Surf", icon: "🏖️", text: "beach" },
+  { id: "culture", label: "Culture & Temples", icon: "🏛️", text: "cultural heritage" },
+  { id: "safari", label: "Wildlife Safari", icon: "🐆", text: "wildlife safari" },
+  { id: "train", label: "Scenic Train", icon: "🚂", text: "scenic train ride" },
+  { id: "nature", label: "Tea Country", icon: "🍵", text: "tea trails" },
+  { id: "hiking", label: "Hiking & Trekking", icon: "🧗", text: "hiking" },
+  { id: "food", label: "Food & Seafood", icon: "🍲", text: "food & seafood dining" },
+  { id: "wellness", label: "Wellness & Spa", icon: "🧘", text: "relaxing wellness" },
+  { id: "luxury", label: "Boutique & Luxury", icon: "💎", text: "boutique luxury" },
+];
+
+const QUICK_PREFERENCES = [
+  { label: "5 Days", text: "5 days" },
+  { label: "7 Days", text: "7 days" },
+  { label: "Couple (2)", text: "couple" },
+  { label: "Family of 4", text: "family of 4" },
+  { label: "Budget $600", text: "budget $600" },
+  { label: "Private Driver", text: "private driver" },
+  { label: "Boutique Hotel", text: "boutique hotel" },
 ];
 
 const QUICK_CHIPS = ["beach", "Galle", "Ella", "Kandy", "Sigiriya", "Mirissa", "Yala", "Nuwara Eliya", "wildlife", "culture"];
@@ -842,28 +1150,28 @@ export default function InteractiveTourCustomizer() {
   };
 
   const promptDetectedDests = extractDestinationsFromPrompt(aiKeywords);
+  const promptDetectedVibes = extractVibesFromPrompt(aiKeywords);
+  const promptDetectedPrefs = extractPreferencesFromPrompt(aiKeywords);
 
   const handleKeywordsChange = (val: string) => {
     setAiKeywords(val);
     const detected = extractDestinationsFromPrompt(val);
     if (detected.length > 0 && selectedTour === "ai-suggested") {
       setInputs((prev) => {
-        const startLoc = LOCATIONS.find(
-          (l) => l.id.toLowerCase() === aiStartingLocation.toLowerCase() || l.name.toLowerCase() === aiStartingLocation.toLowerCase()
-        );
-        let finalDests = detected;
-        if (startLoc && !finalDests.includes(startLoc.id)) {
-          finalDests = [startLoc.id, ...finalDests];
-        }
         const isSame =
-          prev.destinations.length === finalDests.length &&
-          prev.destinations.every((d, i) => d === finalDests[i]);
+          prev.destinations.length === detected.length &&
+          prev.destinations.every((d, i) => d === detected[i]);
         if (isSame) return prev;
         return {
           ...prev,
-          destinations: finalDests,
+          destinations: detected,
         };
       });
+
+      // If user typed "first i want to go kany" or "start from ...", sync starting location
+      if (detected.length > 0 && /\b(?:first|from|start|depart)\b/i.test(val)) {
+        setAiStartingLocation(detected[0]);
+      }
     }
   };
 
@@ -874,16 +1182,13 @@ export default function InteractiveTourCustomizer() {
     const detected = extractDestinationsFromPrompt(nextVal);
     if (detected.length > 0 && selectedTour === "ai-suggested") {
       setInputs((prev) => {
-        const startLoc = LOCATIONS.find(
-          (l) => l.id.toLowerCase() === aiStartingLocation.toLowerCase() || l.name.toLowerCase() === aiStartingLocation.toLowerCase()
-        );
-        let finalDests = detected;
-        if (startLoc && !finalDests.includes(startLoc.id)) {
-          finalDests = [startLoc.id, ...finalDests];
-        }
+        const isSame =
+          prev.destinations.length === detected.length &&
+          prev.destinations.every((d, i) => d === detected[i]);
+        if (isSame) return prev;
         return {
           ...prev,
-          destinations: finalDests,
+          destinations: detected,
         };
       });
     }
@@ -1434,13 +1739,21 @@ export default function InteractiveTourCustomizer() {
       .filter(Boolean)
       .join(", ");
 
+    const detectedVibes = extractVibesFromPrompt(aiKeywords);
+    const interestsHint =
+      detectedVibes.length > 0
+        ? detectedVibes.map((v) => v.id)
+        : detectedDests.length > 0
+        ? ["culture", "sightseeing", "beach"]
+        : ["culture", "beaches"];
+
     try {
       const data = await runMultiAgentPipeline(promptMessage, {
         durationHint: aiDuration,
         destinationHint,
         budgetHint: Math.round(pricing.totalPrice || 600),
         travelersHint: inputs.numberOfTravelers,
-        interestsHint: detectedDests.length > 0 ? ["culture", "sightseeing", "beach"] : ["culture", "beaches"],
+        interestsHint,
         allowFallback: true,
         onProgress: (step, label) => {
           setActiveAgentStep(step);
@@ -1944,71 +2257,200 @@ export default function InteractiveTourCustomizer() {
                     </div>
 
                     <div className="relative mt-4">
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <label className="itc-label">{t("keywordsLabel")}</label>
-                        {promptDetectedDests.length > 0 && (
+                      <div className="flex items-center justify-between gap-2 flex-wrap mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-orange-100 text-[#E05A1A] text-xs">
+                            <BulbOutlined />
+                          </span>
+                          <label className="itc-label !mb-0">{t("keywordsLabel")} & Multi-Destinations</label>
+                        </div>
+                        {(promptDetectedDests.length > 0 || promptDetectedVibes.length > 0 || promptDetectedPrefs.length > 0) && (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            Map Synced: {promptDetectedDests.join(" ➔ ")}
+                            {promptDetectedDests.length > 0 && `${promptDetectedDests.length} ${promptDetectedDests.length === 1 ? "Stop" : "Stops"}`}
+                            {promptDetectedVibes.length > 0 && ` · ${promptDetectedVibes.length} Vibes`}
+                            {promptDetectedPrefs.length > 0 && ` · ${promptDetectedPrefs.length} Prefs`}
                           </span>
                         )}
                       </div>
+
                       <textarea
                         rows={2}
                         value={aiKeywords}
                         onChange={(e) => handleKeywordsChange(e.target.value)}
-                        placeholder="e.g. Plan a 4-day trip to Galle and Mirissa with beach, surf, boutique hotels and whale watching..."
-                        className="itc-input mt-1.5 resize-none !rounded-2xl !py-3"
+                        placeholder="e.g. first i want to go kany and then galle. finally i want to go colombo. Family of 4, budget $800, beach, cultural heritage, and boutique hotels..."
+                        className="itc-input mt-1 resize-none !rounded-2xl !py-3 font-medium text-[13px] leading-relaxed"
                       />
-                      <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
-                        <span className="text-[9px] font-black text-[#B5AC9A] uppercase tracking-[0.18em]">Quick vibes & places:</span>
-                        {QUICK_CHIPS.map((chip) => {
-                          const isLoc = LOCATIONS.some((l) => l.id.toLowerCase() === chip.toLowerCase());
-                          return (
-                            <motion.button
-                              key={chip}
-                              whileHover={{ y: -1 }}
-                              whileTap={{ scale: 0.95 }}
-                              type="button"
-                              onClick={() => handleAddKeywordChip(chip)}
-                              className={`px-3 py-1 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${
-                                isLoc
-                                  ? "bg-orange-50/80 hover:bg-orange-100 border-orange-200 text-[#E05A1A]"
-                                  : "bg-white hover:bg-[#FFF1E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
-                              }`}
-                            >
-                              <span>+ {chip}</span>
-                            </motion.button>
-                          );
-                        })}
-                      </div>
 
-                      {promptDetectedDests.length > 0 && (
-                        <div className="flex items-center justify-between gap-2 mt-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/5 border border-emerald-300/40 text-[11px] font-semibold text-emerald-900">
-                          <span className="flex items-center gap-2">
-                            <EnvironmentOutlined className="text-emerald-600 text-sm" />
-                            <span><strong>Interactive Map Active:</strong> Pinning <strong>{promptDetectedDests.join(" ➔ ")}</strong> with live road routing & driving times.</span>
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (mapRef.current && leafletLibRef.current && promptDetectedDests.length > 0) {
-                                const coords = promptDetectedDests
-                                  .map((id) => LOCATIONS.find((l) => l.id === id))
-                                  .filter((l): l is MapLocation => Boolean(l))
-                                  .map((l) => [l.lat, l.lng] as [number, number]);
-                                if (coords.length > 0) {
-                                  const bounds = leafletLibRef.current.latLngBounds(coords);
-                                  mapRef.current.flyToBounds(bounds.pad(0.35), { duration: 0.9, maxZoom: 9 });
-                                }
-                              }
-                            }}
-                            className="shrink-0 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold shadow-sm transition"
-                          >
-                            Focus on Map ➔
-                          </button>
+                      {/* Real-time AI Parameter Detection Banner */}
+                      {(promptDetectedDests.length > 0 || promptDetectedVibes.length > 0 || promptDetectedPrefs.length > 0) && (
+                        <div className="mt-2.5 p-3 rounded-2xl bg-gradient-to-br from-[#FFFBF8] to-[#FFF6EF] border border-[#FFD9C4]/70 space-y-2 shadow-2xs">
+                          {/* Sequential Route */}
+                          {promptDetectedDests.length > 0 && (
+                            <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[10px] font-black uppercase tracking-wider text-[#8A8577] flex items-center gap-1">
+                                  <EnvironmentOutlined className="text-[#E05A1A]" /> Sequential Route:
+                                </span>
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  {promptDetectedDests.map((dest, i) => (
+                                    <React.Fragment key={dest}>
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-orange-200 text-[#E05A1A] font-extrabold text-[11px] shadow-2xs">
+                                        <span className="w-3.5 h-3.5 rounded-full bg-[#E05A1A] text-white text-[9px] flex items-center justify-center font-black">
+                                          {i + 1}
+                                        </span>
+                                        {dest}
+                                      </span>
+                                      {i < promptDetectedDests.length - 1 && (
+                                        <span className="text-orange-400 font-black text-xs">➔</span>
+                                      )}
+                                    </React.Fragment>
+                                  ))}
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (mapRef.current && leafletLibRef.current && promptDetectedDests.length > 0) {
+                                    const coords = promptDetectedDests
+                                      .map((id) => LOCATIONS.find((l) => l.id === id))
+                                      .filter((l): l is MapLocation => Boolean(l))
+                                      .map((l) => [l.lat, l.lng] as [number, number]);
+                                    if (coords.length > 0) {
+                                      const bounds = leafletLibRef.current.latLngBounds(coords);
+                                      mapRef.current.flyToBounds(bounds.pad(0.35), { duration: 0.9, maxZoom: 9 });
+                                    }
+                                  }
+                                }}
+                                className="px-2.5 py-0.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-[10px] font-black tracking-wide shadow-2xs transition shrink-0"
+                              >
+                                Focus on Map ➔
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Detected Vibes */}
+                          {promptDetectedVibes.length > 0 && (
+                            <div className="flex items-center gap-1.5 flex-wrap text-xs pt-1 border-t border-orange-100/70">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-[#8A8577]">
+                                ✨ Vibes:
+                              </span>
+                              {promptDetectedVibes.map((vibe) => (
+                                <span
+                                  key={vibe.id}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-stone-200 text-[#44403C] text-[10px] font-bold"
+                                >
+                                  <span>{vibe.icon}</span>
+                                  <span>{vibe.label}</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Detected Preferences */}
+                          {promptDetectedPrefs.length > 0 && (
+                            <div className="flex items-center gap-1.5 flex-wrap text-xs pt-1 border-t border-orange-100/70">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-[#8A8577]">
+                                ⚙️ Preferences:
+                              </span>
+                              {promptDetectedPrefs.map((pref) => (
+                                <span
+                                  key={pref.key}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-stone-200 text-[#44403C] text-[10px] font-bold"
+                                >
+                                  <span>{pref.icon}</span>
+                                  <span className="text-stone-400">{pref.label}:</span>
+                                  <span className="text-stone-700">{pref.value}</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
+
+                      {/* Categorized Quick Chips */}
+                      <div className="mt-3 space-y-2">
+                        {/* Locations */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[9px] font-black text-[#B5AC9A] uppercase tracking-[0.16em] shrink-0">
+                            📍 Places:
+                          </span>
+                          {QUICK_LOCATIONS.map((locName) => {
+                            const isAlreadyInPrompt = extractDestinationsFromPrompt(aiKeywords).includes(locName);
+                            return (
+                              <motion.button
+                                key={locName}
+                                whileHover={{ y: -1 }}
+                                whileTap={{ scale: 0.95 }}
+                                type="button"
+                                onClick={() => handleAddKeywordChip(locName)}
+                                className={`px-2.5 py-0.5 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${
+                                  isAlreadyInPrompt
+                                    ? "bg-orange-100 border-orange-300 text-[#E05A1A]"
+                                    : "bg-white hover:bg-[#FFF1E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
+                                }`}
+                              >
+                                <span>{isAlreadyInPrompt ? "✓" : "+"}</span>
+                                <span>{locName}</span>
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Vibes */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[9px] font-black text-[#B5AC9A] uppercase tracking-[0.16em] shrink-0">
+                            ✨ Vibes:
+                          </span>
+                          {QUICK_VIBES.map((v) => {
+                            const isAlready = aiKeywords.toLowerCase().includes(v.text.toLowerCase());
+                            return (
+                              <motion.button
+                                key={v.id}
+                                whileHover={{ y: -1 }}
+                                whileTap={{ scale: 0.95 }}
+                                type="button"
+                                onClick={() => handleAddKeywordChip(v.text)}
+                                className={`px-2 py-0.5 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${
+                                  isAlready
+                                    ? "bg-emerald-50 border-emerald-300 text-emerald-800"
+                                    : "bg-white hover:bg-[#FFF1E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
+                                }`}
+                              >
+                                <span>{v.icon}</span>
+                                <span>{v.label}</span>
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Preferences */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[9px] font-black text-[#B5AC9A] uppercase tracking-[0.16em] shrink-0">
+                            ⚙️ Prefs:
+                          </span>
+                          {QUICK_PREFERENCES.map((p) => {
+                            const isAlready = aiKeywords.toLowerCase().includes(p.text.toLowerCase());
+                            return (
+                              <motion.button
+                                key={p.label}
+                                whileHover={{ y: -1 }}
+                                whileTap={{ scale: 0.95 }}
+                                type="button"
+                                onClick={() => handleAddKeywordChip(p.text)}
+                                className={`px-2 py-0.5 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${
+                                  isAlready
+                                    ? "bg-blue-50 border-blue-300 text-blue-800"
+                                    : "bg-white hover:bg-[#FFF1E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
+                                }`}
+                              >
+                                <span>+</span>
+                                <span>{p.label}</span>
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
 
                     <div className="relative mt-5">

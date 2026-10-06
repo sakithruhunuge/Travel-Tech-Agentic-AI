@@ -159,19 +159,18 @@ def run_agent_pipeline(raw_user_prompt: str) -> dict:
             f"Agent 4 complete | itinerary_length={len(itinerary_md)} chars | duration_s={t_agent4}"
         )
 
-        # Build list of visited destinations from prompt, Agent 1, hotels and POIs
+        # Build list of visited destinations preserving the user's ordered route sequence from Agent 1
         resolved_destinations = []
-        if primary_destination:
-            # Match canonical casing from KNOWN_LOCATIONS if possible
-            canonical = next((c for c in KNOWN_LOCATIONS if c.lower() == primary_destination.lower()), primary_destination)
-            if canonical not in resolved_destinations:
-                resolved_destinations.append(canonical)
+        agent1_dests = params.get("destinations", [])
+        if isinstance(agent1_dests, list) and agent1_dests:
+            for d in agent1_dests:
+                canonical = next((c for c in KNOWN_LOCATIONS if c.lower() == str(d).lower()), str(d).title())
+                if canonical not in resolved_destinations:
+                    resolved_destinations.append(canonical)
 
-        # Check prompt for other mentioned locations
-        prompt_lower = raw_user_prompt.lower()
-        for loc_name in KNOWN_LOCATIONS:
-            if loc_name.lower() in prompt_lower and loc_name not in resolved_destinations:
-                resolved_destinations.append(loc_name)
+        if not resolved_destinations and primary_destination:
+            canonical = next((c for c in KNOWN_LOCATIONS if c.lower() == primary_destination.lower()), primary_destination)
+            resolved_destinations.append(canonical)
 
         # Tag and resolve cities on curated hotels and POIs
         enriched_hotels = []

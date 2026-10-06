@@ -288,19 +288,17 @@ function transformBackendResultToPipelineResult(
 
   // Extract Destinations
   const primaryDest = backendData.destination || inputPayload.destination;
-  const destSet = new Set<string>();
-  if (backendData.destination) {
-    destSet.add(backendData.destination);
+  let destinations: string[] = [];
+  if (Array.isArray(backendData.destinations) && backendData.destinations.length > 0) {
+    destinations = backendData.destinations.filter(Boolean);
+  } else {
+    const destSet = new Set<string>();
+    if (backendData.destination) destSet.add(backendData.destination);
+    if (inputPayload.destination && inputPayload.destination !== "Sri Lanka") destSet.add(inputPayload.destination);
+    hotels.forEach((h) => h.city && destSet.add(h.city));
+    attractions.forEach((a) => a.city && destSet.add(a.city));
+    destinations = Array.from(destSet).filter(Boolean);
   }
-  if (Array.isArray(backendData.destinations)) {
-    backendData.destinations.forEach((d: string) => d && destSet.add(d));
-  }
-  if (inputPayload.destination && inputPayload.destination !== "Sri Lanka") {
-    destSet.add(inputPayload.destination);
-  }
-  hotels.forEach((h) => h.city && destSet.add(h.city));
-  attractions.forEach((a) => a.city && destSet.add(a.city));
-  const destinations = Array.from(destSet).filter(Boolean);
 
   const req: Agent1Response = {
     destination: primaryDest || (destinations[0] || "Sri Lanka"),
