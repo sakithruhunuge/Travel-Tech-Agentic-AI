@@ -11,20 +11,39 @@ if env_path.exists():
 else:
     load_dotenv()
 
-SYSTEM_PROMPT = """You are a strict travel query parser for a Sri Lanka travel platform. 
+SYSTEM_PROMPT = """You are an intelligent, robust travel query parser for a Sri Lanka travel platform. 
 Your ONLY job is to extract structured travel parameters from user input and return valid JSON.
 Do NOT generate itineraries, stories, or any content other than a JSON object.
 
+Typo & Misspelling Tolerance:
+Be resilient to common typos, colloquial names, and misspellings of Sri Lankan destinations:
+- "kany", "kandi", "kande" -> "Kandy"
+- "colambo", "kolombo", "columbo" -> "Colombo"
+- "gal", "gale", "gallee" -> "Galle"
+- "mirisa", "merissa" -> "Mirissa"
+- "sigiri", "seegiriya" -> "Sigiriya"
+- "dambula" -> "Dambulla"
+- "nuwara", "nuwaraeliya", "nuwareliya" -> "Nuwara Eliya"
+- "arugambay", "arugam" -> "Arugam Bay"
+- "benthota" -> "Bentota"
+
+Multi-Destination Sequencing:
+When the user mentions multiple destinations, stops, or a journey sequence (e.g. "first i want to go kany and then galle. finally i want to go colombo"):
+- "destinations": List of all requested destinations in their sequential order (e.g. ["Kandy", "Galle", "Colombo"]).
+- "destination": The first or primary destination (e.g. "Kandy").
+- "destination_coords": Geographic coordinates of the first destination.
+
 Extract exactly these fields:
 {
-  "destination": "<city or region in Sri Lanka, e.g. Galle, Colombo, Bentota, Ella>",
+  "destination": "<primary or first city in Sri Lanka, e.g. Kandy, Galle, Colombo, Bentota, Ella>",
+  "destinations": ["<ordered list of all destinations requested, e.g. Kandy, Galle, Colombo>"],
   "destination_coords": {"lat": <float>, "lng": <float>},
   "travel_dates": "<string, e.g. December 10-15 2026>",
   "duration_days": <integer>,
   "budget_max_usd": <float — total trip budget. Convert: 'cheap'=200, 'standard'=500, 'luxury'=1500>,
   "party_size": <integer, default 2 if not mentioned>,
   "interests": [<list of strings — ONLY from: Historical, Nature, Beach, Adventure, Urban, Food, Photography>],
-  "custom_vibe": "<preserve exact user wording about ambiance, style, mood>"
+  "custom_vibe": "<preserve exact user wording about ambiance, style, mood, route>"
 }
 
 For destination_coords: use your geographic knowledge of Sri Lanka:
@@ -160,7 +179,54 @@ def _normalize_output(data: dict) -> dict:
         data["budget"] = 500.0
     data["budget_max_usd"] = data["budget"]
 
-    data["destination"] = str(data.get("destination", "")).strip()
+    # 3. Destination normalization with typo corrections
+    TYPO_CORRECTIONS = {
+        "kany": "Kandy",
+        "kandi": "Kandy",
+        "kande": "Kandy",
+        "candy": "Kandy",
+        "colambo": "Colombo",
+        "kolombo": "Colombo",
+        "columbo": "Colombo",
+        "gal": "Galle",
+        "gale": "Galle",
+        "gallee": "Galle",
+        "mirisa": "Mirissa",
+        "merissa": "Mirissa",
+        "sigiri": "Sigiriya",
+        "seegiriya": "Sigiriya",
+        "dambula": "Dambulla",
+        "nuwara": "Nuwara Eliya",
+        "nuwaraeliya": "Nuwara Eliya",
+        "nuwareliya": "Nuwara Eliya",
+        "benthota": "Bentota",
+        "arugambay": "Arugam Bay",
+        "arugam": "Arugam Bay",
+    }
+
+    dests = data.get("destinations", [])
+    normalized_dests = []
+    if isinstance(dests, list) and dests:
+        for d in dests:
+            cleaned_d = str(d).strip()
+            canonical = TYPO_CORRECTIONS.get(cleaned_d.lower(), cleaned_d.title())
+            if canonical and canonical not in normalized_dests:
+                normalized_dests.append(canonical)
+
+    raw_dest = str(data.get("destination", "")).strip()
+    if raw_dest:
+        raw_dest_fixed = TYPO_CORRECTIONS.get(raw_dest.lower(), raw_dest.title())
+        if raw_dest_fixed and raw_dest_fixed not in normalized_dests:
+            normalized_dests.insert(0, raw_dest_fixed)
+        data["destination"] = raw_dest_fixed
+
+    if normalized_dests:
+        data["destinations"] = normalized_dests
+        data["destination"] = normalized_dests[0]
+    else:
+        fallback_dest = data.get("destination") or "Galle"
+        data["destination"] = str(fallback_dest).strip().title()
+        data["destinations"] = [data["destination"]]
 
     return data
 
@@ -187,38 +253,63 @@ def _rule_based_fallback(raw_prompt: str) -> dict:
     travel_keywords = [
         "travel", "trip", "tour", "vacation", "holiday", "itinerary", "visit", "day", "days",
         "week", "budget", "hotel", "resort", "beach", "stay", "flight", "explore", "guide",
-        "sri lanka", "galle", "colombo", "kandy", "ella", "bentota", "nuwara eliya",
+        "sri lanka", "galle", "colombo", "kandy", "kany", "kandi", "ella", "bentota", "nuwara eliya",
         "trincomalee", "mirissa", "sigiriya", "yala", "negombo", "jaffna", "dambulla",
     ]
     if not any(k in text for k in travel_keywords):
         return {"error": "off_topic"}
 
-    # 3. Destination extraction
-    dest_coords = {
-        "colombo": (6.9271, 79.8612),
-        "galle": (6.0535, 80.2209),
-        "kandy": (7.2906, 80.6337),
-        "ella": (6.8667, 81.0466),
-        "bentota": (6.4282, 80.0125),
-        "nuwara eliya": (6.9497, 80.7891),
-        "trincomalee": (8.5922, 81.2152),
-        "mirissa": (5.9483, 80.4716),
-        "sigiriya": (7.9570, 80.7603),
-        "yala": (6.3725, 81.4011),
-        "negombo": (7.2008, 79.8737),
-        "jaffna": (9.6615, 80.0255),
-        "anuradhapura": (8.3114, 80.4037),
-        "dambulla": (7.8742, 80.6511),
-        "arugam bay": (6.8415, 81.8340),
+    # 3. Destination extraction with typo mapping and ordering
+    dest_coords_map = {
+        "kandy": ("Kandy", (7.2906, 80.6337)),
+        "kany": ("Kandy", (7.2906, 80.6337)),
+        "kandi": ("Kandy", (7.2906, 80.6337)),
+        "kande": ("Kandy", (7.2906, 80.6337)),
+        "colombo": ("Colombo", (6.9271, 79.8612)),
+        "colambo": ("Colombo", (6.9271, 79.8612)),
+        "kolombo": ("Colombo", (6.9271, 79.8612)),
+        "galle": ("Galle", (6.0535, 80.2209)),
+        "gal": ("Galle", (6.0535, 80.2209)),
+        "gale": ("Galle", (6.0535, 80.2209)),
+        "ella": ("Ella", (6.8667, 81.0466)),
+        "bentota": ("Bentota", (6.4282, 80.0125)),
+        "benthota": ("Bentota", (6.4282, 80.0125)),
+        "nuwara eliya": ("Nuwara Eliya", (6.9497, 80.7891)),
+        "nuwara": ("Nuwara Eliya", (6.9497, 80.7891)),
+        "trincomalee": ("Trincomalee", (8.5922, 81.2152)),
+        "trinco": ("Trincomalee", (8.5922, 81.2152)),
+        "mirissa": ("Mirissa", (5.9483, 80.4716)),
+        "mirisa": ("Mirissa", (5.9483, 80.4716)),
+        "sigiriya": ("Sigiriya", (7.9570, 80.7603)),
+        "sigiri": ("Sigiriya", (7.9570, 80.7603)),
+        "seegiriya": ("Sigiriya", (7.9570, 80.7603)),
+        "yala": ("Yala", (6.3725, 81.4011)),
+        "negombo": ("Negombo", (7.2008, 79.8737)),
+        "jaffna": ("Jaffna", (9.6615, 80.0255)),
+        "anuradhapura": ("Anuradhapura", (8.3114, 80.4037)),
+        "dambulla": ("Dambulla", (7.8742, 80.6511)),
+        "dambula": ("Dambulla", (7.8742, 80.6511)),
+        "arugam bay": ("Arugam Bay", (6.8415, 81.8340)),
+        "arugambay": ("Arugam Bay", (6.8415, 81.8340)),
+        "arugam": ("Arugam Bay", (6.8415, 81.8340)),
     }
 
-    found_dest = "Galle"
-    found_coords = {"lat": 6.0535, "lng": 80.2209}
-    for d_name, (lat, lng) in dest_coords.items():
-        if re.search(r"\b" + re.escape(d_name) + r"\b", text):
-            found_dest = d_name.title()
-            found_coords = {"lat": lat, "lng": lng}
-            break
+    found_dest_matches = []
+    for alias, (canonical, coords) in dest_coords_map.items():
+        pattern = r"\b" + re.escape(alias) + r"\b"
+        for m in re.finditer(pattern, text):
+            found_dest_matches.append((m.start(), canonical, coords))
+
+    found_dest_matches.sort(key=lambda x: x[0])
+    ordered_dests = []
+    for _, canon, _ in found_dest_matches:
+        if canon not in ordered_dests:
+            ordered_dests.append(canon)
+
+    found_dest = ordered_dests[0] if ordered_dests else "Galle"
+    found_coords = next((c[2] for c in found_dest_matches if c[1] == found_dest), (6.0535, 80.2209))
+    if isinstance(found_coords, tuple):
+        found_coords = {"lat": found_coords[0], "lng": found_coords[1]}
 
     # 4. Duration
     duration = 5
@@ -279,6 +370,7 @@ def _rule_based_fallback(raw_prompt: str) -> dict:
 
     data = {
         "destination": found_dest,
+        "destinations": ordered_dests if ordered_dests else [found_dest],
         "destination_coords": found_coords,
         "travel_dates": travel_dates,
         "duration_days": duration,

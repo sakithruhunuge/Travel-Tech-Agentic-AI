@@ -67,8 +67,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "FastAPI agent service unavailable. Ensure the backend is running at " +
-            agentApiUrl,
+            `FastAPI agent service unavailable at ${agentApiUrl}. Please start the backend with 'npm run backend' or run both servers simultaneously using 'npm run dev:all'.`,
           details: fetchErr.message,
         },
         { status: 503 }
