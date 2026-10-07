@@ -198,10 +198,29 @@ def run_agent_pipeline(raw_user_prompt: str) -> dict:
         if not resolved_destinations and primary_destination:
             resolved_destinations = [primary_destination]
 
+        # Group shortlisted hotels & POIs by destination for frontend consumption
+        suggested_places_by_destination: Dict[str, Dict[str, list]] = {}
+        for d in resolved_destinations:
+            suggested_places_by_destination[d] = {"hotels": [], "poi": []}
+
+        for h in enriched_hotels:
+            c = h.get("city") or primary_destination or "Sri Lanka"
+            if c not in suggested_places_by_destination:
+                suggested_places_by_destination[c] = {"hotels": [], "poi": []}
+            suggested_places_by_destination[c]["hotels"].append(h)
+
+        for p in enriched_pois:
+            c = p.get("city") or primary_destination or "Sri Lanka"
+            if c not in suggested_places_by_destination:
+                suggested_places_by_destination[c] = {"hotels": [], "poi": []}
+            suggested_places_by_destination[c]["poi"].append(p)
+
         return {
             "itinerary": itinerary_md,
+            "itinerary_markdown": itinerary_md,
             "hotels": enriched_hotels,
             "pois": enriched_pois,
+            "suggested_places_by_destination": suggested_places_by_destination,
             "estimated_total_usd": curated["estimated_total_usd"],
             "budget_warning": curated["budget_warning"],
             "reasoning": curated["scoring_breakdown"],

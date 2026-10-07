@@ -149,6 +149,377 @@ export const LOCATIONS: MapLocation[] = [
   { id: "Tissamaharama", name: "Tissamaharama", lat: 6.2796, lng: 81.2863, img: "/images/yala.png", description: "Ancient southern lake capital, gateway to Yala and Bundala bird safaris.", category: "wildlife" },
 ];
 
+export const CURATED_DESTINATION_PLACES: Record<string, DestinationPlaces> = {
+  Colombo: {
+    hotels: [
+      {
+        id: "cur-col-1",
+        name: "Galle Face Hotel",
+        avg_nightly_usd: 135,
+        rating: 4.8,
+        price_tier: "Luxury Heritage",
+        description: "Historic 1864 colonial oceanfront icon with sunset veranda on the Indian Ocean.",
+        primary_image: "/images/colombo.png",
+      },
+      {
+        id: "cur-col-2",
+        name: "Cinnamon Grand Colombo",
+        avg_nightly_usd: 110,
+        rating: 4.7,
+        price_tier: "Luxury",
+        description: "5-star downtown sanctuary with lagoon pool, spa, and 14 premier dining venues.",
+        primary_image: "/images/colombo.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-col-1",
+        name: "Gangaramaya Buddhist Temple",
+        ticket_price_usd: 5,
+        rating: 4.8,
+        description: "Vibrant lakeside Buddhist complex featuring museum relics and brass artifacts.",
+        primary_image: "/images/colombo.png",
+      },
+      {
+        id: "cur-poi-col-2",
+        name: "Galle Face Green Promenade",
+        ticket_price_usd: 0,
+        rating: 4.7,
+        description: "Oceanfront urban park famous for evening sea breezes, street eats, and sunset views.",
+        primary_image: "/images/colombo.png",
+      },
+    ],
+  },
+  Kandy: {
+    hotels: [
+      {
+        id: "cur-kan-1",
+        name: "Cinnamon Citadel Kandy",
+        avg_nightly_usd: 85,
+        rating: 4.7,
+        price_tier: "Standard Heritage",
+        description: "Peaceful riverbank retreat on the Mahaweli River surrounded by misty tropical hills.",
+        primary_image: "/images/kandy.png",
+      },
+      {
+        id: "cur-kan-2",
+        name: "Earl's Regency Kandy",
+        avg_nightly_usd: 95,
+        rating: 4.8,
+        price_tier: "Luxury",
+        description: "5-star hillside resort offering mountain vistas and tranquil garden suites.",
+        primary_image: "/images/kandy.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-kan-1",
+        name: "Temple of the Sacred Tooth Relic",
+        ticket_price_usd: 15,
+        rating: 4.9,
+        description: "UNESCO sacred Buddhist temple housing the venerated tooth relic of the Buddha.",
+        primary_image: "/images/kandy.png",
+      },
+      {
+        id: "cur-poi-kan-2",
+        name: "Royal Botanical Gardens Peradeniya",
+        ticket_price_usd: 12,
+        rating: 4.8,
+        description: "World-famous 147-acre royal botanical gardens with 4,000+ plant varieties and palm avenue.",
+        primary_image: "/images/kandy.png",
+      },
+    ],
+  },
+  Sigiriya: {
+    hotels: [
+      {
+        id: "cur-sig-1",
+        name: "Water Garden Sigiriya",
+        avg_nightly_usd: 140,
+        rating: 4.9,
+        price_tier: "Luxury Eco",
+        description: "Villas set across water gardens with unobstructed views of ancient Lion Rock.",
+        primary_image: "/images/sigiriya.png",
+      },
+      {
+        id: "cur-sig-2",
+        name: "Aliya Resort & Spa",
+        avg_nightly_usd: 90,
+        rating: 4.7,
+        price_tier: "Standard",
+        description: "Elephant-themed contemporary resort featuring infinity pool panoramas of Sigiriya citadel.",
+        primary_image: "/images/sigiriya.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-sig-1",
+        name: "Sigiriya Rock Citadel",
+        ticket_price_usd: 36,
+        rating: 4.9,
+        description: "UNESCO 5th-century ancient sky fortress, fresco gallery, and royal water gardens.",
+        primary_image: "/images/sigiriya.png",
+      },
+      {
+        id: "cur-poi-sig-2",
+        name: "Pidurangala Rock Sunrise Hike",
+        ticket_price_usd: 5,
+        rating: 4.8,
+        description: "Scenic boulder climb providing 360-degree panoramic views of Sigiriya Lion Rock.",
+        primary_image: "/images/sigiriya.png",
+      },
+    ],
+  },
+  Dambulla: {
+    hotels: [
+      {
+        id: "cur-dam-1",
+        name: "Heritance Kandalama",
+        avg_nightly_usd: 150,
+        rating: 4.9,
+        price_tier: "Luxury Eco",
+        description: "Geoffrey Bawa architectural landmark embedded into the cliffside overlooking Kandalama lake.",
+        primary_image: "/images/dambulla.png",
+      },
+      {
+        id: "cur-dam-2",
+        name: "Amaya Lake Dambulla",
+        avg_nightly_usd: 85,
+        rating: 4.7,
+        price_tier: "Standard",
+        description: "Lakeside chalet sanctuary set amidst tranquil dry-zone woodland.",
+        primary_image: "/images/dambulla.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-dam-1",
+        name: "Dambulla Royal Cave Temple",
+        ticket_price_usd: 10,
+        rating: 4.8,
+        description: "UNESCO sacred rock monastery with 5 cave sanctuaries filled with statues and murals.",
+        primary_image: "/images/dambulla.png",
+      },
+    ],
+  },
+  Galle: {
+    hotels: [
+      {
+        id: "cur-gal-1",
+        name: "Fort Bazaar Galle",
+        avg_nightly_usd: 140,
+        rating: 4.7,
+        price_tier: "Boutique Heritage",
+        description: "Restored merchant townhouse in the heart of Galle Fort with courtyard dining.",
+        primary_image: "/images/galle.png",
+      },
+      {
+        id: "cur-gal-2",
+        name: "Jetwing Lighthouse",
+        avg_nightly_usd: 130,
+        rating: 4.8,
+        price_tier: "Luxury",
+        description: "Geoffrey Bawa clifftop icon with ocean waves crashing against granite boulders.",
+        primary_image: "/images/galle.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-gal-1",
+        name: "Galle Dutch Fort Ramparts & Lighthouse",
+        ticket_price_usd: 0,
+        rating: 4.8,
+        description: "UNESCO 17th-century colonial bastions, historic lighthouse, and oceanfront promenade.",
+        primary_image: "/images/galle.png",
+      },
+      {
+        id: "cur-poi-gal-2",
+        name: "Flag Rock Bastion Sunset",
+        ticket_price_usd: 0,
+        rating: 4.9,
+        description: "Southwestern bastion famous for dramatic Indian Ocean sunsets and cliff jumpers.",
+        primary_image: "/images/galle.png",
+      },
+    ],
+  },
+  Mirissa: {
+    hotels: [
+      {
+        id: "cur-mir-1",
+        name: "Sri Sharavi Beachfront Villas",
+        avg_nightly_usd: 120,
+        rating: 4.8,
+        price_tier: "Boutique",
+        description: "Eco-chic luxury villas directly on Mirissa bay with beachfront infinity pool.",
+        primary_image: "/images/bentota.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-mir-1",
+        name: "Coconut Tree Hill",
+        ticket_price_usd: 0,
+        rating: 4.9,
+        description: "Photogenic palm-covered headland jutting out into azure waters.",
+        primary_image: "/images/bentota.png",
+      },
+      {
+        id: "cur-poi-mir-2",
+        name: "Mirissa Whale Watching Cruise",
+        ticket_price_usd: 55,
+        rating: 4.8,
+        description: "Morning boat safari observing wild blue whales, sperm whales, and dolphins.",
+        primary_image: "/images/bentota.png",
+      },
+    ],
+  },
+  Ella: {
+    hotels: [
+      {
+        id: "cur-ell-1",
+        name: "98 Acres Resort & Spa",
+        avg_nightly_usd: 165,
+        rating: 4.9,
+        price_tier: "Luxury Eco",
+        description: "Charming thatched chalets perched on a working tea estate with Ella Gap vistas.",
+        primary_image: "/images/nine_arch.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-ell-1",
+        name: "Nine Arch Demodara Bridge",
+        ticket_price_usd: 0,
+        rating: 4.9,
+        description: "Colonial stone rail viaduct nestled in dense mountain jungle and tea trails.",
+        primary_image: "/images/nine_arch.png",
+      },
+      {
+        id: "cur-poi-ell-2",
+        name: "Little Adam's Peak Hike",
+        ticket_price_usd: 0,
+        rating: 4.8,
+        description: "Gentle mountain trek with sweeping vistas over southern Sri Lanka's plains.",
+        primary_image: "/images/nine_arch.png",
+      },
+    ],
+  },
+  "Nuwara Eliya": {
+    hotels: [
+      {
+        id: "cur-nuw-1",
+        name: "Grand Hotel Nuwara Eliya",
+        avg_nightly_usd: 130,
+        rating: 4.8,
+        price_tier: "Luxury Heritage",
+        description: "Palatial Elizabethan manor offering traditional afternoon high tea in the highlands.",
+        primary_image: "/images/tea.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-nuw-1",
+        name: "Pedro Tea Estate & Factory",
+        ticket_price_usd: 5,
+        rating: 4.8,
+        description: "Guided tour through orthodox processing of world-famous single-origin Ceylon tea.",
+        primary_image: "/images/tea.png",
+      },
+      {
+        id: "cur-poi-nuw-2",
+        name: "Lake Gregory Recreational Park",
+        ticket_price_usd: 3,
+        rating: 4.6,
+        description: "High-altitude mountain lake featuring boating, pedal boats, and scenic walking paths.",
+        primary_image: "/images/tea.png",
+      },
+    ],
+  },
+  Bentota: {
+    hotels: [
+      {
+        id: "cur-ben-1",
+        name: "Vivanta by Taj Bentota",
+        avg_nightly_usd: 140,
+        rating: 4.8,
+        price_tier: "Luxury Beach",
+        description: "Beachfront luxury resort overlooking Bentota golden beach with Ayurvedic spa.",
+        primary_image: "/images/bentota.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-ben-1",
+        name: "Madu River Mangrove Safari",
+        ticket_price_usd: 25,
+        rating: 4.8,
+        description: "Boat excursion navigating mangrove tunnels, cinnamon peeling huts, and temple island.",
+        primary_image: "/images/bentota.png",
+      },
+    ],
+  },
+  Yala: {
+    hotels: [
+      {
+        id: "cur-yal-1",
+        name: "Cinnamon Wild Yala",
+        avg_nightly_usd: 150,
+        rating: 4.8,
+        price_tier: "Luxury Eco",
+        description: "Jungle cabins where wildlife wanders up to your verandah bordering Yala Park.",
+        primary_image: "/images/yala.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-yal-1",
+        name: "Yala National Park Safari",
+        ticket_price_usd: 60,
+        rating: 4.9,
+        description: "Guided 4x4 open safari searching for wild leopards, elephants, and sloth bears.",
+        primary_image: "/images/yala.png",
+      },
+    ],
+  },
+};
+
+export function getCuratedPlacesForDestinations(destinations: string[]): Record<string, DestinationPlaces> {
+  const result: Record<string, DestinationPlaces> = {};
+  destinations.forEach((dest) => {
+    const key = Object.keys(CURATED_DESTINATION_PLACES).find(
+      (k) => k.toLowerCase() === dest.toLowerCase()
+    );
+    if (key && CURATED_DESTINATION_PLACES[key]) {
+      result[dest] = CURATED_DESTINATION_PLACES[key];
+    } else {
+      result[dest] = {
+        hotels: [
+          {
+            id: `cur-gen-h-${dest}`,
+            name: `${dest} Boutique Retreat`,
+            avg_nightly_usd: 90,
+            rating: 4.7,
+            price_tier: "Standard",
+            description: `Curated boutique stay in ${dest} offering scenic views and warm local hospitality.`,
+            primary_image: LOCATIONS.find((l) => l.id.toLowerCase() === dest.toLowerCase())?.img || "/images/colombo.png",
+          },
+        ],
+        poi: [
+          {
+            id: `cur-gen-p-${dest}`,
+            name: `${dest} Scenic Landmark`,
+            ticket_price_usd: 10,
+            rating: 4.8,
+            description: `Top-rated attraction and cultural sight in ${dest}.`,
+            primary_image: LOCATIONS.find((l) => l.id.toLowerCase() === dest.toLowerCase())?.img || "/images/sigiriya.png",
+          },
+        ],
+      };
+    }
+  });
+  return result;
+}
+
 export const BASE_TOURS = [
   { id: "cultural", nameKey: "cultural", descKey: "culturalDesc", destinations: ["Colombo", "Dambulla", "Sigiriya", "Kandy"], duration: 5 },
   { id: "southern", nameKey: "southern", descKey: "southernDesc", destinations: ["Bentota", "Galle", "Mirissa", "Yala"], duration: 6 },
@@ -1173,13 +1544,36 @@ export default function InteractiveTourCustomizer() {
   const [aiError, setAiError] = useState<string | null>(null);
   const [activeAgentStep, setActiveAgentStep] = useState<number>(1);
   const [agentStepLabel, setAgentStepLabel] = useState<string>("");
-  const [agentTelemetry, setAgentTelemetry] = useState<FullAgentPipelineResult | null>(null);
+  const defaultAgentData = useMemo(() => getMockAgentPipelineResult("5-day Sri Lanka Cultural Tour", 5), []);
+  const [agentTelemetry, setAgentTelemetry] = useState<FullAgentPipelineResult | null>(defaultAgentData);
   const [activeXaiTab, setActiveXaiTab] = useState<"itinerary" | "curator" | "telemetry">("itinerary");
-  const [aiItinerary, setAiItinerary] = useState<string | null>(null);
+  const [aiItinerary, setAiItinerary] = useState<string | null>(defaultAgentData.itineraryMarkdown);
 
-  const [suggestedPlacesByDestination, setSuggestedPlacesByDestination] = useState<Record<string, DestinationPlaces>>({});
+  const [suggestedPlacesByDestination, setSuggestedPlacesByDestination] = useState<Record<string, DestinationPlaces>>(() =>
+    getCuratedPlacesForDestinations(["Colombo", "Dambulla", "Sigiriya", "Kandy"])
+  );
   const [selectedPlaceIds, setSelectedPlaceIds] = useState<string[]>([]);
   const [failedPoiImages, setFailedPoiImages] = useState<Record<string, boolean>>({});
+
+  // Synchronize suggested hotels and attractions whenever destinations change
+  useEffect(() => {
+    if (inputs.destinations.length > 0) {
+      setSuggestedPlacesByDestination((prev) => {
+        let hasNew = false;
+        const next = { ...prev };
+        inputs.destinations.forEach((dest) => {
+          if (!next[dest] || ((next[dest].hotels?.length || 0) === 0 && (next[dest].poi?.length || 0) === 0)) {
+            const added = getCuratedPlacesForDestinations([dest])[dest];
+            if (added) {
+              next[dest] = added;
+              hasNew = true;
+            }
+          }
+        });
+        return hasNew ? next : prev;
+      });
+    }
+  }, [inputs.destinations]);
 
   useEffect(() => {
     if (aiStartDate && aiEndDate) {
@@ -1418,18 +1812,18 @@ export default function InteractiveTourCustomizer() {
 
   const activeLegs = realLegsData.length > 0 && realLegsData.length === selectedRouteLocations.length - 1
     ? realLegsData.map((rl) => ({
-        from: rl.from,
-        to: rl.to,
-        distanceKm: rl.distanceKm,
-        bearing: rl.bearing,
-        direction: rl.direction,
-        driveTime: { hours: Math.floor(rl.durationMinutes / 60), minutes: rl.durationMinutes % 60, label: rl.driveTimeLabel },
-        pathCoords: rl.pathCoords,
-      }))
+      from: rl.from,
+      to: rl.to,
+      distanceKm: rl.distanceKm,
+      bearing: rl.bearing,
+      direction: rl.direction,
+      driveTime: { hours: Math.floor(rl.durationMinutes / 60), minutes: rl.durationMinutes % 60, label: rl.driveTimeLabel },
+      pathCoords: rl.pathCoords,
+    }))
     : routeLegs.map((rl) => ({
-        ...rl,
-        pathCoords: [[rl.from.lat, rl.from.lng], [rl.to.lat, rl.to.lng]] as [number, number][],
-      }));
+      ...rl,
+      pathCoords: [[rl.from.lat, rl.from.lng], [rl.to.lat, rl.to.lng]] as [number, number][],
+    }));
 
   const displayTotalKm = Math.round(activeLegs.reduce((acc, leg) => acc + leg.distanceKm, 0) * 10) / 10;
   const displayTotalMins = activeLegs.reduce((acc, leg) => acc + (leg.driveTime.hours * 60 + leg.driveTime.minutes), 0);
@@ -1653,43 +2047,54 @@ export default function InteractiveTourCustomizer() {
 
   /* Helper to apply structured 4-agent output to InteractiveTourCustomizer state */
   const handleApplyAgentResult = (data: FullAgentPipelineResult) => {
-    setAiItinerary(data.itineraryMarkdown);
+    setAiItinerary(data.itineraryMarkdown || defaultAgentData.itineraryMarkdown);
     setSelectedTour("ai-suggested");
     setAgentTelemetry(data);
 
     // Populate suggested places for interactive map & quote selection
-    const mappedPlaces: Record<string, DestinationPlaces> = {};
-    data.ranked.forEach((r, idx) => {
-      const item = r.item;
-      const city =
-        item.city ||
-        item.destination ||
-        (LOCATIONS.some((loc) => loc.id === item.city) ? (item.city as string) : "Colombo");
+    const mappedPlaces: Record<string, DestinationPlaces> = {
+      ...(data.suggestedPlacesByDestination || {}),
+    };
 
-      if (!mappedPlaces[city]) {
-        mappedPlaces[city] = { hotels: [], poi: [] };
-      }
-      if (item.type === "hotel" || item.avg_nightly_usd) {
-        mappedPlaces[city].hotels?.push({
-          id: item.id || `hotel-${idx}`,
-          name: item.name,
-          avg_nightly_usd: Number(item.avg_nightly_usd) || 100,
-          rating: Number(item.rating) || 4.8,
-          description: r.reasons?.join(" · ") || item.description || "Curated stay",
-          primary_image: item.primary_image,
-        });
-      } else {
-        mappedPlaces[city].poi?.push({
-          id: item.id || `poi-${idx}`,
-          name: item.name,
-          ticket_price_usd: Number(item.ticket_price_usd) || Number(item.price) || 0,
-          rating: Number(item.rating) || 4.8,
-          description: r.reasons?.join(" · ") || item.description || "Curated activity",
-          primary_image: item.primary_image,
-        });
-      }
-    });
-    setSuggestedPlacesByDestination(mappedPlaces);
+    if (data.ranked && data.ranked.length > 0) {
+      data.ranked.forEach((r, idx) => {
+        const item = r.item;
+        const city =
+          item.city ||
+          item.destination ||
+          (LOCATIONS.some((loc) => loc.id === item.city) ? (item.city as string) : "Colombo");
+
+        if (!mappedPlaces[city]) {
+          mappedPlaces[city] = { hotels: [], poi: [] };
+        }
+        if (item.type === "hotel" || item.avg_nightly_usd) {
+          if (!mappedPlaces[city].hotels) mappedPlaces[city].hotels = [];
+          if (!mappedPlaces[city].hotels?.some((h) => h.name === item.name)) {
+            mappedPlaces[city].hotels?.push({
+              id: item.id || `hotel-${idx}`,
+              name: item.name,
+              avg_nightly_usd: Number(item.avg_nightly_usd) || 100,
+              rating: Number(item.rating) || 4.8,
+              price_tier: item.price_tier || "Standard",
+              description: r.reasons?.join(" · ") || item.description || "Curated stay",
+              primary_image: item.primary_image,
+            });
+          }
+        } else {
+          if (!mappedPlaces[city].poi) mappedPlaces[city].poi = [];
+          if (!mappedPlaces[city].poi?.some((p) => p.name === item.name)) {
+            mappedPlaces[city].poi?.push({
+              id: item.id || `poi-${idx}`,
+              name: item.name,
+              ticket_price_usd: Number(item.ticket_price_usd) || Number(item.price) || 0,
+              rating: Number(item.rating) || 4.8,
+              description: r.reasons?.join(" · ") || item.description || "Curated activity",
+              primary_image: item.primary_image,
+            });
+          }
+        }
+      });
+    }
 
     const returnedCities: string[] = Array.isArray(data.destinations) ? [...data.destinations] : [];
     if (data.requirements?.destination && !returnedCities.some((c) => c.toLowerCase() === data.requirements.destination.toLowerCase())) {
@@ -1712,6 +2117,18 @@ export default function InteractiveTourCustomizer() {
     const promptDetected = extractDestinationsFromPrompt(aiKeywords);
     const merged = Array.from(new Set([...validMappedDests, ...promptDetected]));
     const finalDests = merged.length > 0 ? merged : inputs.destinations.length > 0 ? inputs.destinations : ["Galle", "Mirissa"];
+
+    // Ensure all final destinations have curated places
+    const curatedDefaults = getCuratedPlacesForDestinations(finalDests);
+    finalDests.forEach((city) => {
+      if (!mappedPlaces[city] || ((mappedPlaces[city].hotels?.length || 0) === 0 && (mappedPlaces[city].poi?.length || 0) === 0)) {
+        if (curatedDefaults[city]) {
+          mappedPlaces[city] = curatedDefaults[city];
+        }
+      }
+    });
+
+    setSuggestedPlacesByDestination(mappedPlaces);
 
     setInputs((prev) => ({
       ...prev,
@@ -1830,8 +2247,8 @@ export default function InteractiveTourCustomizer() {
       detectedVibes.length > 0
         ? detectedVibes.map((v) => v.id)
         : detectedDests.length > 0
-        ? ["culture", "sightseeing", "beach"]
-        : ["culture", "beaches"];
+          ? ["culture", "sightseeing", "beach"]
+          : ["culture", "beaches"];
 
     try {
       const data = await runMultiAgentPipeline(promptMessage, {
@@ -1854,8 +2271,8 @@ export default function InteractiveTourCustomizer() {
         err instanceof AgentApiError
           ? err.message
           : err instanceof Error
-          ? err.message
-          : "AI suggestions are temporarily unavailable.";
+            ? err.message
+            : "AI suggestions are temporarily unavailable.";
       console.error("AI pipeline invocation failed:", err);
       setAiError(errorMessage);
       addToast("error", errorMessage);
@@ -2319,11 +2736,10 @@ export default function InteractiveTourCustomizer() {
                               whileTap={{ scale: 0.95 }}
                               type="button"
                               onClick={() => handleSelectStartingLocation(preset.id)}
-                              className={`px-3 py-1 border text-[10px] font-bold rounded-full transition flex items-center gap-1.5 ${
-                                isSelected
+                              className={`px-3 py-1 border text-[10px] font-bold rounded-full transition flex items-center gap-1.5 ${isSelected
                                   ? "bg-gradient-to-r from-[#FF8B50] to-[#E05A1A] text-white border-transparent shadow-xs"
                                   : "bg-white hover:bg-[#FFF3E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
-                              }`}
+                                }`}
                             >
                               <span>{preset.icon}</span>
                               <span>{preset.label}</span>
@@ -2481,11 +2897,10 @@ export default function InteractiveTourCustomizer() {
                                 whileTap={{ scale: 0.95 }}
                                 type="button"
                                 onClick={() => handleAddKeywordChip(locName)}
-                                className={`px-2.5 py-0.5 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${
-                                  isAlreadyInPrompt
+                                className={`px-2.5 py-0.5 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${isAlreadyInPrompt
                                     ? "bg-orange-100 border-orange-300 text-[#E05A1A]"
                                     : "bg-white hover:bg-[#FFF1E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
-                                }`}
+                                  }`}
                               >
                                 <span>{isAlreadyInPrompt ? "✓" : "+"}</span>
                                 <span>{locName}</span>
@@ -2508,11 +2923,10 @@ export default function InteractiveTourCustomizer() {
                                 whileTap={{ scale: 0.95 }}
                                 type="button"
                                 onClick={() => handleAddKeywordChip(v.text)}
-                                className={`px-2 py-0.5 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${
-                                  isAlready
+                                className={`px-2 py-0.5 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${isAlready
                                     ? "bg-emerald-50 border-emerald-300 text-emerald-800"
                                     : "bg-white hover:bg-[#FFF1E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
-                                }`}
+                                  }`}
                               >
                                 <span>{v.icon}</span>
                                 <span>{v.label}</span>
@@ -2535,11 +2949,10 @@ export default function InteractiveTourCustomizer() {
                                 whileTap={{ scale: 0.95 }}
                                 type="button"
                                 onClick={() => handleAddKeywordChip(p.text)}
-                                className={`px-2 py-0.5 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${
-                                  isAlready
+                                className={`px-2 py-0.5 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${isAlready
                                     ? "bg-blue-50 border-blue-300 text-blue-800"
                                     : "bg-white hover:bg-[#FFF1E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
-                                }`}
+                                  }`}
                               >
                                 <span>+</span>
                                 <span>{p.label}</span>
@@ -2595,13 +3008,12 @@ export default function InteractiveTourCustomizer() {
                                     scale: activeAgentStep === agent.id ? 1.02 : 1,
                                   }}
                                   transition={{ duration: 0.3 }}
-                                  className={`rounded-xl px-2.5 py-2.5 text-center border transition-all ${
-                                    activeAgentStep === agent.id
+                                  className={`rounded-xl px-2.5 py-2.5 text-center border transition-all ${activeAgentStep === agent.id
                                       ? "border-[#FF8B50] bg-gradient-to-b from-[#FFF3E9] to-[#FFE8D6] shadow-sm shadow-[#FF8B50]/20 ring-1 ring-[#FF8B50]"
                                       : activeAgentStep > agent.id
-                                      ? "border-emerald-300 bg-emerald-50/70"
-                                      : "border-[#F0E7D8] bg-white/70"
-                                  }`}
+                                        ? "border-emerald-300 bg-emerald-50/70"
+                                        : "border-[#F0E7D8] bg-white/70"
+                                    }`}
                                 >
                                   <div className="flex items-center justify-center gap-1.5 mb-1">
                                     {activeAgentStep > agent.id ? (
@@ -2717,11 +3129,10 @@ export default function InteractiveTourCustomizer() {
                       key={cat.id}
                       type="button"
                       onClick={() => setSelectedCategory(cat.id)}
-                      className={`px-2.5 py-1 rounded-xl text-[10px] font-extrabold transition shrink-0 flex items-center gap-1 border ${
-                        selectedCategory === cat.id
+                      className={`px-2.5 py-1 rounded-xl text-[10px] font-extrabold transition shrink-0 flex items-center gap-1 border ${selectedCategory === cat.id
                           ? "bg-[#0F172A] text-white border-slate-800 shadow-sm"
                           : "bg-white text-[#6E6759] border-[#F0E7D8] hover:border-[#FF8B50]"
-                      }`}
+                        }`}
                     >
                       <span>{cat.icon}</span>
                       <span>{cat.label}</span>
@@ -2770,18 +3181,16 @@ export default function InteractiveTourCustomizer() {
                         className="flex items-center gap-2 shrink-0"
                       >
                         <span
-                          className={`itc-glass flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-black shadow-sm ${
-                            isStart
+                          className={`itc-glass flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-black shadow-sm ${isStart
                               ? "text-[#0369A1] border-[#BAE6FD] bg-gradient-to-r from-[#F0F9FF] to-[#E0F2FE]"
                               : "text-[#44403C]"
-                          }`}
+                            }`}
                         >
                           <span
-                            className={`w-5 h-5 rounded-full text-white text-[9px] font-black flex items-center justify-center ${
-                              isStart
+                            className={`w-5 h-5 rounded-full text-white text-[9px] font-black flex items-center justify-center ${isStart
                                 ? "bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] shadow-sm"
                                 : "bg-gradient-to-br from-[#FF8B50] to-[#FF6B2C]"
-                            }`}
+                              }`}
                           >
                             {isStart ? "🛫" : i}
                           </span>
@@ -2832,9 +3241,9 @@ export default function InteractiveTourCustomizer() {
                             leg.pathCoords.length > 0
                               ? leg.pathCoords
                               : [
-                                  [leg.from.lat, leg.from.lng],
-                                  [leg.to.lat, leg.to.lng],
-                                ]
+                                [leg.from.lat, leg.from.lng],
+                                [leg.to.lat, leg.to.lng],
+                              ]
                           );
                           mapRef.current.flyToBounds(bounds.pad(0.3), { duration: 0.8 });
                         }
@@ -3021,33 +3430,30 @@ export default function InteractiveTourCustomizer() {
                   <button
                     type="button"
                     onClick={() => setActiveXaiTab("itinerary")}
-                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-                      activeXaiTab === "itinerary"
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${activeXaiTab === "itinerary"
                         ? "bg-[#FFF3E9] text-[#E05A1A] border border-[#FFD9C4] shadow-sm"
                         : "text-[#7A7263] hover:text-[#44403C] hover:bg-stone-50"
-                    }`}
+                      }`}
                   >
                     <CompassOutlined /> Day-by-Day Itinerary
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveXaiTab("curator")}
-                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-                      activeXaiTab === "curator"
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${activeXaiTab === "curator"
                         ? "bg-[#FFF3E9] text-[#E05A1A] border border-[#FFD9C4] shadow-sm"
                         : "text-[#7A7263] hover:text-[#44403C] hover:bg-stone-50"
-                    }`}
+                      }`}
                   >
                     <BarChartOutlined /> Agent 3 Decision Matrix (XAI)
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveXaiTab("telemetry")}
-                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-                      activeXaiTab === "telemetry"
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${activeXaiTab === "telemetry"
                         ? "bg-[#FFF3E9] text-[#E05A1A] border border-[#FFD9C4] shadow-sm"
                         : "text-[#7A7263] hover:text-[#44403C] hover:bg-stone-50"
-                    }`}
+                      }`}
                   >
                     <ClockCircleOutlined /> Engine Telemetry & Architecture
                   </button>
@@ -3273,31 +3679,31 @@ export default function InteractiveTourCustomizer() {
                         {(agentTelemetry?.ranked && agentTelemetry.ranked.length > 0
                           ? agentTelemetry.ranked.filter((r) => r.item.type === "hotel" || r.item.avg_nightly_usd)
                           : [
-                              {
-                                item: {
-                                  name: "Water Garden Sigiriya",
-                                  city: "Sigiriya",
-                                  avg_nightly_usd: 120,
-                                  rating: 4.9,
-                                  price_tier: "Luxury Eco",
-                                  curator_score: 95,
-                                },
-                                score: 95,
-                                reasons: ["Unmatched proximity to UNESCO Sigiriya Lion Rock (12 min drive)", "Top verified review score (4.9/5.0) with organic culinary gardens", "High cluster density: 6 major cultural attractions within 8km"],
+                            {
+                              item: {
+                                name: "Water Garden Sigiriya",
+                                city: "Sigiriya",
+                                avg_nightly_usd: 120,
+                                rating: 4.9,
+                                price_tier: "Luxury Eco",
+                                curator_score: 95,
                               },
-                              {
-                                item: {
-                                  name: "Cinnamon Citadel Kandy",
-                                  city: "Kandy",
-                                  avg_nightly_usd: 85,
-                                  rating: 4.7,
-                                  price_tier: "Standard Heritage",
-                                  curator_score: 91,
-                                },
-                                score: 91,
-                                reasons: ["Direct peaceful Mahaweli River frontage avoiding noisy city traffic", "100% budget fit ($85/night vs target ceiling)", "Complete amenity match: Infinity pool, ayurvedic spa, & high-speed Wi-Fi"],
+                              score: 95,
+                              reasons: ["Unmatched proximity to UNESCO Sigiriya Lion Rock (12 min drive)", "Top verified review score (4.9/5.0) with organic culinary gardens", "High cluster density: 6 major cultural attractions within 8km"],
+                            },
+                            {
+                              item: {
+                                name: "Cinnamon Citadel Kandy",
+                                city: "Kandy",
+                                avg_nightly_usd: 85,
+                                rating: 4.7,
+                                price_tier: "Standard Heritage",
+                                curator_score: 91,
                               },
-                            ]
+                              score: 91,
+                              reasons: ["Direct peaceful Mahaweli River frontage avoiding noisy city traffic", "100% budget fit ($85/night vs target ceiling)", "Complete amenity match: Infinity pool, ayurvedic spa, & high-speed Wi-Fi"],
+                            },
+                          ]
                         ).map((entry, idx) => {
                           const item = entry.item;
                           const score = entry.score || item.curator_score || 90;

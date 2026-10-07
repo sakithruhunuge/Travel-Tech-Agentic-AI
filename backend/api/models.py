@@ -20,8 +20,10 @@ class ItineraryResponse(BaseModel):
     """Travel itinerary generation response payload."""
 
     itinerary: str = Field(..., description="Markdown-formatted synthesized itinerary")
+    itinerary_markdown: str = Field(default="", description="Alias for markdown synthesized itinerary")
     hotels: List[Dict[str, Any]] = Field(default_factory=list, description="Top recommended hotels")
     pois: List[Dict[str, Any]] = Field(default_factory=list, description="Top recommended POIs")
+    suggested_places_by_destination: Dict[str, Any] = Field(default_factory=dict, description="Hotels and POIs grouped by destination")
     estimated_total_usd: float = Field(default=0.0, description="Estimated total cost in USD")
     budget_warning: bool = Field(default=False, description="Flag indicating if cost exceeds budget")
     reasoning: Dict[str, Any] = Field(default_factory=dict, description="Scoring & explainability breakdown from Agent 3")
