@@ -49,3 +49,13 @@ backend/backups/*.json
 # Workflows & internal prompts
 master prompt workflow
 
+# Security Audit Reports & Word Document Generation Artifacts
+*.docx
+*.docx.bak
+test_evidence/
+scripts/generate_*.py
+scripts/audit_docx.py
+scripts/create_sliit_logo.py
+scripts/capture_real_terminal_evidence.py
+scripts/set_update_fields.py
+scripts/update_toc_exact.ps1
