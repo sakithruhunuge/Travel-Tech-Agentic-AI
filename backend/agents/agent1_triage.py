@@ -40,9 +40,11 @@ Extract exactly these fields:
   "destination_coords": {"lat": <float>, "lng": <float>},
   "travel_dates": "<string, e.g. December 10-15 2026>",
   "duration_days": <integer>,
-  "budget_max_usd": <float — total trip budget. Convert: 'cheap'=200, 'standard'=500, 'luxury'=1500>,
+  "budget_max_usd": <float — total trip budget. If user asks for 'budget friendly', 'cheap', or '3 star' without a total dollar figure, convert to 200. Convert: 'standard'=500, 'luxury'=1500>,
   "party_size": <integer, default 2 if not mentioned>,
   "interests": [<list of strings — ONLY from: Historical, Nature, Beach, Adventure, Urban, Food, Photography>],
+  "hotel_tier": "<string — 'budget' for 2-3 star or budget-friendly/cheap/affordable, 'standard' for 4-star/mid-range, 'luxury' for 5-star/luxury/villas/resorts, default 'standard'>",
+  "preferred_star_rating": <float or null — 3.0 for 3-star, 4.0 for 4-star, 5.0 for 5-star, or null if unspecified>,
   "custom_vibe": "<preserve exact user wording about ambiance, style, mood, route>"
 }
 
@@ -228,6 +230,94 @@ def _normalize_output(data: dict) -> dict:
         data["destination"] = str(fallback_dest).strip().title()
         data["destinations"] = [data["destination"]]
 
+    # 4. Hotel tier and star rating normalization
+    combined_text = (str(data.get("custom_vibe", "")) + " " + str(data.get("raw_prompt", ""))).lower()
+    raw_hotel_tier = str(data.get("hotel_tier", "")).lower().strip()
+    raw_category = str(data.get("budget_category", "")).lower().strip()
+    raw_stars = data.get("preferred_star_rating")
+
+    # Priority 1: Explicit parameter in data
+    resolved_tier = None
+    if raw_category in ("luxury", "standard", "budget"):
+        resolved_tier = raw_category
+    elif raw_hotel_tier in ("luxury", "standard", "budget"):
+        resolved_tier = raw_hotel_tier
+
+    # Priority 2: Structured pattern "budget category: <tier>" or "<tier> category hotel"
+    if not resolved_tier:
+        cat_match = re.search(r"\bbudget\s*category\s*:\s*([a-z]+)", combined_text)
+        if cat_match:
+            tier_token = cat_match.group(1).lower()
+            if "lux" in tier_token:
+                resolved_tier = "luxury"
+            elif "budg" in tier_token:
+                resolved_tier = "budget"
+            elif "stand" in tier_token:
+                resolved_tier = "standard"
+        elif re.search(r"\bbudget\s+category(?:\s+hotel|\s+stay)?\b", combined_text):
+            resolved_tier = "budget"
+        elif re.search(r"\bluxury\s+category(?:\s+hotel|\s+stay)?\b", combined_text):
+            resolved_tier = "luxury"
+        elif re.search(r"\bstandard\s+category(?:\s+hotel|\s+stay)?\b", combined_text):
+            resolved_tier = "standard"
+
+    # Priority 3: Star rating if explicitly supplied
+    if not resolved_tier and raw_stars is not None:
+        try:
+            num_s = float(raw_stars)
+            if num_s >= 4.8:
+                resolved_tier = "luxury"
+            elif num_s <= 3.2:
+                resolved_tier = "budget"
+            elif 3.5 <= num_s <= 4.5:
+                resolved_tier = "standard"
+        except (ValueError, TypeError):
+            pass
+
+    # Priority 4: Distinct semantic keywords (never match bare "budget" which refers to dollar spending)
+    if not resolved_tier:
+        has_luxury = bool(re.search(r"\b(?:5[- ]?star|five[- ]?star|luxury|luxurious|boutique\s+resort|villa|resort|high[- ]?end|premium)\b", combined_text))
+        has_budget = bool(re.search(r"\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|budget\s+stay|budget\s+inn|budget\s+lodge|cheap\s+hotel|cheap\s+stay|cheap|economy|affordable|hostel|backpacker|guesthouse)\b", combined_text))
+        has_standard = bool(re.search(r"\b(?:4[- ]?star|four[- ]?star|standard\s+hotel|standard\s+stay|mid[- ]?range|comfort)\b", combined_text))
+
+        if has_luxury and not has_budget:
+            resolved_tier = "luxury"
+        elif has_budget and not has_luxury:
+            resolved_tier = "budget"
+        elif has_standard:
+            resolved_tier = "standard"
+        elif "cheap" in raw_hotel_tier:
+            resolved_tier = "budget"
+        elif "lux" in raw_hotel_tier:
+            resolved_tier = "luxury"
+        else:
+            resolved_tier = "standard"
+
+    if resolved_tier == "budget":
+        data["hotel_tier"] = "budget"
+        data["budget_category"] = "budget"
+        data["preferred_star_rating"] = 3.0
+    elif resolved_tier == "luxury":
+        data["hotel_tier"] = "luxury"
+        data["budget_category"] = "luxury"
+        data["preferred_star_rating"] = 5.0
+    else:
+        data["hotel_tier"] = "standard"
+        data["budget_category"] = "standard"
+        data["preferred_star_rating"] = 4.0
+
+    has_explicit_budget = (raw_budget is not None) or bool(
+        "$" in combined_text or re.search(r"\bbudget\s*(?:of|is|:)?\s*\d+", combined_text)
+    )
+    if not has_explicit_budget:
+        if resolved_tier == "budget":
+            data["budget"] = max(150.0, float(data.get("duration_days", 3)) * 45.0)
+        elif resolved_tier == "luxury":
+            data["budget"] = max(800.0, float(data.get("duration_days", 3)) * 220.0)
+        else:
+            data["budget"] = max(350.0, float(data.get("duration_days", 3)) * 90.0)
+        data["budget_max_usd"] = data["budget"]
+
     return data
 
 
@@ -328,9 +418,9 @@ def _rule_based_fallback(raw_prompt: str) -> dict:
         b_num = re.search(r"budget\s*(?:of|is|:)?\s*(\d+)", text)
         if b_num:
             budget = float(b_num.group(1))
-        elif "cheap" in text or "budget" in text and "low" in text:
-            budget = 200.0
-        elif "luxury" in text:
+        elif any(k in text for k in ["cheap", "budget", "affordable", "economy", "hostel", "3 star", "3-star", "three star"]):
+            budget = 200.0 if ("solo" in text or duration <= 5) else max(200.0, float(duration) * 45.0)
+        elif "luxury" in text or "5 star" in text or "5-star" in text:
             budget = 1500.0
 
     # 6. Party size
@@ -368,6 +458,56 @@ def _rule_based_fallback(raw_prompt: str) -> dict:
     date_match = re.search(r"(?:in\s+)?(january|february|march|april|may|june|july|august|september|october|november|december)(?:\s+\d{1,2}(?:-\d{1,2})?)?(?:\s*,\s*\d{4})?", text)
     travel_dates = date_match.group(0).title() if date_match else "Upcoming Dates"
 
+    # 9. Hotel tier and star rating preference (3 categories: Budget, Standard, Luxury)
+    hotel_tier = "standard"
+    budget_category = "standard"
+    preferred_stars = 4.0
+
+    cat_match = re.search(r"\bbudget\s*category\s*:\s*([a-z]+)", text)
+    if cat_match:
+        tier_token = cat_match.group(1).lower()
+        if "lux" in tier_token:
+            hotel_tier = "luxury"
+            budget_category = "luxury"
+            preferred_stars = 5.0
+        elif "budg" in tier_token:
+            hotel_tier = "budget"
+            budget_category = "budget"
+            preferred_stars = 3.0
+        elif "stand" in tier_token:
+            hotel_tier = "standard"
+            budget_category = "standard"
+            preferred_stars = 4.0
+    elif re.search(r"\bbudget\s+category(?:\s+hotel|\s+stay)?\b", text):
+        hotel_tier = "budget"
+        budget_category = "budget"
+        preferred_stars = 3.0
+    elif re.search(r"\bluxury\s+category(?:\s+hotel|\s+stay)?\b", text):
+        hotel_tier = "luxury"
+        budget_category = "luxury"
+        preferred_stars = 5.0
+    elif re.search(r"\bstandard\s+category(?:\s+hotel|\s+stay)?\b", text):
+        hotel_tier = "standard"
+        budget_category = "standard"
+        preferred_stars = 4.0
+    else:
+        has_luxury = bool(re.search(r"\b(?:5[- ]?star|five[- ]?star|luxury|luxurious|boutique|villa|resort|high[- ]?end)\b", text))
+        has_budget = bool(re.search(r"\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|budget\s+stay|cheap\s+hotel|cheap\s+stay|cheap|economy|affordable|hostel|backpacker)\b", text))
+        has_standard = bool(re.search(r"\b(?:4[- ]?star|four[- ]?star|standard\s+hotel|standard\s+stay|mid[- ]?range|comfort)\b", text))
+
+        if has_luxury and not has_budget:
+            hotel_tier = "luxury"
+            budget_category = "luxury"
+            preferred_stars = 5.0
+        elif has_budget and not has_luxury:
+            hotel_tier = "budget"
+            budget_category = "budget"
+            preferred_stars = 3.0
+        elif has_standard:
+            hotel_tier = "standard"
+            budget_category = "standard"
+            preferred_stars = 4.0
+
     data = {
         "destination": found_dest,
         "destinations": ordered_dests if ordered_dests else [found_dest],
@@ -380,6 +520,9 @@ def _rule_based_fallback(raw_prompt: str) -> dict:
         "party_size": party_size,
         "travellers": party_size,
         "interests": interests,
+        "hotel_tier": hotel_tier,
+        "budget_category": budget_category,
+        "preferred_star_rating": preferred_stars,
         "custom_vibe": raw_prompt,
     }
     return _normalize_output(data)

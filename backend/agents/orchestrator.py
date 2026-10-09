@@ -98,7 +98,7 @@ def find_nearest_known_city(lat, lng):
         return None
 
 
-def run_agent_pipeline(raw_user_prompt: str) -> dict:
+def run_agent_pipeline(raw_user_prompt: str, category_override: Optional[str] = None) -> dict:
     """Executes the full 4-agent pipeline sequentially with structured logging and timings."""
     timings = {}
 
@@ -116,11 +116,23 @@ def run_agent_pipeline(raw_user_prompt: str) -> dict:
             logger.warning(f"Agent 1 returned error: {err}")
             return {"error": err, "agent_timings": timings}
 
+        # Apply category override if explicitly provided from API
+        if category_override and str(category_override).lower() in ("budget", "standard", "luxury"):
+            chosen_cat = str(category_override).lower()
+            params["hotel_tier"] = chosen_cat
+            params["budget_category"] = chosen_cat
+            if chosen_cat == "budget":
+                params["preferred_star_rating"] = 3.0
+            elif chosen_cat == "luxury":
+                params["preferred_star_rating"] = 5.0
+            else:
+                params["preferred_star_rating"] = 4.0
+
         primary_destination = params.get("destination", "")
         dest_coords = params.get("destination_coords", {})
 
         logger.info(
-            f"Agent 1 complete | destination={primary_destination} | duration_s={t_agent1}"
+            f"Agent 1 complete | destination={primary_destination} | tier={params.get('budget_category')} | duration_s={t_agent1}"
         )
 
         # Agent 2: Information Retrieval
