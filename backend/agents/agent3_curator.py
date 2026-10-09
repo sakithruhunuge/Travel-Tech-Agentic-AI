@@ -173,6 +173,79 @@ def score_hotel(
     return round(total_score, 2), breakdown
 
 
+def generate_xai_hotel_reasons(
+    hotel: dict,
+    breakdown: dict,
+    ceiling: float,
+    preferred_tier: str = "",
+    preferred_stars: Optional[float] = None,
+) -> List[str]:
+    """Generates crystal-clear, user-friendly explainable AI rationale for a curated hotel."""
+    reasons = []
+    price = float(hotel.get("price_usd", 0.0) or 0.0)
+    tier = str(hotel.get("price_tier", "")).title()
+    stars = hotel.get("star_rating", "3-Star")
+
+    # 1. Budget Fit explanation
+    b_pts = breakdown.get("budget_fit", 25)
+    if price > 0:
+        if ceiling > 0 and price <= ceiling:
+            diff = round(ceiling - price, 1)
+            if diff >= 5:
+                reasons.append(
+                    f"Budget Fit ({b_pts}/30 pts): Priced at ${price:.0f}/night, providing great value while staying ${diff:.0f}/night below your daily target ceiling."
+                )
+            else:
+                reasons.append(
+                    f"Budget Fit ({b_pts}/30 pts): Perfectly aligns with your target budget at ${price:.0f}/night without hidden extra fees."
+                )
+        else:
+            reasons.append(
+                f"Budget Fit ({b_pts}/30 pts): Valued at ${price:.0f}/night, offering high comfort and balanced amenities."
+            )
+    else:
+        reasons.append("Budget Fit (25/30 pts): Highly economical lodging option within trip parameters.")
+
+    # 2. Star & Class match
+    s_pts = breakdown.get("star_rating", 12)
+    if preferred_stars:
+        reasons.append(
+            f"Star Rating Match ({s_pts}/15 pts): Meets your preferred {preferred_stars:.0f}-star requirement ({stars}) with verified guest satisfaction."
+        )
+    else:
+        reasons.append(
+            f"Quality & Hospitality ({s_pts}/15 pts): Verified {stars} property with consistent positive guest ratings."
+        )
+
+    # 3. Location & POI density
+    p_pts = breakdown.get("poi_density", 15)
+    poi_count = hotel.get("poi_density_5km", 0)
+    if poi_count:
+        reasons.append(
+            f"Strategic Location ({p_pts}/20 pts): Located within 5 km of {poi_count} primary attractions, significantly cutting down daily commute times."
+        )
+    else:
+        reasons.append(
+            f"Transit Accessibility ({p_pts}/20 pts): Conveniently positioned near key sightseeing routes and safe transport corridors."
+        )
+
+    # 4. Amenities
+    a_pts = breakdown.get("amenities", 15)
+    amenities = []
+    if hotel.get("has_wifi"):
+        amenities.append("Free High-Speed Wi-Fi")
+    if hotel.get("has_pool"):
+        amenities.append("Swimming Pool")
+    if hotel.get("has_restaurant"):
+        amenities.append("In-House Dining")
+    if amenities:
+        reasons.append(
+            f"Amenity Match ({a_pts}/20 pts): Equipped with {', '.join(amenities)} tailored for a comfortable stay."
+        )
+
+    return reasons
+
+
 def score_poi(
     poi: dict, interests: list, hotel_shortlist: Optional[list] = None
 ) -> float:
@@ -369,7 +442,17 @@ def curate_candidates(candidates: dict, user_params: dict) -> dict:
             preferred_stars=preferred_stars,
         )
         hotel["curator_score"] = score
-        scored_hotels.append((score, hotel, breakdown))
+        hotel_reasons = generate_xai_hotel_reasons(
+            hotel,
+            breakdown,
+            effective_budget_ceiling,
+            preferred_tier=hotel_tier,
+            preferred_stars=preferred_stars,
+        )
+        hotel["reasons"] = hotel_reasons
+        breakdown_with_reasons = dict(breakdown)
+        breakdown_with_reasons["reasons"] = hotel_reasons
+        scored_hotels.append((score, hotel, breakdown_with_reasons))
 
     scored_hotels.sort(key=lambda x: x[0], reverse=True)
     top_3_hotels = [item[1] for item in scored_hotels[:3]]

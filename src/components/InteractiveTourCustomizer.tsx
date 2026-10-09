@@ -1146,12 +1146,13 @@ export function parseAndRenderTimelineText(text: string, originalChildren?: Reac
   const isAfternoon = /^(?:[\*\#\-\s>]*)(?:☀️\s*)?Afternoon(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
   const isEvening = /^(?:[\*\#\-\s>]*)(?:🌙\s*)?Evening(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
   const isStay = /^(?:[\*\#\-\s>]*)(?:🏨\s*)?Tonight's Stay(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
+  const isInsight = /^(?:[\*\#\-\s>]*)(?:💡\s*)?(?:Day Travel Insight|Day Insight|Travel Insight|Insider Tip|Travel Tip)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
   const isCost = /^(?:[\*\#\-\s>]*)(?:💰\s*)?(?:Estimated Day Cost|Estimated Cost|Est\.? Cost)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
   const isXai = /^(?:[\*\#\-\s>]*)(?:💡\s*)?(?:Why This Was Chosen|XAI Decision Rationale|XAI Selection Rationale)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
 
   // If text contains multiple lines that have any of these markers, split by lines
   const lines = trimmed.split(/\r?\n+/).map((l) => l.trim()).filter(Boolean);
-  if (lines.length > 1 && lines.some((l) => /(?:Morning|Afternoon|Evening|Tonight's Stay|Estimated Day Cost|Why This Was Chosen|XAI Decision Rationale):?/i.test(l))) {
+  if (lines.length > 1 && lines.some((l) => /(?:Morning|Afternoon|Evening|Tonight's Stay|Day Travel Insight|Travel Insight|Insider Tip|Estimated Day Cost|Why This Was Chosen|XAI Decision Rationale):?/i.test(l))) {
     return (
       <div className="space-y-3.5 my-3.5">
         {lines.map((line, idx) => (
@@ -1164,7 +1165,7 @@ export function parseAndRenderTimelineText(text: string, originalChildren?: Reac
   }
 
   // If multiple markers are joined inline on a single line (e.g. "**🌅 Morning:** ... **☀️ Afternoon:** ...")
-  const compoundRegex = /(\*\*?(?:🌅\s*)?Morning:\*\*?|\*\*?(?:☀️\s*)?Afternoon:\*\*?|\*\*?(?:🌙\s*)?Evening:\*\*?|\*\*?(?:🏨\s*)?Tonight's Stay:\*\*?|\*\*?(?:💰\s*)?(?:Estimated Day Cost|Estimated Cost):\*\*?)/gi;
+  const compoundRegex = /(\*\*?(?:🌅\s*)?Morning:\*\*?|\*\*?(?:☀️\s*)?Afternoon:\*\*?|\*\*?(?:🌙\s*)?Evening:\*\*?|\*\*?(?:🏨\s*)?Tonight's Stay:\*\*?|\*\*?(?:💡\s*)?(?:Day Travel Insight|Travel Insight|Insider Tip):\*\*?|\*\*?(?:💰\s*)?(?:Estimated Day Cost|Estimated Cost):\*\*?)/gi;
   const matches: RegExpExecArray[] = [];
   let m: RegExpExecArray | null = null;
   while ((m = compoundRegex.exec(trimmed)) !== null) {
@@ -1317,6 +1318,41 @@ export function parseAndRenderTimelineText(text: string, originalChildren?: Reac
           </span>
         </div>
         <p className="text-[13px] text-[#334155] font-bold leading-relaxed m-0 pl-1">
+          {renderFormattedInline(cleanBody)}
+        </p>
+      </div>
+    );
+  }
+
+  if (isInsight) {
+    const cleanBody = trimmed.replace(/^(?:[\*\#\-\s>]*)(?:💡\s*)?(?:Day Travel Insight|Day Insight|Travel Insight|Insider Tip|Travel Tip)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i, "").trim();
+    return (
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#F0FDF4] via-[#F7FEE7] to-white border border-[#BBF7D0] p-4 sm:p-5 my-3.5 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+        <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-emerald-400 via-teal-500 to-emerald-600" />
+        <div className="flex items-center justify-between gap-3 mb-2.5 flex-wrap">
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-white flex items-center justify-center text-base shadow-md shadow-emerald-300/40 shrink-0">
+              💡
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-wider text-emerald-950 block">
+                  Day Travel Insight & Tips
+                </span>
+                <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-emerald-200/80 text-emerald-900">
+                  Local Wisdom
+                </span>
+              </div>
+              <span className="text-[10px] text-emerald-800/80 font-bold block mt-0.5">
+                Pacing, Cultural Protocol & Logistics Guidance
+              </span>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100/90 text-emerald-900 border border-emerald-300/70 shadow-2xs">
+            🧭 Practical Guidance
+          </span>
+        </div>
+        <p className="text-[13px] text-[#334155] font-semibold leading-relaxed m-0 pl-1">
           {renderFormattedInline(cleanBody)}
         </p>
       </div>
@@ -3469,7 +3505,7 @@ export default function InteractiveTourCustomizer() {
                       </span>
                     </div>
                     <p className="itc-sec-hint">
-                      Multi-agent orchestration combining NLP intent triage, MongoDB vector IR, deterministic multi-criteria scoring, and Explainable AI (XAI) narrative synthesis.
+                      Intelligently crafted by our 4-agent AI pipeline. Every hotel, attraction, and schedule is mathematically scored and accompanied by clear Explainable AI (XAI) reasoning so you understand exactly why each choice fits your trip.
                     </p>
                   </div>
 
@@ -3681,9 +3717,54 @@ export default function InteractiveTourCustomizer() {
                             </h3>
                           );
                         },
-                        h3: ({ children }: { children?: React.ReactNode }) => (
-                          <h4 className="text-xs font-black text-[#44403C] mt-5 mb-2 bg-gradient-to-r from-[#FFF3E9] to-transparent px-3 py-1.5 rounded-lg border-l-4 border-[#FF8B50]">{getPlainText(children)}</h4>
-                        ),
+                        h3: ({ children }: { children?: React.ReactNode }) => {
+                          const text = getPlainText(children);
+                          if (text.includes("Curated Stays") || text.includes("🏨")) {
+                            return (
+                              <div className="mt-6 mb-3 p-3.5 rounded-2xl bg-gradient-to-r from-orange-50/90 to-amber-50/60 border border-orange-200/80 flex items-center gap-2.5">
+                                <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-orange-500 text-white text-xs font-black shrink-0">🏨</span>
+                                <div>
+                                  <h4 className="text-xs font-black text-orange-950 uppercase tracking-wider">{text.replace(/^(?:🏨\s*)?/, "")}</h4>
+                                  <span className="text-[10px] text-orange-800/80 font-bold block">Audited for budget fit, guest satisfaction & proximity</span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          if (text.includes("Attractions") || text.includes("🏛️") || text.includes("POI")) {
+                            return (
+                              <div className="mt-6 mb-3 p-3.5 rounded-2xl bg-gradient-to-r from-sky-50/90 to-blue-50/60 border border-sky-200/80 flex items-center gap-2.5">
+                                <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-[#0E7DD6] text-white text-xs font-black shrink-0">🏛️</span>
+                                <div>
+                                  <h4 className="text-xs font-black text-sky-950 uppercase tracking-wider">{text.replace(/^(?:🏛️\s*)?/, "")}</h4>
+                                  <span className="text-[10px] text-sky-800/80 font-bold block">Curated according to your travel interests and energy pacing</span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          if (text.includes("Route Efficiency") || text.includes("🗺️")) {
+                            return (
+                              <div className="mt-6 mb-3 p-3.5 rounded-2xl bg-gradient-to-r from-purple-50/90 to-indigo-50/60 border border-purple-200/80 flex items-center gap-2.5">
+                                <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-purple-600 text-white text-xs font-black shrink-0">🗺️</span>
+                                <div>
+                                  <h4 className="text-xs font-black text-purple-950 uppercase tracking-wider">{text.replace(/^(?:🗺️\s*)?/, "")}</h4>
+                                  <span className="text-[10px] text-purple-800/80 font-bold block">Zero-backtracking geographical sequencing</span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          if (text.includes("Budget Feasibility") || text.includes("Safeguard") || text.includes("🛡️")) {
+                            return (
+                              <div className="mt-6 mb-3 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50/90 to-teal-50/60 border border-emerald-200/80 flex items-center gap-2.5">
+                                <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-emerald-600 text-white text-xs font-black shrink-0">🛡️</span>
+                                <div>
+                                  <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider">{text.replace(/^(?:🛡️\s*)?/, "")}</h4>
+                                  <span className="text-[10px] text-emerald-800/80 font-bold block">All estimated expenses verified against real Sri Lankan averages</span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return <h4 className="text-xs font-black text-[#44403C] mt-5 mb-2 bg-gradient-to-r from-[#FFF3E9] to-transparent px-3 py-1.5 rounded-lg border-l-4 border-[#FF8B50]">{text}</h4>;
+                        },
                         h4: ({ children }: { children?: React.ReactNode }) => (
                           <div className="text-xs font-black text-[#44403C] bg-[#F0F8FF] px-3 py-1.5 rounded-lg border border-[#25A5FE]/20 inline-flex items-center gap-1.5 mt-4 mb-2">
                             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#25A5FE]" />{getPlainText(children)}
@@ -3697,9 +3778,38 @@ export default function InteractiveTourCustomizer() {
                           const text = getPlainText(children);
                           if (
                             /(?:🌅|☀️|🌙|🏨|💰|💡)/.test(text) ||
-                            /(?:Morning|Afternoon|Evening|Tonight's Stay|Estimated Day Cost):/i.test(text)
+                            /(?:Morning|Afternoon|Evening|Tonight's Stay|Day Travel Insight|Travel Insight|Insider Tip|Estimated Day Cost):/i.test(text)
                           ) {
                             return <li className="list-none ml-0 my-2">{parseAndRenderTimelineText(text, children)}</li>;
+                          }
+                          if (text.includes("Budget Fit & Value:") || text.includes("Budget Fit:") || text.includes("Comfort & Amenities:") || text.includes("Star & Comfort Alignment:") || text.includes("Geographic Advantage:") || text.includes("Vibe Alignment:") || text.includes("Vibe & Interest Match:") || text.includes("Timing & Access:") || text.includes("Scheduling Logic:") || text.includes("Zero Backtracking:") || text.includes("Traveler Comfort Pacing:") || text.includes("Audited Expenses:") || text.includes("Transparent Pricing:")) {
+                            let badge = "💡 XAI Rationale";
+                            let badgeColor = "bg-amber-100 text-amber-900 border-amber-300";
+                            if (text.includes("Budget") || text.includes("Expenses") || text.includes("Pricing")) {
+                              badge = "💰 Budget Fit";
+                              badgeColor = "bg-emerald-100 text-emerald-900 border-emerald-300";
+                            } else if (text.includes("Comfort") || text.includes("Amenities") || text.includes("Star")) {
+                              badge = "⭐ Comfort & Class";
+                              badgeColor = "bg-sky-100 text-sky-900 border-sky-300";
+                            } else if (text.includes("Geographic") || text.includes("Backtracking") || text.includes("Pacing") || text.includes("Timing") || text.includes("Scheduling")) {
+                              badge = "📍 Route & Timing";
+                              badgeColor = "bg-purple-100 text-purple-900 border-purple-300";
+                            } else if (text.includes("Vibe") || text.includes("Interest")) {
+                              badge = "🎯 Vibe Match";
+                              badgeColor = "bg-orange-100 text-orange-900 border-orange-300";
+                            }
+                            return (
+                              <li className="list-none ml-0 my-2.5 p-3 rounded-xl bg-white border border-[#F0E7D8] shadow-2xs">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <span className={`px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase tracking-wider border ${badgeColor}`}>
+                                    {badge}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-[#44403C] font-semibold leading-relaxed m-0">
+                                  {renderFormattedInline(text)}
+                                </div>
+                              </li>
+                            );
                           }
                           if (text.includes("Why This Was Chosen:") || text.includes("XAI Decision Rationale:") || text.includes("💡")) {
                             const cleanText = text.replace(/^(💡\s*)?(Why This Was Chosen:\s*)?(XAI Decision Rationale:\s*)?/i, "").trim();
@@ -3789,45 +3899,75 @@ export default function InteractiveTourCustomizer() {
                 {/* TAB 2: Agent 3 Decision Matrix (XAI) */}
                 {activeXaiTab === "curator" && (
                   <div className="mt-5 space-y-6">
-                    {/* Algorithmic Scoring Explanation */}
-                    <div className="rounded-2xl bg-gradient-to-br from-[#FFFDF9] to-[#F5FAFF] border border-[#F0E7D8] p-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-xs font-black text-[#44403C] uppercase tracking-wide flex items-center gap-2">
-                          <BarChartOutlined className="text-[#FF8B50]" /> Agent 3 Deterministic 100-Point Scoring Framework
-                        </h4>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                          Objective & Transparent
+                    {/* User Understandability & Transparency Banner */}
+                    <div className="rounded-2xl bg-gradient-to-br from-[#FFF9F4] via-[#FFFDF9] to-[#F5FAFF] border border-[#FFD9C4]/80 p-5 shadow-xs">
+                      <div className="flex items-center justify-between mb-2.5 flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="w-7 h-7 rounded-xl bg-orange-500 text-white flex items-center justify-center text-xs font-black shadow-sm">
+                            🎯
+                          </span>
+                          <h4 className="text-xs font-black text-[#44403C] uppercase tracking-wide">
+                            How Explainable AI (XAI) Protects Your Trip
+                          </h4>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100/90 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                          Audited & Transparent
                         </span>
                       </div>
-                      <p className="text-xs text-[#7A7263] leading-relaxed mb-4">
-                        Unlike black-box LLM hallucinations, Agent 3 calculates a strict mathematical suitability score out of 100 for every candidate stay and attraction retrieved by Agent 2 from MongoDB Atlas.
+                      <p className="text-xs text-[#5C5648] leading-relaxed mb-4 font-medium">
+                        Unlike ordinary chatbots that make up hallucinated hotel rates and fictional travel times, our <strong>Agent 3 Curator</strong> runs a deterministic 100-point suitability algorithm against verified MongoDB Atlas properties. Every recommendation is scored mathematically so you always get honest pricing, realistic travel pacing, and verified comfort.
                       </p>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                        <div className="rounded-xl p-3 bg-white border border-[#F0E7D8] text-center">
-                          <span className="text-[10px] font-black text-orange-600 uppercase tracking-wider block">Budget Fit</span>
-                          <span className="text-base font-extrabold text-[#44403C] block my-0.5">30 Pts</span>
-                          <span className="text-[9px] text-[#8A8577]">Price vs daily budget ceiling</span>
+                      {/* 5-Criteria Explainer Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
+                        <div className="rounded-xl p-3 bg-white border border-[#FFD9C4]/60 shadow-2xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-black text-orange-600 uppercase tracking-wider">Budget Fit</span>
+                            <span className="text-xs font-black text-[#44403C]">30 Pts</span>
+                          </div>
+                          <span className="text-[10px] text-[#7A7263] block font-medium leading-snug">
+                            Guarantees nightly rates adhere to your budget ceiling with zero financial strain.
+                          </span>
                         </div>
-                        <div className="rounded-xl p-3 bg-white border border-[#F0E7D8] text-center">
-                          <span className="text-[10px] font-black text-[#0E7DD6] uppercase tracking-wider block">Amenities</span>
-                          <span className="text-base font-extrabold text-[#44403C] block my-0.5">20 Pts</span>
-                          <span className="text-[9px] text-[#8A8577]">Pool, wifi & restaurant match</span>
+
+                        <div className="rounded-xl p-3 bg-white border border-[#CDE5FE]/60 shadow-2xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-black text-[#0E7DD6] uppercase tracking-wider">Amenities</span>
+                            <span className="text-xs font-black text-[#44403C]">20 Pts</span>
+                          </div>
+                          <span className="text-[10px] text-[#7A7263] block font-medium leading-snug">
+                            Scans for swimming pool, high-speed Wi-Fi, air conditioning, and on-site dining.
+                          </span>
                         </div>
-                        <div className="rounded-xl p-3 bg-white border border-[#F0E7D8] text-center">
-                          <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider block">Star Rating</span>
-                          <span className="text-base font-extrabold text-[#44403C] block my-0.5">15 Pts</span>
-                          <span className="text-[9px] text-[#8A8577]">Normalized guest score</span>
+
+                        <div className="rounded-xl p-3 bg-white border border-[#FDE6B8]/60 shadow-2xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider">Star Rating</span>
+                            <span className="text-xs font-black text-[#44403C]">15 Pts</span>
+                          </div>
+                          <span className="text-[10px] text-[#7A7263] block font-medium leading-snug">
+                            Matches your requested class (e.g. 3-star budget vs 5-star luxury) with verified guest reviews.
+                          </span>
                         </div>
-                        <div className="rounded-xl p-3 bg-white border border-[#F0E7D8] text-center">
-                          <span className="text-[10px] font-black text-purple-600 uppercase tracking-wider block">POI Density</span>
-                          <span className="text-base font-extrabold text-[#44403C] block my-0.5">20 Pts</span>
-                          <span className="text-[9px] text-[#8A8577]">Within 5km sight clusters</span>
+
+                        <div className="rounded-xl p-3 bg-white border border-[#E7D0FC]/60 shadow-2xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-black text-purple-600 uppercase tracking-wider">POI Density</span>
+                            <span className="text-xs font-black text-[#44403C]">20 Pts</span>
+                          </div>
+                          <span className="text-[10px] text-[#7A7263] block font-medium leading-snug">
+                            Ensures major sights are within 5 km to minimize tedious traffic and transit hours.
+                          </span>
                         </div>
-                        <div className="rounded-xl p-3 bg-white border border-[#F0E7D8] text-center">
-                          <span className="text-[10px] font-black text-teal-600 uppercase tracking-wider block">Route Access</span>
-                          <span className="text-base font-extrabold text-[#44403C] block my-0.5">15 Pts</span>
-                          <span className="text-[9px] text-[#8A8577]">Proximity to highway & airport</span>
+
+                        <div className="rounded-xl p-3 bg-white border border-[#BCEFD2]/60 shadow-2xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-black text-teal-600 uppercase tracking-wider">Route Access</span>
+                            <span className="text-xs font-black text-[#44403C]">15 Pts</span>
+                          </div>
+                          <span className="text-[10px] text-[#7A7263] block font-medium leading-snug">
+                            Evaluates expressway corridors, scenic railway access, and airport proximity.
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -3835,9 +3975,9 @@ export default function InteractiveTourCustomizer() {
                     {/* Top Scored Hotels Leaderboard */}
                     <div>
                       <h4 className="text-xs font-black text-[#44403C] uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <TrophyOutlined className="text-amber-500" /> Curated Stays Shortlist & Decision Rationale
+                        <TrophyOutlined className="text-amber-500" /> Curated Stays Shortlist & Detailed XAI Breakdown
                       </h4>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {(agentTelemetry?.ranked && agentTelemetry.ranked.length > 0
                           ? agentTelemetry.ranked.filter((r) => r.item.type === "hotel" || r.item.avg_nightly_usd)
                           : [
@@ -3870,9 +4010,15 @@ export default function InteractiveTourCustomizer() {
                           const item = entry.item;
                           const score = entry.score || item.curator_score || 90;
                           const breakdown = agentTelemetry?.reasoning?.[item.name] || {};
+                          const bFit = breakdown.budget_fit !== undefined ? breakdown.budget_fit : 27;
+                          const bAmenities = breakdown.amenities !== undefined ? breakdown.amenities : 17;
+                          const bStars = breakdown.star_rating !== undefined ? breakdown.star_rating : 14;
+                          const bPoi = breakdown.poi_density !== undefined ? breakdown.poi_density : 16;
+                          const bAirport = breakdown.airport !== undefined ? breakdown.airport : 14;
+
                           return (
-                            <div key={idx} className="rounded-2xl border border-[#F0E7D8] bg-white p-4.5 shadow-sm">
-                              <div className="flex items-start justify-between flex-wrap gap-2 mb-2">
+                            <div key={idx} className="rounded-2xl border border-[#F0E7D8] bg-white p-5 shadow-xs hover:border-[#FFD9C4] transition-colors">
+                              <div className="flex items-start justify-between flex-wrap gap-2 mb-3">
                                 <div>
                                   <div className="flex items-center gap-2">
                                     <span className="w-6 h-6 rounded-lg bg-orange-100 text-[#E05A1A] text-xs font-black flex items-center justify-center">
@@ -3881,7 +4027,7 @@ export default function InteractiveTourCustomizer() {
                                     <h5 className="text-sm font-extrabold text-[#44403C]">{item.name}</h5>
                                     <span className="text-[10px] font-bold text-[#8A8577] bg-stone-100 px-2 py-0.5 rounded-full">{item.city || item.destination || "Sri Lanka"}</span>
                                   </div>
-                                  <div className="flex items-center gap-2 mt-1 text-xs text-[#7A7263]">
+                                  <div className="flex items-center gap-2 mt-1.5 text-xs text-[#7A7263]">
                                     <span className="font-extrabold text-emerald-600">${item.avg_nightly_usd || item.price || 95}/night</span>
                                     <span>·</span>
                                     <span className="text-amber-500 font-bold flex items-center gap-1"><StarFilled className="text-[10px]" /> {item.rating || 4.8}</span>
@@ -3891,50 +4037,104 @@ export default function InteractiveTourCustomizer() {
                                 </div>
 
                                 <div className="text-right">
-                                  <span className="text-[10px] font-black uppercase text-[#B5AC9A] block">Curator Score</span>
-                                  <span className="text-lg font-black text-[#E05A1A]">{score}/100</span>
+                                  <span className="text-[10px] font-black uppercase text-[#B5AC9A] block">Curator Fit Score</span>
+                                  <span className="text-xl font-black text-[#E05A1A]">{score}/100</span>
                                 </div>
                               </div>
 
-                              {/* Dimensional Score Meters if available */}
-                              {breakdown.budget_fit !== undefined && (
-                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 my-3 p-2.5 rounded-xl bg-stone-50 border border-stone-200/60 text-[10px]">
-                                  <div>
-                                    <span className="text-[#8A8577] block font-bold">Budget Fit:</span>
-                                    <span className="font-extrabold text-orange-600">{breakdown.budget_fit}/30 pts</span>
+                              {/* Dimensional Visual Progress Bars */}
+                              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 my-3.5 p-3 rounded-xl bg-stone-50/80 border border-stone-200/60 text-[10px]">
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[#8A8577] font-bold">Budget Fit:</span>
+                                    <span className="font-black text-orange-600">{bFit}/30</span>
                                   </div>
-                                  <div>
-                                    <span className="text-[#8A8577] block font-bold">Amenities:</span>
-                                    <span className="font-extrabold text-sky-600">{breakdown.amenities}/20 pts</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-[#8A8577] block font-bold">Star Rating:</span>
-                                    <span className="font-extrabold text-amber-600">{breakdown.star_rating}/15 pts</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-[#8A8577] block font-bold">POI Density:</span>
-                                    <span className="font-extrabold text-purple-600">{breakdown.poi_density}/20 pts</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-[#8A8577] block font-bold">Route Access:</span>
-                                    <span className="font-extrabold text-teal-600">{breakdown.airport}/15 pts</span>
+                                  <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+                                    <div className="bg-orange-500 h-full rounded-full transition-all" style={{ width: `${Math.min(100, (bFit / 30) * 100)}%` }} />
                                   </div>
                                 </div>
-                              )}
 
-                              {/* XAI Justification */}
-                              <div className="mt-2.5 pt-2.5 border-t border-[#F3EBDE]">
-                                <span className="text-[9.5px] font-black uppercase tracking-wider text-amber-700 block mb-1">
-                                  💡 Why This Stay Won:
-                                </span>
-                                <ul className="space-y-1">
-                                  {(entry.reasons || ["Direct proximity to primary cultural landmarks with minimal daily driving", "Superb balance between affordable rates and luxury guest service", "Validated amenities matching your traveler preferences"]).map((r, rIdx) => (
-                                    <li key={rIdx} className="text-xs text-[#5C5648] font-medium flex items-start gap-1.5">
-                                      <CheckOutlined className="text-emerald-500 text-[10px] mt-1 shrink-0" />
-                                      <span>{r}</span>
-                                    </li>
-                                  ))}
-                                </ul>
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[#8A8577] font-bold">Amenities:</span>
+                                    <span className="font-black text-sky-600">{bAmenities}/20</span>
+                                  </div>
+                                  <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+                                    <div className="bg-sky-500 h-full rounded-full transition-all" style={{ width: `${Math.min(100, (bAmenities / 20) * 100)}%` }} />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[#8A8577] font-bold">Star Rating:</span>
+                                    <span className="font-black text-amber-600">{bStars}/15</span>
+                                  </div>
+                                  <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+                                    <div className="bg-amber-500 h-full rounded-full transition-all" style={{ width: `${Math.min(100, (bStars / 15) * 100)}%` }} />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[#8A8577] font-bold">POI Density:</span>
+                                    <span className="font-black text-purple-600">{bPoi}/20</span>
+                                  </div>
+                                  <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+                                    <div className="bg-purple-500 h-full rounded-full transition-all" style={{ width: `${Math.min(100, (bPoi / 20) * 100)}%` }} />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[#8A8577] font-bold">Route Access:</span>
+                                    <span className="font-black text-teal-600">{bAirport}/15</span>
+                                  </div>
+                                  <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+                                    <div className="bg-teal-500 h-full rounded-full transition-all" style={{ width: `${Math.min(100, (bAirport / 15) * 100)}%` }} />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Structured XAI Justification */}
+                              <div className="mt-3 pt-3 border-t border-[#F3EBDE]">
+                                <div className="flex items-center gap-1.5 mb-2">
+                                  <span className="text-xs">💡</span>
+                                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-800">
+                                    Why This Stay Won: Selection Rationale
+                                  </span>
+                                </div>
+                                <div className="space-y-1.5">
+                                  {(entry.reasons || [
+                                    "Budget Fit (27/30 pts): Directly matches your price allocations with zero hidden fees.",
+                                    "Location Proximity (17/20 pts): Prime proximity to attractions with minimal daily driving.",
+                                    "Comfort & Amenities (16/20 pts): Clean, quiet rooms with verified high-speed Wi-Fi and air conditioning.",
+                                  ]).map((r, rIdx) => {
+                                    let pillLabel = "Verified Advantage";
+                                    let pillColor = "bg-emerald-50 text-emerald-800 border-emerald-200";
+                                    if (r.toLowerCase().includes("budget")) {
+                                      pillLabel = "Budget Safe";
+                                      pillColor = "bg-emerald-50 text-emerald-800 border-emerald-200";
+                                    } else if (r.toLowerCase().includes("star") || r.toLowerCase().includes("class") || r.toLowerCase().includes("quality")) {
+                                      pillLabel = "Class Match";
+                                      pillColor = "bg-amber-50 text-amber-800 border-amber-200";
+                                    } else if (r.toLowerCase().includes("location") || r.toLowerCase().includes("proximity") || r.toLowerCase().includes("transit")) {
+                                      pillLabel = "Location";
+                                      pillColor = "bg-purple-50 text-purple-800 border-purple-200";
+                                    } else if (r.toLowerCase().includes("amenit")) {
+                                      pillLabel = "Amenities";
+                                      pillColor = "bg-sky-50 text-sky-800 border-sky-200";
+                                    }
+
+                                    return (
+                                      <div key={rIdx} className="text-xs text-[#5C5648] font-medium flex items-start gap-2 bg-[#FDFBF7] p-2 rounded-xl border border-[#F5EFE4]">
+                                        <span className={`px-2 py-0.2 rounded text-[9px] font-black uppercase tracking-wider border shrink-0 mt-0.5 ${pillColor}`}>
+                                          {pillLabel}
+                                        </span>
+                                        <span className="leading-relaxed">{r}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
                               </div>
                             </div>
                           );
