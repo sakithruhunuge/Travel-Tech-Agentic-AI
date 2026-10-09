@@ -40,18 +40,25 @@ except ImportError:
     from api.routes import router as api_router, agent_router
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Lifecycle manager: verifies database connectivity on startup and closes clients on shutdown."""
-    print("=" * 60)
-    print("[STARTING] Travel Agentic AI Backend (FastAPI)")
-    print("=" * 60)
+import asyncio
+
+async def _background_db_ping():
+    loop = asyncio.get_running_loop()
     try:
-        scraper_ok, main_ok = ping_connections()
+        scraper_ok, main_ok = await loop.run_in_executor(None, ping_connections)
         print(f"MongoDB Scraper Cluster : {'[CONNECTED]' if scraper_ok else '[OFFLINE]'}")
         print(f"MongoDB Production/Staging: {'[CONNECTED]' if main_ok else '[OFFLINE]'}")
     except Exception as e:
         print(f"[WARN] Database connection ping failed: {e}")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifecycle manager: initializes non-blocking database connectivity and closes clients on shutdown."""
+    print("=" * 60)
+    print("[STARTING] Travel Agentic AI Backend (FastAPI)")
+    print("=" * 60)
+    asyncio.create_task(_background_db_ping())
 
     yield
 
@@ -72,10 +79,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS Middleware configuration
+# CORS Middleware configuration (supports localhost, subdomains like ceylon-safari.localhost, and 127.0.0.1)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origin_regex=r"^https?://([a-zA-Z0-9-]+\.)*(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -13,6 +13,9 @@ class ItineraryRequest(BaseModel):
     budget_usd: float = Field(..., ge=50.0, description="Total budget in USD (minimum $50.0)")
     party_size: int = Field(default=2, ge=1, description="Number of travelers")
     interests: List[str] = Field(default_factory=list, description="Traveler interests or themes")
+    hotel_tier: str = Field(default="standard", description="Requested hotel tier ('budget', 'standard', 'luxury')")
+    budget_category: str = Field(default="standard", description="Requested budget category ('budget', 'standard', 'luxury')")
+    preferred_star_rating: Any = Field(default=None, description="Preferred star rating (e.g. 3.0, 4.0, 5.0)")
     custom_vibe: str = Field(default="", description="Optional vibe preference (e.g. relaxed, adventurous)")
 
 
@@ -68,6 +71,8 @@ class Agent1ProcessResponse(BaseModel):
     duration_days: int = Field(default=1)
     party_size: int = Field(default=2)
     budget_max_usd: float = Field(default=500.0)
+    hotel_tier: str = Field(default="standard")
+    preferred_star_rating: Any = Field(default=None)
     custom_vibe: str = Field(default="")
     travel_dates: str = Field(default="")
 
