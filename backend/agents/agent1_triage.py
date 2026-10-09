@@ -40,9 +40,11 @@ Extract exactly these fields:
   "destination_coords": {"lat": <float>, "lng": <float>},
   "travel_dates": "<string, e.g. December 10-15 2026>",
   "duration_days": <integer>,
-  "budget_max_usd": <float — total trip budget. Convert: 'cheap'=200, 'standard'=500, 'luxury'=1500>,
+  "budget_max_usd": <float — total trip budget. If user asks for 'budget friendly', 'cheap', or '3 star' without a total dollar figure, convert to 200. Convert: 'standard'=500, 'luxury'=1500>,
   "party_size": <integer, default 2 if not mentioned>,
   "interests": [<list of strings — ONLY from: Historical, Nature, Beach, Adventure, Urban, Food, Photography>],
+  "hotel_tier": "<string — 'budget' for 2-3 star or budget-friendly/cheap/affordable, 'standard' for 4-star/mid-range, 'luxury' for 5-star/luxury/villas/resorts, default 'standard'>",
+  "preferred_star_rating": <float or null — 3.0 for 3-star, 4.0 for 4-star, 5.0 for 5-star, or null if unspecified>,
   "custom_vibe": "<preserve exact user wording about ambiance, style, mood, route>"
 }
 
@@ -228,6 +230,44 @@ def _normalize_output(data: dict) -> dict:
         data["destination"] = str(fallback_dest).strip().title()
         data["destinations"] = [data["destination"]]
 
+    # 4. Hotel tier and star rating normalization
+    combined_text = (str(data.get("custom_vibe", "")) + " " + str(data.get("raw_prompt", ""))).lower()
+    raw_hotel_tier = str(data.get("hotel_tier", "")).lower()
+    raw_stars = data.get("preferred_star_rating")
+
+    is_budget_phrase = bool(re.search(r"\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|economy|affordable|hostel|backpacker)\b", combined_text))
+    is_luxury_phrase = bool(re.search(r"\b(?:5[- ]?star|five[- ]?star|luxury|boutique|villa|resort|high[- ]?end)\b", combined_text))
+    is_standard_phrase = bool(re.search(r"\b(?:4[- ]?star|four[- ]?star|standard|mid[- ]?range)\b", combined_text))
+
+    if is_budget_phrase or "budget" in raw_hotel_tier or "cheap" in raw_hotel_tier:
+        data["hotel_tier"] = "budget"
+        data["preferred_star_rating"] = 3.0
+        # If no explicit dollar budget was given, calibrate budget to budget hotel levels
+        if "$" not in combined_text and not re.search(r"\bbudget\s*(?:of|is|:)?\s*\d+", combined_text):
+            data["budget"] = min(data["budget"], max(150.0, float(data["duration_days"]) * 45.0))
+            data["budget_max_usd"] = data["budget"]
+    elif is_luxury_phrase or "lux" in raw_hotel_tier:
+        data["hotel_tier"] = "luxury"
+        data["preferred_star_rating"] = 5.0
+    elif is_standard_phrase or "standard" in raw_hotel_tier:
+        data["hotel_tier"] = "standard"
+        data["preferred_star_rating"] = 4.0
+    else:
+        if raw_stars is not None:
+            try:
+                num_s = float(raw_stars)
+                data["preferred_star_rating"] = num_s
+                data["hotel_tier"] = "budget" if num_s <= 3.0 else ("standard" if num_s == 4.0 else "luxury")
+            except (ValueError, TypeError):
+                data["hotel_tier"] = "standard"
+                data["preferred_star_rating"] = None
+        elif raw_hotel_tier in ("budget", "standard", "luxury"):
+            data["hotel_tier"] = raw_hotel_tier
+            data["preferred_star_rating"] = 3.0 if raw_hotel_tier == "budget" else (4.0 if raw_hotel_tier == "standard" else 5.0)
+        else:
+            data["hotel_tier"] = "standard"
+            data["preferred_star_rating"] = None
+
     return data
 
 
@@ -328,9 +368,9 @@ def _rule_based_fallback(raw_prompt: str) -> dict:
         b_num = re.search(r"budget\s*(?:of|is|:)?\s*(\d+)", text)
         if b_num:
             budget = float(b_num.group(1))
-        elif "cheap" in text or "budget" in text and "low" in text:
-            budget = 200.0
-        elif "luxury" in text:
+        elif any(k in text for k in ["cheap", "budget", "affordable", "economy", "hostel", "3 star", "3-star", "three star"]):
+            budget = max(150.0, float(duration) * 45.0)
+        elif "luxury" in text or "5 star" in text or "5-star" in text:
             budget = 1500.0
 
     # 6. Party size
@@ -368,6 +408,19 @@ def _rule_based_fallback(raw_prompt: str) -> dict:
     date_match = re.search(r"(?:in\s+)?(january|february|march|april|may|june|july|august|september|october|november|december)(?:\s+\d{1,2}(?:-\d{1,2})?)?(?:\s*,\s*\d{4})?", text)
     travel_dates = date_match.group(0).title() if date_match else "Upcoming Dates"
 
+    # 9. Hotel tier and star rating preference
+    hotel_tier = "standard"
+    preferred_stars = None
+    if re.search(r"\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|economy|affordable|hostel|backpacker)\b", text):
+        hotel_tier = "budget"
+        preferred_stars = 3.0
+    elif re.search(r"\b(?:5[- ]?star|five[- ]?star|luxury|boutique|villa|resort|high[- ]?end)\b", text):
+        hotel_tier = "luxury"
+        preferred_stars = 5.0
+    elif re.search(r"\b(?:4[- ]?star|four[- ]?star|standard|mid[- ]?range)\b", text):
+        hotel_tier = "standard"
+        preferred_stars = 4.0
+
     data = {
         "destination": found_dest,
         "destinations": ordered_dests if ordered_dests else [found_dest],
@@ -380,6 +433,8 @@ def _rule_based_fallback(raw_prompt: str) -> dict:
         "party_size": party_size,
         "travellers": party_size,
         "interests": interests,
+        "hotel_tier": hotel_tier,
+        "preferred_star_rating": preferred_stars,
         "custom_vibe": raw_prompt,
     }
     return _normalize_output(data)

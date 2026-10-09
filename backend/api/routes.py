@@ -109,12 +109,17 @@ async def generate_itinerary(request: ItineraryRequest) -> ItineraryResponse:
             hints.append(f"{request.duration_days} days")
         if request.budget_usd and "budget" not in prompt.lower() and "$" not in prompt:
             hints.append(f"budget ${request.budget_usd}")
+        if request.hotel_tier and request.hotel_tier != "standard" and request.hotel_tier not in prompt.lower():
+            hints.append(f"{request.hotel_tier} hotel")
+        if request.preferred_star_rating and "star" not in prompt.lower():
+            hints.append(f"{int(request.preferred_star_rating)}-star hotel")
         if hints:
             prompt = f"{prompt} ({', '.join(hints)})"
     elif request.custom_vibe:
         prompt = f"{request.duration_days} days in {request.destination}, budget ${request.budget_usd}, {request.custom_vibe}"
     else:
-        prompt = f"{request.duration_days} days in {request.destination}, budget ${request.budget_usd}"
+        hotel_hint = f", {request.hotel_tier} hotel" if request.hotel_tier and request.hotel_tier != "standard" else ""
+        prompt = f"{request.duration_days} days in {request.destination}, budget ${request.budget_usd}{hotel_hint}"
 
     result = run_agent_pipeline(prompt)
 

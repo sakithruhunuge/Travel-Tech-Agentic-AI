@@ -170,6 +170,15 @@ export const CURATED_DESTINATION_PLACES: Record<string, DestinationPlaces> = {
         description: "5-star downtown sanctuary with lagoon pool, spa, and 14 premier dining venues.",
         primary_image: "/images/colombo.png",
       },
+      {
+        id: "cur-col-3",
+        name: "City Rest Fort Budget Inn",
+        avg_nightly_usd: 32,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Comfortable 3-star budget stay with easy access to Colombo Fort and seaside promenade.",
+        primary_image: "/images/colombo.png",
+      },
     ],
     poi: [
       {
@@ -208,6 +217,15 @@ export const CURATED_DESTINATION_PLACES: Record<string, DestinationPlaces> = {
         rating: 4.8,
         price_tier: "Luxury",
         description: "5-star hillside resort offering mountain vistas and tranquil garden suites.",
+        primary_image: "/images/kandy.png",
+      },
+      {
+        id: "cur-kan-3",
+        name: "Kandy View Garden Rest",
+        avg_nightly_usd: 30,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Clean, scenic hillside 3-star budget stay overlooking the Mahaweli valley.",
         primary_image: "/images/kandy.png",
       },
     ],
@@ -250,6 +268,15 @@ export const CURATED_DESTINATION_PLACES: Record<string, DestinationPlaces> = {
         description: "Elephant-themed contemporary resort featuring infinity pool panoramas of Sigiriya citadel.",
         primary_image: "/images/sigiriya.png",
       },
+      {
+        id: "cur-sig-3",
+        name: "Sigiriya Rock Side Cottage",
+        avg_nightly_usd: 28,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Cozy 3-star budget eco-chalet with direct garden vistas of Lion Rock.",
+        primary_image: "/images/sigiriya.png",
+      },
     ],
     poi: [
       {
@@ -290,6 +317,15 @@ export const CURATED_DESTINATION_PLACES: Record<string, DestinationPlaces> = {
         description: "Lakeside chalet sanctuary set amidst tranquil dry-zone woodland.",
         primary_image: "/images/dambulla.png",
       },
+      {
+        id: "cur-dam-3",
+        name: "Dambulla Rock View Inn",
+        avg_nightly_usd: 28,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Peaceful 3-star budget guesthouse minutes from the UNESCO Cave Temple.",
+        primary_image: "/images/dambulla.png",
+      },
     ],
     poi: [
       {
@@ -320,6 +356,15 @@ export const CURATED_DESTINATION_PLACES: Record<string, DestinationPlaces> = {
         rating: 4.8,
         price_tier: "Luxury",
         description: "Geoffrey Bawa clifftop icon with ocean waves crashing against granite boulders.",
+        primary_image: "/images/galle.png",
+      },
+      {
+        id: "cur-gal-3",
+        name: "Galle Fort Budget Inn",
+        avg_nightly_usd: 35,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Charming budget-friendly 3-star inn just steps from the Dutch ramparts.",
         primary_image: "/images/galle.png",
       },
     ],
@@ -353,6 +398,15 @@ export const CURATED_DESTINATION_PLACES: Record<string, DestinationPlaces> = {
         description: "Eco-chic luxury villas directly on Mirissa bay with beachfront infinity pool.",
         primary_image: "/images/bentota.png",
       },
+      {
+        id: "cur-mir-2",
+        name: "Mirissa Bay Eco Rest",
+        avg_nightly_usd: 30,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Friendly 3-star beachside budget stay near Coconut Tree Hill.",
+        primary_image: "/images/bentota.png",
+      },
     ],
     poi: [
       {
@@ -382,6 +436,15 @@ export const CURATED_DESTINATION_PLACES: Record<string, DestinationPlaces> = {
         rating: 4.9,
         price_tier: "Luxury Eco",
         description: "Charming thatched chalets perched on a working tea estate with Ella Gap vistas.",
+        primary_image: "/images/nine_arch.png",
+      },
+      {
+        id: "cur-ell-2",
+        name: "Ella Gap Budget Chalets",
+        avg_nightly_usd: 28,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Scenic 3-star budget guesthouse walking distance to Nine Arch Bridge.",
         primary_image: "/images/nine_arch.png",
       },
     ],
@@ -415,6 +478,15 @@ export const CURATED_DESTINATION_PLACES: Record<string, DestinationPlaces> = {
         description: "Palatial Elizabethan manor offering traditional afternoon high tea in the highlands.",
         primary_image: "/images/tea.png",
       },
+      {
+        id: "cur-nuw-2",
+        name: "Single Tree Hill Budget Lodge",
+        avg_nightly_usd: 32,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Warm, welcoming 3-star budget lodge close to tea estates and Lake Gregory.",
+        primary_image: "/images/tea.png",
+      },
     ],
     poi: [
       {
@@ -446,6 +518,15 @@ export const CURATED_DESTINATION_PLACES: Record<string, DestinationPlaces> = {
         description: "Beachfront luxury resort overlooking Bentota golden beach with Ayurvedic spa.",
         primary_image: "/images/bentota.png",
       },
+      {
+        id: "cur-ben-2",
+        name: "Bentota River Breeze Rest",
+        avg_nightly_usd: 32,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Relaxed 3-star riverfront budget stay near the golden beach.",
+        primary_image: "/images/bentota.png",
+      },
     ],
     poi: [
       {
@@ -467,6 +548,15 @@ export const CURATED_DESTINATION_PLACES: Record<string, DestinationPlaces> = {
         rating: 4.8,
         price_tier: "Luxury Eco",
         description: "Jungle cabins where wildlife wanders up to your verandah bordering Yala Park.",
+        primary_image: "/images/yala.png",
+      },
+      {
+        id: "cur-yal-2",
+        name: "Tissamaharama Safari Budget Rest",
+        avg_nightly_usd: 30,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Affordable 3-star safari base camp minutes from Yala National Park gates.",
         primary_image: "/images/yala.png",
       },
     ],
@@ -501,6 +591,15 @@ export function getCuratedPlacesForDestinations(destinations: string[]): Record<
             rating: 4.7,
             price_tier: "Standard",
             description: `Curated boutique stay in ${dest} offering scenic views and warm local hospitality.`,
+            primary_image: LOCATIONS.find((l) => l.id.toLowerCase() === dest.toLowerCase())?.img || "/images/colombo.png",
+          },
+          {
+            id: `cur-gen-budget-${dest}`,
+            name: `${dest} 3-Star Budget Rest`,
+            avg_nightly_usd: 32,
+            rating: 3.5,
+            price_tier: "Budget",
+            description: `Clean, comfortable 3-star budget accommodation in ${dest}.`,
             primary_image: LOCATIONS.find((l) => l.id.toLowerCase() === dest.toLowerCase())?.img || "/images/colombo.png",
           },
         ],
@@ -824,9 +923,13 @@ export function extractPreferencesFromPrompt(text: string): DetectedPreference[]
   }
 
   // Hotel class
-  if (/\b(5[- ]star|luxury|boutique|villa|resort)\b/i.test(text)) {
-    const hit = text.match(/\b(5[- ]star|luxury|boutique|villa|resort)\b/i)![0];
+  if (/\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|economy\s+hotel|affordable\s+hotel|hostel|guesthouse)\b/i.test(text)) {
+    prefs.push({ key: "stay", label: "Stay", value: "3-Star Budget Friendly", icon: "🏨" });
+  } else if (/\b(5[- ]star|five[- ]star|luxury|boutique|villa|resort)\b/i.test(text)) {
+    const hit = text.match(/\b(5[- ]star|five[- ]star|luxury|boutique|villa|resort)\b/i)![0];
     prefs.push({ key: "stay", label: "Stay", value: hit.charAt(0).toUpperCase() + hit.slice(1), icon: "🏨" });
+  } else if (/\b(4[- ]star|four[- ]star|standard)\b/i.test(text)) {
+    prefs.push({ key: "stay", label: "Stay", value: "Standard Comfort", icon: "🏨" });
   }
 
   // Transport
@@ -906,7 +1009,7 @@ export function resolveStartingLocationObject(locNameOrId: string): MapLocation 
 export function extractStartingLocationFromPrompt(text: string): string | null {
   if (!text) return null;
 
-  // Patterns like "starting from X", "start from X", "depart from X", "departing from X", "pickup from/at X", "leaving from X"
+  // Patterns like "starting from X", "start from X", "departing from X", "depart per X", "pickup from/at X", "leaving from X"
   const startRegex = /\b(?:starting\s+(?:from|at)|start\s+(?:from|at)|departing\s+(?:from|at)|depart\s+(?:from|at)|pickup\s+(?:from|at)|leaving\s+(?:from|at))\s+([a-zA-Z\s'()]+?)(?:\.|\band\b|\bthen\b|,|$)/i;
   const match = text.match(startRegex);
   if (match && match[1]) {
@@ -968,12 +1071,13 @@ const QUICK_PREFERENCES = [
   { label: "7 Days", text: "7 days" },
   { label: "Couple (2)", text: "couple" },
   { label: "Family of 4", text: "family of 4" },
+  { label: "Budget Friendly", text: "3 star hotel, budget friendly" },
   { label: "Budget $600", text: "budget $600" },
   { label: "Private Driver", text: "private driver" },
   { label: "Boutique Hotel", text: "boutique hotel" },
 ];
 
-const QUICK_CHIPS = ["beach", "Galle", "Ella", "Kandy", "Sigiriya", "Mirissa", "Yala", "Nuwara Eliya", "wildlife", "culture"];
+const QUICK_CHIPS = ["beach", "3-star hotel", "Galle", "Ella", "Kandy", "Sigiriya", "budget friendly", "Mirissa", "Yala", "Nuwara Eliya", "wildlife", "culture"];
 
 const SEASONS = [
   { id: "off-peak", name: "Off-Peak", window: "May – Jun · Oct – Nov", mult: SEASON_MULTIPLIERS["off-peak"] },
@@ -1602,15 +1706,25 @@ export default function InteractiveTourCustomizer() {
   const handleKeywordsChange = (val: string) => {
     setAiKeywords(val);
     const detected = extractDestinationsFromPrompt(val);
-    if (detected.length > 0 && selectedTour === "ai-suggested") {
+    const isBudget = /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|budget|cheap|affordable|hostel|guesthouse)\b/i.test(val);
+    const isLuxury = /\b(?:5[- ]?star|five[- ]?star|luxury|boutique|premium|resort)\b/i.test(val);
+
+    if (selectedTour === "ai-suggested") {
       setInputs((prev) => {
-        const isSame =
-          prev.destinations.length === detected.length &&
-          prev.destinations.every((d, i) => d === detected[i]);
-        if (isSame) return prev;
+        let nextHotelClass = prev.hotelClass;
+        if (isBudget) nextHotelClass = "budget";
+        else if (isLuxury) nextHotelClass = "luxury";
+
+        const isSameDests =
+          detected.length === 0 ||
+          (prev.destinations.length === detected.length &&
+            prev.destinations.every((d, i) => d === detected[i]));
+
+        if (isSameDests && nextHotelClass === prev.hotelClass) return prev;
         return {
           ...prev,
-          destinations: detected,
+          destinations: detected.length > 0 ? detected : prev.destinations,
+          hotelClass: nextHotelClass,
         };
       });
     }
@@ -1627,15 +1741,25 @@ export default function InteractiveTourCustomizer() {
     const nextVal = isAlreadyPresent ? aiKeywords : (aiKeywords ? `${aiKeywords}, ${chip}` : chip);
     setAiKeywords(nextVal);
     const detected = extractDestinationsFromPrompt(nextVal);
-    if (detected.length > 0 && selectedTour === "ai-suggested") {
+    const isBudget = /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|budget|cheap|affordable|hostel|guesthouse)\b/i.test(nextVal);
+    const isLuxury = /\b(?:5[- ]?star|five[- ]?star|luxury|boutique|premium|resort)\b/i.test(nextVal);
+
+    if (selectedTour === "ai-suggested") {
       setInputs((prev) => {
-        const isSame =
-          prev.destinations.length === detected.length &&
-          prev.destinations.every((d, i) => d === detected[i]);
-        if (isSame) return prev;
+        let nextHotelClass = prev.hotelClass;
+        if (isBudget) nextHotelClass = "budget";
+        else if (isLuxury) nextHotelClass = "luxury";
+
+        const isSameDests =
+          detected.length === 0 ||
+          (prev.destinations.length === detected.length &&
+            prev.destinations.every((d, i) => d === detected[i]));
+
+        if (isSameDests && nextHotelClass === prev.hotelClass) return prev;
         return {
           ...prev,
-          destinations: detected,
+          destinations: detected.length > 0 ? detected : prev.destinations,
+          hotelClass: nextHotelClass,
         };
       });
     }
@@ -2128,6 +2252,27 @@ export default function InteractiveTourCustomizer() {
       }
     });
 
+    const isBudgetReq =
+      /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|budget|cheap|affordable|hostel|guesthouse)\b/i.test(aiKeywords) ||
+      (typeof data.requirements?.budget === "number" && data.requirements.budget < 500);
+    const isLuxuryReq =
+      /\b(?:5[- ]?star|five[- ]?star|luxury|boutique|premium|resort)\b/i.test(aiKeywords);
+
+    // If budget was requested, sort hotels in mappedPlaces so budget hotels are at the top
+    if (isBudgetReq) {
+      Object.keys(mappedPlaces).forEach((city) => {
+        if (mappedPlaces[city].hotels && mappedPlaces[city].hotels.length > 1) {
+          mappedPlaces[city].hotels.sort((a, b) => {
+            const aIsBudget = (a.price_tier || "").toLowerCase().includes("budget") || a.avg_nightly_usd <= 50;
+            const bIsBudget = (b.price_tier || "").toLowerCase().includes("budget") || b.avg_nightly_usd <= 50;
+            if (aIsBudget && !bIsBudget) return -1;
+            if (!aIsBudget && bIsBudget) return 1;
+            return a.avg_nightly_usd - b.avg_nightly_usd;
+          });
+        }
+      });
+    }
+
     setSuggestedPlacesByDestination(mappedPlaces);
 
     setInputs((prev) => ({
@@ -2135,6 +2280,7 @@ export default function InteractiveTourCustomizer() {
       duration: data.requirements.duration || aiDuration,
       numberOfTravelers: data.requirements.travellers || prev.numberOfTravelers,
       destinations: finalDests,
+      hotelClass: isBudgetReq ? "budget" : (isLuxuryReq ? "luxury" : prev.hotelClass),
     }));
     if (aiStartDate) setPreferredStartDate(aiStartDate);
 
@@ -2222,11 +2368,23 @@ export default function InteractiveTourCustomizer() {
     const detectedDests = extractDestinationsFromPrompt(aiKeywords);
     const destinationHint = detectedDests[0] || inputs.destinations[0] || "Sri Lanka";
 
+    const isBudgetPrompt =
+      /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|budget|cheap|affordable|hostel|guesthouse)\b/i.test(aiKeywords) ||
+      inputs.hotelClass === "budget";
+    const isLuxuryPrompt =
+      /\b(?:5[- ]?star|five[- ]?star|luxury|boutique|premium|resort)\b/i.test(aiKeywords) ||
+      inputs.hotelClass === "luxury";
+
+    const budgetHintCalc = isBudgetPrompt
+      ? Math.max(150, aiDuration * 45)
+      : Math.round(pricing.totalPrice || 600);
+
     // If user prompt mentioned destinations, ensure inputs.destinations reflects them immediately
-    if (detectedDests.length > 0) {
+    if (detectedDests.length > 0 || isBudgetPrompt || isLuxuryPrompt) {
       setInputs((prev) => ({
         ...prev,
-        destinations: detectedDests,
+        destinations: detectedDests.length > 0 ? detectedDests : prev.destinations,
+        hotelClass: isBudgetPrompt ? "budget" : (isLuxuryPrompt ? "luxury" : prev.hotelClass),
       }));
     }
 
@@ -2237,7 +2395,9 @@ export default function InteractiveTourCustomizer() {
       aiEndDate ? `Ending: ${aiEndDate}` : "",
       `Duration: ${aiDuration} days`,
       `Travelers: ${inputs.numberOfTravelers}`,
-      pricing.totalPrice ? `Budget: ~$${Math.round(pricing.totalPrice)}` : "",
+      isBudgetPrompt
+        ? `Budget: ~$${budgetHintCalc} (3-star budget friendly)`
+        : (pricing.totalPrice ? `Budget: ~$${Math.round(pricing.totalPrice)}` : ""),
     ]
       .filter(Boolean)
       .join(", ");
@@ -2254,7 +2414,9 @@ export default function InteractiveTourCustomizer() {
       const data = await runMultiAgentPipeline(promptMessage, {
         durationHint: aiDuration,
         destinationHint,
-        budgetHint: Math.round(pricing.totalPrice || 600),
+        budgetHint: budgetHintCalc,
+        hotelTierHint: isBudgetPrompt ? "budget" : (isLuxuryPrompt ? "luxury" : "standard"),
+        starRatingHint: isBudgetPrompt ? 3.0 : (isLuxuryPrompt ? 5.0 : undefined),
         travelersHint: inputs.numberOfTravelers,
         interestsHint,
         allowFallback: true,

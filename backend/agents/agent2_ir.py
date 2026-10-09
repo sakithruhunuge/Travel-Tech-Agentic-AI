@@ -101,6 +101,33 @@ def retrieve_candidates(params: Dict[str, Any]) -> Dict[str, Any]:
             normalized_interests.append("Urban")
     interests = list(dict.fromkeys(normalized_interests or interests))
     custom_vibe = params.get("custom_vibe", "") or ""
+    hotel_tier = str(params.get("hotel_tier", "")).lower()
+    raw_preferred_stars = params.get("preferred_star_rating")
+    try:
+        preferred_stars = float(raw_preferred_stars) if raw_preferred_stars is not None else None
+    except (ValueError, TypeError):
+        preferred_stars = None
+
+    import re
+    vibe_lower = custom_vibe.lower()
+    is_budget_request = (
+        hotel_tier == "budget"
+        or (preferred_stars is not None and preferred_stars <= 3.0)
+        or bool(re.search(r"\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|economy|affordable|hostel)\b", vibe_lower))
+    )
+    is_luxury_request = (
+        hotel_tier == "luxury"
+        or (preferred_stars is not None and preferred_stars >= 5.0)
+        or bool(re.search(r"\b(?:5[- ]?star|five[- ]?star|luxury|boutique|villa|resort)\b", vibe_lower))
+    )
+
+    # Determine effective hotel budget ceiling to prevent luxury hotels from dominating budget queries
+    if is_budget_request:
+        effective_hotel_ceiling = min(budget_per_night, 55.0) if budget_per_night > 55.0 else max(budget_per_night, 25.0)
+    elif is_luxury_request:
+        effective_hotel_ceiling = max(budget_per_night, 120.0)
+    else:
+        effective_hotel_ceiling = budget_per_night
 
     # MongoDB collection handles
     staging_db = main_db.client["travel_staging"]
@@ -110,16 +137,24 @@ def retrieve_candidates(params: Dict[str, Any]) -> Dict[str, Any]:
     # -------------------------------------------------------------------------
     # Strategy A — Geospatial Hotel Search ($geoNear)
     # -------------------------------------------------------------------------
+    hotel_geo_query: Dict[str, Any] = {
+        "embedding_ready": True,
+        "price_usd": {"$lte": effective_hotel_ceiling},
+    }
+    if is_budget_request:
+        hotel_geo_query["$or"] = [
+            {"price_tier": "Budget"},
+            {"price_usd": {"$gt": 0, "$lte": effective_hotel_ceiling}},
+            {"star_rating": {"$regex": "3", "$options": "i"}},
+        ]
+
     pipeline_a = [
         {
             "$geoNear": {
                 "near": {"type": "Point", "coordinates": [lng, lat]},
                 "distanceField": "dist_meters",
                 "maxDistance": 100000,  # 100km radius
-                "query": {
-                    "embedding_ready": True,
-                    "price_usd": {"$lte": budget_per_night},
-                },
+                "query": hotel_geo_query,
                 "spherical": True,
             }
         },
@@ -135,7 +170,13 @@ def retrieve_candidates(params: Dict[str, Any]) -> Dict[str, Any]:
     # -------------------------------------------------------------------------
     # Strategy B — Vector Similarity Search (Atlas $vectorSearch or Python Cosine Fallback)
     # -------------------------------------------------------------------------
-    query_vec = encode(custom_vibe) if custom_vibe else encode("hotel")
+    search_prompt = custom_vibe
+    if is_budget_request:
+        search_prompt = f"{custom_vibe} affordable budget friendly 3-star hotel accommodation"
+    elif is_luxury_request:
+        search_prompt = f"{custom_vibe} luxury boutique 5-star hotel resort"
+
+    query_vec = encode(search_prompt) if search_prompt else encode("hotel")
     hotels_vec: List[Dict[str, Any]] = []
     vector_search_method = "atlas"
 
@@ -150,7 +191,7 @@ def retrieve_candidates(params: Dict[str, Any]) -> Dict[str, Any]:
                 "filter": {
                     "$and": [
                         {"embedding_ready": {"$eq": True}},
-                        {"price_usd": {"$lte": budget_per_night}},
+                        {"price_usd": {"$lte": effective_hotel_ceiling}},
                     ]
                 },
             }
@@ -170,7 +211,7 @@ def retrieve_candidates(params: Dict[str, Any]) -> Dict[str, Any]:
             staged_hotels.find(
                 {
                     "embedding_ready": True,
-                    "price_usd": {"$lte": budget_per_night},
+                    "price_usd": {"$lte": effective_hotel_ceiling},
                 },
                 {"_id": 1, "name": 1, "embedding": 1},
             )

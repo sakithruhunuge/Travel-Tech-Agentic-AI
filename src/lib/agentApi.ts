@@ -131,6 +131,8 @@ export async function runMultiAgentPipeline(
     budgetHint?: number;
     travelersHint?: number;
     interestsHint?: string[];
+    hotelTierHint?: string;
+    starRatingHint?: number;
   }
 ): Promise<FullAgentPipelineResult> {
   const {
@@ -141,6 +143,8 @@ export async function runMultiAgentPipeline(
     budgetHint = 800,
     travelersHint = 2,
     interestsHint = ["Scenic", "Cultural", "Beach"],
+    hotelTierHint,
+    starRatingHint,
   } = options || {};
 
   // Step 1: Agent 1 - NLP Triage
@@ -165,13 +169,24 @@ export async function runMultiAgentPipeline(
     clearTimeout(stepTimer4);
   };
 
+  const isBudgetPrompt = /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|economy|affordable|hostel)\b/i.test(message);
+  const isLuxuryPrompt = /\b(?:5[- ]?star|five[- ]?star|luxury|boutique|villa|resort)\b/i.test(message);
+  const resolvedTier = hotelTierHint || (isBudgetPrompt ? "budget" : (isLuxuryPrompt ? "luxury" : "standard"));
+  const resolvedStars = starRatingHint ?? (isBudgetPrompt ? 3.0 : (isLuxuryPrompt ? 5.0 : undefined));
+
+  const resolvedBudget = (isBudgetPrompt && (!budgetHint || budgetHint > 500))
+    ? Math.max(150, (durationHint || 5) * 45)
+    : (budgetHint || 800);
+
   const payload = {
     destination: destinationHint || "Sri Lanka",
     travel_dates: "Flexible / Upcoming Dates",
     duration_days: durationHint || 5,
-    budget_usd: budgetHint || 800,
+    budget_usd: resolvedBudget,
     party_size: travelersHint || 2,
     interests: interestsHint || ["Cultural", "Beach"],
+    hotel_tier: resolvedTier,
+    preferred_star_rating: resolvedStars,
     custom_vibe: message || `Trip to ${destinationHint} for ${durationHint} days`,
   };
 
@@ -423,20 +438,30 @@ ${destinations
 /* ================= HIGH-FIDELITY MOCK / DEMO FALLBACK ================= */
 
 export function getMockAgentPipelineResult(message: string, durationHint = 5): FullAgentPipelineResult {
+  const isBudget = /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|economy|affordable|hostel)\b/i.test(message);
+
   const req: Agent1Response = {
     destination: "Colombo, Kandy, Sigiriya, Galle",
     duration: durationHint || 5,
     travellers: 2,
-    budget: 1800,
+    budget: isBudget ? Math.max(150, (durationHint || 5) * 45) : 1800,
     interests: ["Ancient Heritage", "Wildlife", "Scenic Tea Country", "Coastal Beaches"],
   };
 
+  const retrievedHotels: RetrievedItem[] = isBudget
+    ? [
+        { id: "h1-b", name: "Galle Fort Budget Inn", city: "Galle", avg_nightly_usd: 35, rating: 3.5, price_tier: "Budget", curator_score: 93, description: "Charming budget-friendly 3-star inn just steps from the Dutch ramparts." },
+        { id: "h2-b", name: "Kandy View Garden Rest", city: "Kandy", avg_nightly_usd: 30, rating: 3.5, price_tier: "Budget", curator_score: 90, description: "Clean, scenic hillside budget stay overlooking Mahaweli valley." },
+        { id: "h3-b", name: "Sigiriya Rock Side Cottage", city: "Sigiriya", avg_nightly_usd: 28, rating: 3.5, price_tier: "Budget", curator_score: 89, description: "Cozy budget eco-chalet with direct garden vistas of Lion Rock." },
+      ]
+    : [
+        { id: "h1", name: "Cinnamon Citadel Kandy", city: "Kandy", avg_nightly_usd: 110, rating: 4.8, price_tier: "Standard", curator_score: 88, description: "Riverfront retreat surrounded by tropical hills." },
+        { id: "h2", name: "Water Garden Sigiriya", city: "Sigiriya", avg_nightly_usd: 160, rating: 4.9, price_tier: "Luxury", curator_score: 95, description: "Luxury villas with panoramic views of the Lion Rock." },
+        { id: "h3", name: "Fort Bazaar Galle", city: "Galle", avg_nightly_usd: 140, rating: 4.7, price_tier: "Standard", curator_score: 91, description: "Boutique merchant home in the heart of Galle Fort." },
+      ];
+
   const retrieved: Agent2Response = {
-    hotels: [
-      { id: "h1", name: "Cinnamon Citadel Kandy", city: "Kandy", avg_nightly_usd: 110, rating: 4.8, price_tier: "Standard", curator_score: 88, description: "Riverfront retreat surrounded by tropical hills." },
-      { id: "h2", name: "Water Garden Sigiriya", city: "Sigiriya", avg_nightly_usd: 160, rating: 4.9, price_tier: "Luxury", curator_score: 95, description: "Luxury villas with panoramic views of the Lion Rock." },
-      { id: "h3", name: "Fort Bazaar Galle", city: "Galle", avg_nightly_usd: 140, rating: 4.7, price_tier: "Standard", curator_score: 91, description: "Boutique merchant home in the heart of Galle Fort." },
-    ],
+    hotels: retrievedHotels,
     attractions: [
       { id: "a1", name: "Sigiriya Rock Citadel", city: "Sigiriya", ticket_price_usd: 36, rating: 4.9, curator_score: 98, description: "UNESCO 5th-century ancient citadel with royal water gardens." },
       { id: "a2", name: "Temple of the Sacred Tooth Relic", city: "Kandy", ticket_price_usd: 15, rating: 4.8, curator_score: 92, description: "Historic Buddhist temple housing the sacred tooth relic." },
