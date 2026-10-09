@@ -235,10 +235,17 @@ def _generate_template_itinerary(curated_data: dict, user_params: dict) -> str:
     stay_total = round(hotel_price * duration, 2)
     activities_total = round(len(pois) * 8.0, 2)
 
+    budget_cat = str(user_params.get("budget_category") or user_params.get("hotel_tier") or "standard").lower()
+    cat_title = (
+        "🪙 Budget Category (3-Star & Economy)"
+        if budget_cat == "budget"
+        else ("✨ Luxury Category (5-Star & Premium Resort)" if budget_cat == "luxury" else "🛋️ Standard Category (4-Star & Comfort)")
+    )
+
     lines = [
         f"# 🌴 Your Sri Lanka Itinerary: {destinations_str} ({duration} Days)\n",
         "## Overview",
-        f"Welcome to your handcrafted {duration}-day journey across {destinations_str}! Specially tailored for {party_size} traveler{'s' if party_size > 1 else ''} with a focus on {interests_str}, this plan balances iconic landmarks, leisure, and memorable local dining perfectly aligned with your ${budget} budget.\n",
+        f"Welcome to your handcrafted {duration}-day journey across {destinations_str}! Tailored for {party_size} traveler{'s' if party_size > 1 else ''} in our **{cat_title}**, this plan balances iconic landmarks, leisure, and memorable local experiences strictly aligned with your ${budget:.0f} budget.\n",
         "---\n",
     ]
 

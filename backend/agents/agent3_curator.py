@@ -95,6 +95,7 @@ def score_hotel(
 
     is_budget_req = preferred_tier == "budget" or (preferred_stars is not None and preferred_stars <= 3.0)
     is_luxury_req = preferred_tier == "luxury" or (preferred_stars is not None and preferred_stars >= 5.0)
+    is_standard_req = preferred_tier == "standard" or (preferred_stars is not None and 3.5 <= preferred_stars <= 4.5)
 
     # a) Budget Fit (30 pts)
     if is_budget_req:
@@ -108,6 +109,30 @@ def score_hotel(
             budget_fit = 12.0
         else:
             budget_fit = 0.0
+    elif is_luxury_req:
+        if price_usd <= 0.0:
+            budget_fit = 10.0
+        elif price_usd >= 120.0:
+            budget_fit = 30.0
+        elif price_usd >= 75.0:
+            budget_fit = 24.0
+        elif price_usd >= 50.0:
+            budget_fit = 15.0
+        else:
+            budget_fit = 0.0
+    elif is_standard_req:
+        if price_usd <= 0.0:
+            budget_fit = 15.0
+        elif 40.0 <= price_usd <= 110.0:
+            budget_fit = 30.0
+        elif 25.0 <= price_usd < 40.0:
+            budget_fit = 22.0
+        elif 110.0 < price_usd <= 150.0:
+            budget_fit = 20.0
+        elif price_usd > 150.0:
+            budget_fit = 8.0
+        else:
+            budget_fit = 12.0
     else:
         if price_usd <= 0.0:
             budget_fit = 15.0
@@ -154,10 +179,17 @@ def score_hotel(
         elif hotel_tier_doc == "Luxury" or price_usd > 100.0:
             tier_modifier -= 25.0
     elif is_luxury_req:
-        if hotel_tier_doc == "Luxury" or price_usd >= 120.0:
+        if hotel_tier_doc in ("Luxury", "Premium") or price_usd >= 120.0:
             tier_modifier += 10.0
-        elif hotel_tier_doc == "Budget" or (0 < price_usd <= 40.0):
+        elif hotel_tier_doc == "Budget" or (0 < price_usd <= 45.0):
+            tier_modifier -= 25.0
+    elif is_standard_req:
+        if hotel_tier_doc in ("Standard", "Comfort", "Boutique") or (45.0 <= price_usd <= 110.0):
+            tier_modifier += 10.0
+        elif hotel_tier_doc == "Luxury" and price_usd > 180.0:
             tier_modifier -= 15.0
+        elif hotel_tier_doc == "Budget" and price_usd < 25.0:
+            tier_modifier -= 10.0
 
     total_score = max(0.0, min(100.0, budget_fit + amenities + star_rating_score + poi_density + airport + tier_modifier))
 
@@ -242,6 +274,11 @@ def generate_xai_hotel_reasons(
         reasons.append(
             f"Amenity Match ({a_pts}/20 pts): Equipped with {', '.join(amenities)} tailored for a comfortable stay."
         )
+
+    cat_label = "Budget (3-Star & Economy)" if (preferred_tier == "budget" or (preferred_stars and preferred_stars <= 3.0)) else ("Luxury (5-Star & Premium Resort)" if (preferred_tier == "luxury" or (preferred_stars and preferred_stars >= 5.0)) else "Standard (4-Star & Comfort)")
+    reasons.append(
+        f"Budget Category Alignment: Shortlisted for your {cat_label} category with verified price integrity and comfort standards."
+    )
 
     return reasons
 

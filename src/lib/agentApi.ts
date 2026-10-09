@@ -30,6 +30,9 @@ export interface Agent1Response {
   travellers: number;
   budget: number;
   interests: string[];
+  hotel_tier?: string;
+  budget_category?: string;
+  preferred_star_rating?: number;
 }
 
 export interface RetrievedItem {
@@ -133,6 +136,7 @@ export async function runMultiAgentPipeline(
     interestsHint?: string[];
     hotelTierHint?: string;
     starRatingHint?: number;
+    budgetCategoryHint?: "budget" | "standard" | "luxury";
   }
 ): Promise<FullAgentPipelineResult> {
   const {
@@ -140,11 +144,12 @@ export async function runMultiAgentPipeline(
     allowFallback = true,
     durationHint = 5,
     destinationHint = "Sri Lanka",
-    budgetHint = 800,
+    budgetHint,
     travelersHint = 2,
     interestsHint = ["Scenic", "Cultural", "Beach"],
     hotelTierHint,
     starRatingHint,
+    budgetCategoryHint,
   } = options || {};
 
   // Step 1: Agent 1 - NLP Triage
@@ -169,23 +174,36 @@ export async function runMultiAgentPipeline(
     clearTimeout(stepTimer4);
   };
 
-  const isBudgetPrompt = /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|economy|affordable|hostel)\b/i.test(message);
-  const isLuxuryPrompt = /\b(?:5[- ]?star|five[- ]?star|luxury|boutique|villa|resort)\b/i.test(message);
-  const resolvedTier = hotelTierHint || (isBudgetPrompt ? "budget" : (isLuxuryPrompt ? "luxury" : "standard"));
-  const resolvedStars = starRatingHint ?? (isBudgetPrompt ? 3.0 : (isLuxuryPrompt ? 5.0 : undefined));
+  const isBudgetPrompt =
+    budgetCategoryHint === "budget" ||
+    (budgetCategoryHint !== "luxury" && budgetCategoryHint !== "standard" &&
+      /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|economy|affordable|hostel|backpacker)\b/i.test(message));
+  const isLuxuryPrompt =
+    budgetCategoryHint === "luxury" ||
+    (budgetCategoryHint !== "budget" && budgetCategoryHint !== "standard" &&
+      /\b(?:5[- ]?star|five[- ]?star|luxury|luxurious|boutique|villa|resort|high[- ]?end)\b/i.test(message));
 
-  const resolvedBudget = (isBudgetPrompt && (!budgetHint || budgetHint > 500))
-    ? Math.max(150, (durationHint || 5) * 45)
-    : (budgetHint || 800);
+  const resolvedTier = budgetCategoryHint || hotelTierHint || (isBudgetPrompt ? "budget" : (isLuxuryPrompt ? "luxury" : "standard"));
+  const resolvedStars = starRatingHint ?? (resolvedTier === "budget" ? 3.0 : (resolvedTier === "luxury" ? 5.0 : 4.0));
+
+  let resolvedBudget = budgetHint;
+  if (!resolvedBudget || resolvedBudget <= 0) {
+    if (resolvedTier === "budget") resolvedBudget = Math.max(150, (durationHint || 5) * 45 * Math.max(1, travelersHint * 0.75));
+    else if (resolvedTier === "luxury") resolvedBudget = Math.max(800, (durationHint || 5) * 220 * Math.max(1, travelersHint * 0.75));
+    else resolvedBudget = Math.max(400, (durationHint || 5) * 90 * Math.max(1, travelersHint * 0.75));
+  } else if (resolvedTier === "budget" && resolvedBudget > 500) {
+    resolvedBudget = Math.max(150, (durationHint || 5) * 45 * Math.max(1, travelersHint * 0.75));
+  }
 
   const payload = {
     destination: destinationHint || "Sri Lanka",
     travel_dates: "Flexible / Upcoming Dates",
     duration_days: durationHint || 5,
-    budget_usd: resolvedBudget,
+    budget_usd: Math.round(resolvedBudget),
     party_size: travelersHint || 2,
     interests: interestsHint || ["Cultural", "Beach"],
     hotel_tier: resolvedTier,
+    budget_category: resolvedTier,
     preferred_star_rating: resolvedStars,
     custom_vibe: message || `Trip to ${destinationHint} for ${durationHint} days`,
   };
@@ -342,6 +360,9 @@ function transformBackendResultToPipelineResult(
     travellers: backendData.params?.party_size || inputPayload.party_size,
     budget: backendData.params?.budget_max_usd || inputPayload.budget_usd,
     interests: backendData.params?.interests || inputPayload.interests,
+    hotel_tier: backendData.params?.hotel_tier || inputPayload.hotel_tier,
+    budget_category: backendData.params?.budget_category || inputPayload.budget_category,
+    preferred_star_rating: backendData.params?.preferred_star_rating || inputPayload.preferred_star_rating,
   };
 
   const explanations = {
@@ -454,13 +475,19 @@ ${destinations
 /* ================= HIGH-FIDELITY MOCK / DEMO FALLBACK ================= */
 
 export function getMockAgentPipelineResult(message: string, durationHint = 5): FullAgentPipelineResult {
-  const isBudget = /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|economy|affordable|hostel)\b/i.test(message);
+  const isBudget = /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|economy|affordable|hostel|backpacker)\b/i.test(message) || /\bbudget\b/i.test(message);
+  const isLuxury = /\b(?:5[- ]?star|five[- ]?star|luxury|luxurious|boutique|villa|resort|high[- ]?end)\b/i.test(message);
+
+  const budgetCategory = isBudget ? "budget" : (isLuxury ? "luxury" : "standard");
+  const calibratedBudget = isBudget
+    ? Math.max(150, (durationHint || 5) * 45 * 2)
+    : (isLuxury ? Math.max(1200, (durationHint || 5) * 240 * 2) : Math.max(450, (durationHint || 5) * 85 * 2));
 
   const req: Agent1Response = {
     destination: "Colombo, Kandy, Sigiriya, Galle",
     duration: durationHint || 5,
     travellers: 2,
-    budget: isBudget ? Math.max(150, (durationHint || 5) * 45) : 1800,
+    budget: calibratedBudget,
     interests: ["Ancient Heritage", "Wildlife", "Scenic Tea Country", "Coastal Beaches"],
   };
 
@@ -470,11 +497,17 @@ export function getMockAgentPipelineResult(message: string, durationHint = 5): F
         { id: "h2-b", name: "Kandy View Garden Rest", city: "Kandy", avg_nightly_usd: 30, rating: 3.5, price_tier: "Budget", curator_score: 90, description: "Clean, scenic hillside budget stay overlooking Mahaweli valley." },
         { id: "h3-b", name: "Sigiriya Rock Side Cottage", city: "Sigiriya", avg_nightly_usd: 28, rating: 3.5, price_tier: "Budget", curator_score: 89, description: "Cozy budget eco-chalet with direct garden vistas of Lion Rock." },
       ]
-    : [
-        { id: "h1", name: "Cinnamon Citadel Kandy", city: "Kandy", avg_nightly_usd: 110, rating: 4.8, price_tier: "Standard", curator_score: 88, description: "Riverfront retreat surrounded by tropical hills." },
-        { id: "h2", name: "Water Garden Sigiriya", city: "Sigiriya", avg_nightly_usd: 160, rating: 4.9, price_tier: "Luxury", curator_score: 95, description: "Luxury villas with panoramic views of the Lion Rock." },
-        { id: "h3", name: "Fort Bazaar Galle", city: "Galle", avg_nightly_usd: 140, rating: 4.7, price_tier: "Standard", curator_score: 91, description: "Boutique merchant home in the heart of Galle Fort." },
-      ];
+    : (isLuxury
+      ? [
+        { id: "h1-lux", name: "Amangalla Historic Luxury Resort", city: "Galle", avg_nightly_usd: 240, rating: 5.0, price_tier: "Luxury", curator_score: 97, description: "Iconic ultra-luxury heritage sanctuary offering bespoke private butler service." },
+        { id: "h2-lux", name: "Water Garden Sigiriya Villas & Spa", city: "Sigiriya", avg_nightly_usd: 220, rating: 5.0, price_tier: "Luxury", curator_score: 96, description: "Exclusive water villas with private plunge pools and direct panoramic vistas of Lion Rock." },
+        { id: "h3-lux", name: "Ceylon Tea Trails Bungalow", city: "Kandy", avg_nightly_usd: 260, rating: 5.0, price_tier: "Luxury", curator_score: 98, description: "World-class 5-star mountain retreat immersed in emerald Ceylon tea hills." },
+      ]
+      : [
+        { id: "h1", name: "Cinnamon Citadel Kandy", city: "Kandy", avg_nightly_usd: 75, rating: 4.4, price_tier: "Standard", curator_score: 91, description: "Comfortable 4-star riverfront hotel surrounded by tranquil tropical hills." },
+        { id: "h2", name: "Sigiriya Village Garden Resort", city: "Sigiriya", avg_nightly_usd: 80, rating: 4.3, price_tier: "Standard", curator_score: 90, description: "4-star eco-comfort resort with swimming pool facing Sigiriya rock." },
+        { id: "h3", name: "Fort Bazaar Boutique Hotel", city: "Galle", avg_nightly_usd: 90, rating: 4.5, price_tier: "Standard", curator_score: 92, description: "Inviting 4-star boutique hotel in the historic heart of Galle Fort." },
+      ]);
 
   const retrieved: Agent2Response = {
     hotels: retrievedHotels,

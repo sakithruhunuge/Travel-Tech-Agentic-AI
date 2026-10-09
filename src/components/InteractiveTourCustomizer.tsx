@@ -1742,14 +1742,16 @@ export default function InteractiveTourCustomizer() {
   const handleKeywordsChange = (val: string) => {
     setAiKeywords(val);
     const detected = extractDestinationsFromPrompt(val);
-    const isBudget = /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|budget|cheap|affordable|hostel|guesthouse)\b/i.test(val);
-    const isLuxury = /\b(?:5[- ]?star|five[- ]?star|luxury|boutique|premium|resort)\b/i.test(val);
+    const isBudget = /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|budget|cheap|affordable|hostel|guesthouse|backpacker)\b/i.test(val);
+    const isLuxury = /\b(?:5[- ]?star|five[- ]?star|luxury|luxurious|boutique|premium|resort|villa|high[- ]?end)\b/i.test(val);
+    const isStandard = /\b(?:4[- ]?star|four[- ]?star|standard|comfort|mid[- ]?range)\b/i.test(val);
 
     if (selectedTour === "ai-suggested") {
       setInputs((prev) => {
         let nextHotelClass = prev.hotelClass;
         if (isBudget) nextHotelClass = "budget";
         else if (isLuxury) nextHotelClass = "luxury";
+        else if (isStandard) nextHotelClass = "standard";
 
         const isSameDests =
           detected.length === 0 ||
@@ -1772,19 +1774,60 @@ export default function InteractiveTourCustomizer() {
     }
   };
 
+  const handleSelectBudgetCategory = (cat: "budget" | "standard" | "luxury") => {
+    setInputs((prev) => ({
+      ...prev,
+      hotelClass: cat,
+    }));
+
+    // Instantly sort hotels across all active destinations to match the selected category
+    setSuggestedPlacesByDestination((prev) => {
+      const updated: Record<string, DestinationPlaces> = {};
+      Object.entries(prev).forEach(([city, group]) => {
+        const sortedHotels = [...(group.hotels || [])].sort((a, b) => {
+          if (cat === "budget") {
+            const aIsBudget = (a.price_tier || "").toLowerCase().includes("budget") || a.avg_nightly_usd <= 50;
+            const bIsBudget = (b.price_tier || "").toLowerCase().includes("budget") || b.avg_nightly_usd <= 50;
+            if (aIsBudget && !bIsBudget) return -1;
+            if (!aIsBudget && bIsBudget) return 1;
+            return a.avg_nightly_usd - b.avg_nightly_usd;
+          } else if (cat === "luxury") {
+            const aIsLux = (a.price_tier || "").toLowerCase().includes("lux") || (a.price_tier || "").toLowerCase().includes("boutique") || a.avg_nightly_usd >= 120 || (a.rating || 0) >= 4.8;
+            const bIsLux = (b.price_tier || "").toLowerCase().includes("lux") || (b.price_tier || "").toLowerCase().includes("boutique") || b.avg_nightly_usd >= 120 || (b.rating || 0) >= 4.8;
+            if (aIsLux && !bIsLux) return -1;
+            if (!aIsLux && bIsLux) return 1;
+            return b.avg_nightly_usd - a.avg_nightly_usd;
+          } else {
+            const aIsStandard = (a.price_tier || "").toLowerCase().includes("standard") || (a.avg_nightly_usd >= 45 && a.avg_nightly_usd <= 115);
+            const bIsStandard = (b.price_tier || "").toLowerCase().includes("standard") || (b.avg_nightly_usd >= 45 && b.avg_nightly_usd <= 115);
+            if (aIsStandard && !bIsStandard) return -1;
+            if (!aIsStandard && bIsStandard) return 1;
+            const aDist = Math.abs(a.avg_nightly_usd - 80);
+            const bDist = Math.abs(b.avg_nightly_usd - 80);
+            return aDist - bDist;
+          }
+        });
+        updated[city] = { ...group, hotels: sortedHotels };
+      });
+      return updated;
+    });
+  };
+
   const handleAddKeywordChip = (chip: string) => {
     const isAlreadyPresent = aiKeywords.toLowerCase().includes(chip.toLowerCase());
     const nextVal = isAlreadyPresent ? aiKeywords : (aiKeywords ? `${aiKeywords}, ${chip}` : chip);
     setAiKeywords(nextVal);
     const detected = extractDestinationsFromPrompt(nextVal);
-    const isBudget = /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|budget|cheap|affordable|hostel|guesthouse)\b/i.test(nextVal);
-    const isLuxury = /\b(?:5[- ]?star|five[- ]?star|luxury|boutique|premium|resort)\b/i.test(nextVal);
+    const isBudget = /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|budget|cheap|affordable|hostel|guesthouse|backpacker)\b/i.test(nextVal);
+    const isLuxury = /\b(?:5[- ]?star|five[- ]?star|luxury|luxurious|boutique|premium|resort|villa|high[- ]?end)\b/i.test(nextVal);
+    const isStandard = /\b(?:4[- ]?star|four[- ]?star|standard|comfort|mid[- ]?range)\b/i.test(nextVal);
 
     if (selectedTour === "ai-suggested") {
       setInputs((prev) => {
         let nextHotelClass = prev.hotelClass;
         if (isBudget) nextHotelClass = "budget";
         else if (isLuxury) nextHotelClass = "luxury";
+        else if (isStandard) nextHotelClass = "standard";
 
         const isSameDests =
           detected.length === 0 ||
@@ -2288,35 +2331,55 @@ export default function InteractiveTourCustomizer() {
       }
     });
 
-    const isBudgetReq =
-      /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|budget|cheap|affordable|hostel|guesthouse)\b/i.test(aiKeywords) ||
-      (typeof data.requirements?.budget === "number" && data.requirements.budget < 500);
-    const isLuxuryReq =
-      /\b(?:5[- ]?star|five[- ]?star|luxury|boutique|premium|resort)\b/i.test(aiKeywords);
+    const targetCategory: "budget" | "standard" | "luxury" =
+      inputs.hotelClass === "budget" || data.requirements?.budget_category === "budget" || data.requirements?.hotel_tier === "budget"
+        ? "budget"
+        : (inputs.hotelClass === "luxury" || data.requirements?.budget_category === "luxury" || data.requirements?.hotel_tier === "luxury"
+            ? "luxury"
+            : (inputs.hotelClass === "standard" || data.requirements?.budget_category === "standard" || data.requirements?.hotel_tier === "standard"
+                ? "standard"
+                : (/\b(?:5[- ]?star|luxury|luxurious|resort|villa)\b/i.test(aiKeywords)
+                    ? "luxury"
+                    : (/\b(?:3[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap)\b/i.test(aiKeywords) ? "budget" : "standard"))));
 
-    // If budget was requested, sort hotels in mappedPlaces so budget hotels are at the top
-    if (isBudgetReq) {
-      Object.keys(mappedPlaces).forEach((city) => {
-        if (mappedPlaces[city].hotels && mappedPlaces[city].hotels.length > 1) {
-          mappedPlaces[city].hotels.sort((a, b) => {
+    // Sort hotels in mappedPlaces strictly according to the selected category!
+    Object.keys(mappedPlaces).forEach((city) => {
+      if (mappedPlaces[city].hotels && mappedPlaces[city].hotels.length > 1) {
+        mappedPlaces[city].hotels.sort((a, b) => {
+          if (targetCategory === "budget") {
             const aIsBudget = (a.price_tier || "").toLowerCase().includes("budget") || a.avg_nightly_usd <= 50;
             const bIsBudget = (b.price_tier || "").toLowerCase().includes("budget") || b.avg_nightly_usd <= 50;
             if (aIsBudget && !bIsBudget) return -1;
             if (!aIsBudget && bIsBudget) return 1;
             return a.avg_nightly_usd - b.avg_nightly_usd;
-          });
-        }
-      });
-    }
+          } else if (targetCategory === "luxury") {
+            const aIsLux = (a.price_tier || "").toLowerCase().includes("lux") || (a.price_tier || "").toLowerCase().includes("boutique") || a.avg_nightly_usd >= 120 || (a.rating || 0) >= 4.8;
+            const bIsLux = (b.price_tier || "").toLowerCase().includes("lux") || (b.price_tier || "").toLowerCase().includes("boutique") || b.avg_nightly_usd >= 120 || (b.rating || 0) >= 4.8;
+            if (aIsLux && !bIsLux) return -1;
+            if (!aIsLux && bIsLux) return 1;
+            return b.avg_nightly_usd - a.avg_nightly_usd;
+          } else {
+            // standard: prioritize sweet spot $45-$115
+            const aIsStandard = (a.price_tier || "").toLowerCase().includes("standard") || (a.avg_nightly_usd >= 45 && a.avg_nightly_usd <= 115);
+            const bIsStandard = (b.price_tier || "").toLowerCase().includes("standard") || (b.avg_nightly_usd >= 45 && b.avg_nightly_usd <= 115);
+            if (aIsStandard && !bIsStandard) return -1;
+            if (!aIsStandard && bIsStandard) return 1;
+            const aDist = Math.abs(a.avg_nightly_usd - 80);
+            const bDist = Math.abs(b.avg_nightly_usd - 80);
+            return aDist - bDist;
+          }
+        });
+      }
+    });
 
     setSuggestedPlacesByDestination(mappedPlaces);
 
     setInputs((prev) => ({
       ...prev,
-      duration: data.requirements.duration || aiDuration,
-      numberOfTravelers: data.requirements.travellers || prev.numberOfTravelers,
+      duration: data.requirements?.duration || aiDuration,
+      numberOfTravelers: data.requirements?.travellers || prev.numberOfTravelers,
       destinations: finalDests,
-      hotelClass: isBudgetReq ? "budget" : (isLuxuryReq ? "luxury" : prev.hotelClass),
+      hotelClass: targetCategory,
     }));
     if (aiStartDate) setPreferredStartDate(aiStartDate);
 
@@ -2404,25 +2467,35 @@ export default function InteractiveTourCustomizer() {
     const detectedDests = extractDestinationsFromPrompt(aiKeywords);
     const destinationHint = detectedDests[0] || inputs.destinations[0] || "Sri Lanka";
 
-    const isBudgetPrompt =
-      /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|budget|cheap|affordable|hostel|guesthouse)\b/i.test(aiKeywords) ||
-      inputs.hotelClass === "budget";
-    const isLuxuryPrompt =
-      /\b(?:5[- ]?star|five[- ]?star|luxury|boutique|premium|resort)\b/i.test(aiKeywords) ||
-      inputs.hotelClass === "luxury";
+    const budgetCategory: "budget" | "standard" | "luxury" =
+      inputs.hotelClass === "budget"
+        ? "budget"
+        : (inputs.hotelClass === "luxury" ? "luxury" : "standard");
+
+    const isBudgetPrompt = budgetCategory === "budget";
+    const isLuxuryPrompt = budgetCategory === "luxury";
+
+    const travelersCount = inputs.numberOfTravelers || 2;
+    const travelerMultiplier = Math.max(1, travelersCount * 0.75);
 
     const budgetHintCalc = isBudgetPrompt
-      ? Math.max(150, aiDuration * 45)
-      : Math.round(pricing.totalPrice || 600);
+      ? Math.max(150, Math.round(aiDuration * 45 * travelerMultiplier))
+      : (isLuxuryPrompt
+          ? Math.max(800, Math.round(aiDuration * 220 * travelerMultiplier))
+          : Math.max(400, Math.round(aiDuration * 90 * travelerMultiplier)));
 
-    // If user prompt mentioned destinations, ensure inputs.destinations reflects them immediately
-    if (detectedDests.length > 0 || isBudgetPrompt || isLuxuryPrompt) {
-      setInputs((prev) => ({
-        ...prev,
-        destinations: detectedDests.length > 0 ? detectedDests : prev.destinations,
-        hotelClass: isBudgetPrompt ? "budget" : (isLuxuryPrompt ? "luxury" : prev.hotelClass),
-      }));
-    }
+    setInputs((prev) => ({
+      ...prev,
+      destinations: detectedDests.length > 0 ? detectedDests : prev.destinations,
+      hotelClass: budgetCategory,
+    }));
+
+    const catName =
+      budgetCategory === "budget"
+        ? "Budget (3-Star & Economy, ~$25–$45/night)"
+        : (budgetCategory === "luxury"
+            ? "Luxury (5-Star & Premium Resort, ~$140–$250+/night)"
+            : "Standard (4-Star & Comfort, ~$55–$110/night)");
 
     const promptMessage = [
       aiStartingLocation ? `Starting location: ${aiStartingLocation}` : "",
@@ -2430,10 +2503,8 @@ export default function InteractiveTourCustomizer() {
       aiStartDate ? `Starting: ${aiStartDate}` : "",
       aiEndDate ? `Ending: ${aiEndDate}` : "",
       `Duration: ${aiDuration} days`,
-      `Travelers: ${inputs.numberOfTravelers}`,
-      isBudgetPrompt
-        ? `Budget: ~$${budgetHintCalc} (3-star budget friendly)`
-        : (pricing.totalPrice ? `Budget: ~$${Math.round(pricing.totalPrice)}` : ""),
+      `Travelers: ${travelersCount}`,
+      `Budget category: ${catName} (~$${budgetHintCalc} total budget)`,
     ]
       .filter(Boolean)
       .join(", ");
@@ -2451,9 +2522,10 @@ export default function InteractiveTourCustomizer() {
         durationHint: aiDuration,
         destinationHint,
         budgetHint: budgetHintCalc,
-        hotelTierHint: isBudgetPrompt ? "budget" : (isLuxuryPrompt ? "luxury" : "standard"),
-        starRatingHint: isBudgetPrompt ? 3.0 : (isLuxuryPrompt ? 5.0 : undefined),
-        travelersHint: inputs.numberOfTravelers,
+        budgetCategoryHint: budgetCategory,
+        hotelTierHint: budgetCategory,
+        starRatingHint: budgetCategory === "budget" ? 3.0 : (budgetCategory === "luxury" ? 5.0 : 4.0),
+        travelersHint: travelersCount,
         interestsHint,
         allowFallback: true,
         onProgress: (step, label) => {
@@ -2463,7 +2535,7 @@ export default function InteractiveTourCustomizer() {
       });
 
       handleApplyAgentResult(data);
-      addToast("success", "AI Package generated across the 4-agent pipeline! Review your itinerary and suggested places below.");
+      addToast("success", `✨ AI Package generated for ${catName}! Review your itinerary and curated places below.`);
     } catch (err: unknown) {
       const errorMessage =
         err instanceof AgentApiError
@@ -2954,6 +3026,100 @@ export default function InteractiveTourCustomizer() {
                           </span>
                         </div>
                       )}
+                    </div>
+
+                    {/* Dedicated 3-Category Budget Input */}
+                    <div className="mt-4 pt-4 border-t border-[#F0E7D8]/80">
+                      <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-black">
+                            💰
+                          </span>
+                          <label className="itc-label !mb-0">
+                            Select Trip Budget Category <span className="text-[#E05A1A] font-bold">*</span>
+                          </label>
+                        </div>
+                        <span className="text-[11px] font-extrabold text-[#78716C] bg-white border border-[#E7DFD3] px-2.5 py-0.5 rounded-full shadow-2xs">
+                          {inputs.hotelClass === "budget" && "🪙 Budget Tier: ~$25–$45/night"}
+                          {(inputs.hotelClass === "standard" || !inputs.hotelClass) && "🛋️ Standard Tier: ~$55–$110/night"}
+                          {(inputs.hotelClass === "luxury" || inputs.hotelClass === "premium-boutique") && "✨ Luxury Tier: ~$140–$250+/night"}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        {[
+                          {
+                            id: "budget" as const,
+                            icon: "🪙",
+                            title: "Budget",
+                            tierName: "3-Star & Economy",
+                            rate: "$25 - $45",
+                            badge: "Affordable",
+                            desc: "Clean verified guesthouses & 3-star stays balancing cost with comfort",
+                            badgeColor: "bg-emerald-50 text-emerald-800 border-emerald-300",
+                          },
+                          {
+                            id: "standard" as const,
+                            icon: "🛋️",
+                            title: "Standard",
+                            tierName: "4-Star & Comfort",
+                            rate: "$55 - $110",
+                            badge: "Most Popular",
+                            desc: "4-star comfort hotels featuring pools, breakfast, Wi-Fi & central access",
+                            badgeColor: "bg-blue-50 text-blue-800 border-blue-300",
+                          },
+                          {
+                            id: "luxury" as const,
+                            icon: "✨",
+                            title: "Luxury",
+                            tierName: "5-Star & Premium",
+                            rate: "$140 - $250+",
+                            badge: "VIP Indulgence",
+                            desc: "5-star luxury resorts, private villas, spa retreats & world-class hospitality",
+                            badgeColor: "bg-amber-50 text-amber-900 border-amber-300",
+                          },
+                        ].map((cat) => {
+                          const isSelected =
+                            cat.id === "luxury"
+                              ? inputs.hotelClass === "luxury" || inputs.hotelClass === "premium-boutique"
+                              : inputs.hotelClass === cat.id;
+                          return (
+                            <motion.button
+                              key={cat.id}
+                              whileHover={{ y: -2 }}
+                              whileTap={{ scale: 0.98 }}
+                              type="button"
+                              onClick={() => handleSelectBudgetCategory(cat.id)}
+                              className={`relative p-3.5 rounded-2xl border text-left transition-all overflow-hidden ${
+                                isSelected
+                                  ? "border-[#E05A1A] bg-gradient-to-br from-[#FFF9F5] via-[#FFF3EA] to-[#FFEFE4] shadow-sm ring-2 ring-[#E05A1A]/30"
+                                  : "border-[#E8DFD1] bg-white hover:border-[#FFD9C4] hover:bg-[#FFFBF8]"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-1 mb-1.5">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-lg">{cat.icon}</span>
+                                  <span className="text-sm font-black text-[#44403C]">{cat.title}</span>
+                                </div>
+                                <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${cat.badgeColor}`}>
+                                  {cat.badge}
+                                </span>
+                              </div>
+                              <div className="text-[11px] font-extrabold text-[#E05A1A] mb-1">
+                                {cat.tierName} · <span className="text-[#57534E]">{cat.rate}/night</span>
+                              </div>
+                              <p className="text-[10.5px] text-[#78716C] leading-snug font-medium line-clamp-2">
+                                {cat.desc}
+                              </p>
+                              {isSelected && (
+                                <span className="absolute bottom-2 right-2 w-5 h-5 rounded-full bg-[#E05A1A] text-white text-[10px] flex items-center justify-center font-black shadow-xs">
+                                  ✓
+                                </span>
+                              )}
+                            </motion.button>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     <div className="relative mt-4">
@@ -4418,20 +4584,27 @@ export default function InteractiveTourCustomizer() {
               <CrownOutlined className="itc-sec-icon" />
             </header>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {(["budget", "standard", "luxury", "premium-boutique"] as const).map((tier, i) => {
-                const isSelected = inputs.hotelClass === tier;
-                const stars = [3, 4, 5, 5][i];
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {(["budget", "standard", "luxury"] as const).map((tier, i) => {
+                const isSelected = inputs.hotelClass === tier || (tier === "luxury" && inputs.hotelClass === "premium-boutique");
+                const stars = [3, 4, 5][i];
                 const rate = HOTEL_RATES[tier];
+                const categoryTitles = {
+                  budget: "Budget (3-Star & Economy)",
+                  standard: "Standard (4-Star & Comfort)",
+                  luxury: "Luxury (5-Star & Premium)",
+                };
                 return (
                   <motion.button key={tier} type="button" whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}
-                    onClick={() => setInputs((prev) => ({ ...prev, hotelClass: tier }))}
+                    onClick={() => handleSelectBudgetCategory(tier)}
                     className={`relative text-left rounded-[22px] border p-5 transition-all duration-300 overflow-hidden ${isSelected ? "border-[#FF8B50] bg-gradient-to-br from-[#FFF6EF] to-white shadow-[0_16px_40px_-16px_rgba(255,139,80,0.5)]" : "border-[#F0E7D8] bg-white hover:border-[#FFD9C4] hover:shadow-md"}`}>
                     <div className="flex items-center justify-between">
                       <span className="flex text-amber-400 gap-0.5">{Array.from({ length: stars }).map((_, s) => <StarFilled key={s} className="text-[11px]" />)}</span>
-                      {tier === "premium-boutique" && <span className="text-[8px] font-black uppercase tracking-[0.18em] text-[#E05A1A] bg-[#FF8B50]/10 border border-[#FFD9C4] px-2 py-1 rounded-md"><CrownOutlined className="mr-1" />Signature</span>}
+                      {tier === "luxury" && <span className="text-[8px] font-black uppercase tracking-[0.18em] text-[#E05A1A] bg-[#FF8B50]/10 border border-[#FFD9C4] px-2 py-1 rounded-md"><CrownOutlined className="mr-1" />Signature</span>}
+                      {tier === "standard" && <span className="text-[8px] font-black uppercase tracking-[0.18em] text-[#0284C7] bg-sky-50 border border-sky-200 px-2 py-1 rounded-md">Popular</span>}
+                      {tier === "budget" && <span className="text-[8px] font-black uppercase tracking-[0.18em] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md">Value</span>}
                     </div>
-                    <span className="block text-sm font-black text-[#44403C] mt-3">{translateKey(`hotelTiers.${tier === "premium-boutique" ? "premiumBoutique" : tier}`)}</span>
+                    <span className="block text-sm font-black text-[#44403C] mt-3">{categoryTitles[tier]}</span>
                     <span className="block text-[10.5px] text-[#8A8577] font-medium mt-1 leading-snug">{HOTEL_LABELS[tier]}</span>
                     <div className="mt-3.5 flex items-end justify-between">
                       <span className="itc-serif text-2xl font-semibold text-[#44403C]">${rate}<span className="text-[10px] font-sans font-bold text-[#B5AC9A] uppercase"> /night</span></span>

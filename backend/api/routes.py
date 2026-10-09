@@ -101,6 +101,7 @@ async def process_agent1(request: Agent1ProcessRequest) -> Agent1ProcessResponse
 async def generate_itinerary(request: ItineraryRequest) -> ItineraryResponse:
     """Generates a complete multi-day itinerary using the 4-agent pipeline."""
     # Prioritize user prompt in custom_vibe so Agent 1 can parse user intent accurately
+    category = getattr(request, "budget_category", None) or request.hotel_tier or "standard"
     if request.custom_vibe and len(request.custom_vibe.strip()) > 8:
         prompt = request.custom_vibe.strip()
         # Append hints only if not already mentioned in prompt
@@ -109,19 +110,19 @@ async def generate_itinerary(request: ItineraryRequest) -> ItineraryResponse:
             hints.append(f"{request.duration_days} days")
         if request.budget_usd and "budget" not in prompt.lower() and "$" not in prompt:
             hints.append(f"budget ${request.budget_usd}")
-        if request.hotel_tier and request.hotel_tier != "standard" and request.hotel_tier not in prompt.lower():
-            hints.append(f"{request.hotel_tier} hotel")
+        if category in ("budget", "standard", "luxury") and category not in prompt.lower():
+            hints.append(f"{category} category hotel")
         if request.preferred_star_rating and "star" not in prompt.lower():
             hints.append(f"{int(request.preferred_star_rating)}-star hotel")
         if hints:
             prompt = f"{prompt} ({', '.join(hints)})"
     elif request.custom_vibe:
-        prompt = f"{request.duration_days} days in {request.destination}, budget ${request.budget_usd}, {request.custom_vibe}"
+        prompt = f"{request.duration_days} days in {request.destination}, budget ${request.budget_usd}, {category} hotel, {request.custom_vibe}"
     else:
-        hotel_hint = f", {request.hotel_tier} hotel" if request.hotel_tier and request.hotel_tier != "standard" else ""
+        hotel_hint = f", {category} hotel"
         prompt = f"{request.duration_days} days in {request.destination}, budget ${request.budget_usd}{hotel_hint}"
 
-    result = run_agent_pipeline(prompt)
+    result = run_agent_pipeline(prompt, category_override=category)
 
     if "error" in result:
         raise HTTPException(
