@@ -98,7 +98,7 @@ def find_nearest_known_city(lat, lng):
         return None
 
 
-def run_agent_pipeline(raw_user_prompt: str) -> dict:
+def run_agent_pipeline(raw_user_prompt: str, category_override: Optional[str] = None) -> dict:
     """Executes the full 4-agent pipeline sequentially with structured logging and timings."""
     timings = {}
 
@@ -116,11 +116,23 @@ def run_agent_pipeline(raw_user_prompt: str) -> dict:
             logger.warning(f"Agent 1 returned error: {err}")
             return {"error": err, "agent_timings": timings}
 
+        # Apply category override if explicitly provided from API
+        if category_override and str(category_override).lower() in ("budget", "standard", "luxury"):
+            chosen_cat = str(category_override).lower()
+            params["hotel_tier"] = chosen_cat
+            params["budget_category"] = chosen_cat
+            if chosen_cat == "budget":
+                params["preferred_star_rating"] = 3.0
+            elif chosen_cat == "luxury":
+                params["preferred_star_rating"] = 5.0
+            else:
+                params["preferred_star_rating"] = 4.0
+
         primary_destination = params.get("destination", "")
         dest_coords = params.get("destination_coords", {})
 
         logger.info(
-            f"Agent 1 complete | destination={primary_destination} | duration_s={t_agent1}"
+            f"Agent 1 complete | destination={primary_destination} | tier={params.get('budget_category')} | duration_s={t_agent1}"
         )
 
         # Agent 2: Information Retrieval
@@ -198,10 +210,29 @@ def run_agent_pipeline(raw_user_prompt: str) -> dict:
         if not resolved_destinations and primary_destination:
             resolved_destinations = [primary_destination]
 
+        # Group shortlisted hotels & POIs by destination for frontend consumption
+        suggested_places_by_destination: Dict[str, Dict[str, list]] = {}
+        for d in resolved_destinations:
+            suggested_places_by_destination[d] = {"hotels": [], "poi": []}
+
+        for h in enriched_hotels:
+            c = h.get("city") or primary_destination or "Sri Lanka"
+            if c not in suggested_places_by_destination:
+                suggested_places_by_destination[c] = {"hotels": [], "poi": []}
+            suggested_places_by_destination[c]["hotels"].append(h)
+
+        for p in enriched_pois:
+            c = p.get("city") or primary_destination or "Sri Lanka"
+            if c not in suggested_places_by_destination:
+                suggested_places_by_destination[c] = {"hotels": [], "poi": []}
+            suggested_places_by_destination[c]["poi"].append(p)
+
         return {
             "itinerary": itinerary_md,
+            "itinerary_markdown": itinerary_md,
             "hotels": enriched_hotels,
             "pois": enriched_pois,
+            "suggested_places_by_destination": suggested_places_by_destination,
             "estimated_total_usd": curated["estimated_total_usd"],
             "budget_warning": curated["budget_warning"],
             "reasoning": curated["scoring_breakdown"],

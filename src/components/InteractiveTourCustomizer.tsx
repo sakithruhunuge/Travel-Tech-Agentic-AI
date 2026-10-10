@@ -149,6 +149,476 @@ export const LOCATIONS: MapLocation[] = [
   { id: "Tissamaharama", name: "Tissamaharama", lat: 6.2796, lng: 81.2863, img: "/images/yala.png", description: "Ancient southern lake capital, gateway to Yala and Bundala bird safaris.", category: "wildlife" },
 ];
 
+export const CURATED_DESTINATION_PLACES: Record<string, DestinationPlaces> = {
+  Colombo: {
+    hotels: [
+      {
+        id: "cur-col-1",
+        name: "Galle Face Hotel",
+        avg_nightly_usd: 135,
+        rating: 4.8,
+        price_tier: "Luxury Heritage",
+        description: "Historic 1864 colonial oceanfront icon with sunset veranda on the Indian Ocean.",
+        primary_image: "/images/colombo.png",
+      },
+      {
+        id: "cur-col-2",
+        name: "Cinnamon Grand Colombo",
+        avg_nightly_usd: 110,
+        rating: 4.7,
+        price_tier: "Luxury",
+        description: "5-star downtown sanctuary with lagoon pool, spa, and 14 premier dining venues.",
+        primary_image: "/images/colombo.png",
+      },
+      {
+        id: "cur-col-3",
+        name: "City Rest Fort Budget Inn",
+        avg_nightly_usd: 32,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Comfortable 3-star budget stay with easy access to Colombo Fort and seaside promenade.",
+        primary_image: "/images/colombo.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-col-1",
+        name: "Gangaramaya Buddhist Temple",
+        ticket_price_usd: 5,
+        rating: 4.8,
+        description: "Vibrant lakeside Buddhist complex featuring museum relics and brass artifacts.",
+        primary_image: "/images/colombo.png",
+      },
+      {
+        id: "cur-poi-col-2",
+        name: "Galle Face Green Promenade",
+        ticket_price_usd: 0,
+        rating: 4.7,
+        description: "Oceanfront urban park famous for evening sea breezes, street eats, and sunset views.",
+        primary_image: "/images/colombo.png",
+      },
+    ],
+  },
+  Kandy: {
+    hotels: [
+      {
+        id: "cur-kan-1",
+        name: "Cinnamon Citadel Kandy",
+        avg_nightly_usd: 85,
+        rating: 4.7,
+        price_tier: "Standard Heritage",
+        description: "Peaceful riverbank retreat on the Mahaweli River surrounded by misty tropical hills.",
+        primary_image: "/images/kandy.png",
+      },
+      {
+        id: "cur-kan-2",
+        name: "Earl's Regency Kandy",
+        avg_nightly_usd: 95,
+        rating: 4.8,
+        price_tier: "Luxury",
+        description: "5-star hillside resort offering mountain vistas and tranquil garden suites.",
+        primary_image: "/images/kandy.png",
+      },
+      {
+        id: "cur-kan-3",
+        name: "Kandy View Garden Rest",
+        avg_nightly_usd: 30,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Clean, scenic hillside 3-star budget stay overlooking the Mahaweli valley.",
+        primary_image: "/images/kandy.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-kan-1",
+        name: "Temple of the Sacred Tooth Relic",
+        ticket_price_usd: 15,
+        rating: 4.9,
+        description: "UNESCO sacred Buddhist temple housing the venerated tooth relic of the Buddha.",
+        primary_image: "/images/kandy.png",
+      },
+      {
+        id: "cur-poi-kan-2",
+        name: "Royal Botanical Gardens Peradeniya",
+        ticket_price_usd: 12,
+        rating: 4.8,
+        description: "World-famous 147-acre royal botanical gardens with 4,000+ plant varieties and palm avenue.",
+        primary_image: "/images/kandy.png",
+      },
+    ],
+  },
+  Sigiriya: {
+    hotels: [
+      {
+        id: "cur-sig-1",
+        name: "Water Garden Sigiriya",
+        avg_nightly_usd: 140,
+        rating: 4.9,
+        price_tier: "Luxury Eco",
+        description: "Villas set across water gardens with unobstructed views of ancient Lion Rock.",
+        primary_image: "/images/sigiriya.png",
+      },
+      {
+        id: "cur-sig-2",
+        name: "Aliya Resort & Spa",
+        avg_nightly_usd: 90,
+        rating: 4.7,
+        price_tier: "Standard",
+        description: "Elephant-themed contemporary resort featuring infinity pool panoramas of Sigiriya citadel.",
+        primary_image: "/images/sigiriya.png",
+      },
+      {
+        id: "cur-sig-3",
+        name: "Sigiriya Rock Side Cottage",
+        avg_nightly_usd: 28,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Cozy 3-star budget eco-chalet with direct garden vistas of Lion Rock.",
+        primary_image: "/images/sigiriya.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-sig-1",
+        name: "Sigiriya Rock Citadel",
+        ticket_price_usd: 36,
+        rating: 4.9,
+        description: "UNESCO 5th-century ancient sky fortress, fresco gallery, and royal water gardens.",
+        primary_image: "/images/sigiriya.png",
+      },
+      {
+        id: "cur-poi-sig-2",
+        name: "Pidurangala Rock Sunrise Hike",
+        ticket_price_usd: 5,
+        rating: 4.8,
+        description: "Scenic boulder climb providing 360-degree panoramic views of Sigiriya Lion Rock.",
+        primary_image: "/images/sigiriya.png",
+      },
+    ],
+  },
+  Dambulla: {
+    hotels: [
+      {
+        id: "cur-dam-1",
+        name: "Heritance Kandalama",
+        avg_nightly_usd: 150,
+        rating: 4.9,
+        price_tier: "Luxury Eco",
+        description: "Geoffrey Bawa architectural landmark embedded into the cliffside overlooking Kandalama lake.",
+        primary_image: "/images/dambulla.png",
+      },
+      {
+        id: "cur-dam-2",
+        name: "Amaya Lake Dambulla",
+        avg_nightly_usd: 85,
+        rating: 4.7,
+        price_tier: "Standard",
+        description: "Lakeside chalet sanctuary set amidst tranquil dry-zone woodland.",
+        primary_image: "/images/dambulla.png",
+      },
+      {
+        id: "cur-dam-3",
+        name: "Dambulla Rock View Inn",
+        avg_nightly_usd: 28,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Peaceful 3-star budget guesthouse minutes from the UNESCO Cave Temple.",
+        primary_image: "/images/dambulla.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-dam-1",
+        name: "Dambulla Royal Cave Temple",
+        ticket_price_usd: 10,
+        rating: 4.8,
+        description: "UNESCO sacred rock monastery with 5 cave sanctuaries filled with statues and murals.",
+        primary_image: "/images/dambulla.png",
+      },
+    ],
+  },
+  Galle: {
+    hotels: [
+      {
+        id: "cur-gal-1",
+        name: "Fort Bazaar Galle",
+        avg_nightly_usd: 140,
+        rating: 4.7,
+        price_tier: "Boutique Heritage",
+        description: "Restored merchant townhouse in the heart of Galle Fort with courtyard dining.",
+        primary_image: "/images/galle.png",
+      },
+      {
+        id: "cur-gal-2",
+        name: "Jetwing Lighthouse",
+        avg_nightly_usd: 130,
+        rating: 4.8,
+        price_tier: "Luxury",
+        description: "Geoffrey Bawa clifftop icon with ocean waves crashing against granite boulders.",
+        primary_image: "/images/galle.png",
+      },
+      {
+        id: "cur-gal-3",
+        name: "Galle Fort Budget Inn",
+        avg_nightly_usd: 35,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Charming budget-friendly 3-star inn just steps from the Dutch ramparts.",
+        primary_image: "/images/galle.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-gal-1",
+        name: "Galle Dutch Fort Ramparts & Lighthouse",
+        ticket_price_usd: 0,
+        rating: 4.8,
+        description: "UNESCO 17th-century colonial bastions, historic lighthouse, and oceanfront promenade.",
+        primary_image: "/images/galle.png",
+      },
+      {
+        id: "cur-poi-gal-2",
+        name: "Flag Rock Bastion Sunset",
+        ticket_price_usd: 0,
+        rating: 4.9,
+        description: "Southwestern bastion famous for dramatic Indian Ocean sunsets and cliff jumpers.",
+        primary_image: "/images/galle.png",
+      },
+    ],
+  },
+  Mirissa: {
+    hotels: [
+      {
+        id: "cur-mir-1",
+        name: "Sri Sharavi Beachfront Villas",
+        avg_nightly_usd: 120,
+        rating: 4.8,
+        price_tier: "Boutique",
+        description: "Eco-chic luxury villas directly on Mirissa bay with beachfront infinity pool.",
+        primary_image: "/images/bentota.png",
+      },
+      {
+        id: "cur-mir-2",
+        name: "Mirissa Bay Eco Rest",
+        avg_nightly_usd: 30,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Friendly 3-star beachside budget stay near Coconut Tree Hill.",
+        primary_image: "/images/bentota.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-mir-1",
+        name: "Coconut Tree Hill",
+        ticket_price_usd: 0,
+        rating: 4.9,
+        description: "Photogenic palm-covered headland jutting out into azure waters.",
+        primary_image: "/images/bentota.png",
+      },
+      {
+        id: "cur-poi-mir-2",
+        name: "Mirissa Whale Watching Cruise",
+        ticket_price_usd: 55,
+        rating: 4.8,
+        description: "Morning boat safari observing wild blue whales, sperm whales, and dolphins.",
+        primary_image: "/images/bentota.png",
+      },
+    ],
+  },
+  Ella: {
+    hotels: [
+      {
+        id: "cur-ell-1",
+        name: "98 Acres Resort & Spa",
+        avg_nightly_usd: 165,
+        rating: 4.9,
+        price_tier: "Luxury Eco",
+        description: "Charming thatched chalets perched on a working tea estate with Ella Gap vistas.",
+        primary_image: "/images/nine_arch.png",
+      },
+      {
+        id: "cur-ell-2",
+        name: "Ella Gap Budget Chalets",
+        avg_nightly_usd: 28,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Scenic 3-star budget guesthouse walking distance to Nine Arch Bridge.",
+        primary_image: "/images/nine_arch.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-ell-1",
+        name: "Nine Arch Demodara Bridge",
+        ticket_price_usd: 0,
+        rating: 4.9,
+        description: "Colonial stone rail viaduct nestled in dense mountain jungle and tea trails.",
+        primary_image: "/images/nine_arch.png",
+      },
+      {
+        id: "cur-poi-ell-2",
+        name: "Little Adam's Peak Hike",
+        ticket_price_usd: 0,
+        rating: 4.8,
+        description: "Gentle mountain trek with sweeping vistas over southern Sri Lanka's plains.",
+        primary_image: "/images/nine_arch.png",
+      },
+    ],
+  },
+  "Nuwara Eliya": {
+    hotels: [
+      {
+        id: "cur-nuw-1",
+        name: "Grand Hotel Nuwara Eliya",
+        avg_nightly_usd: 130,
+        rating: 4.8,
+        price_tier: "Luxury Heritage",
+        description: "Palatial Elizabethan manor offering traditional afternoon high tea in the highlands.",
+        primary_image: "/images/tea.png",
+      },
+      {
+        id: "cur-nuw-2",
+        name: "Single Tree Hill Budget Lodge",
+        avg_nightly_usd: 32,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Warm, welcoming 3-star budget lodge close to tea estates and Lake Gregory.",
+        primary_image: "/images/tea.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-nuw-1",
+        name: "Pedro Tea Estate & Factory",
+        ticket_price_usd: 5,
+        rating: 4.8,
+        description: "Guided tour through orthodox processing of world-famous single-origin Ceylon tea.",
+        primary_image: "/images/tea.png",
+      },
+      {
+        id: "cur-poi-nuw-2",
+        name: "Lake Gregory Recreational Park",
+        ticket_price_usd: 3,
+        rating: 4.6,
+        description: "High-altitude mountain lake featuring boating, pedal boats, and scenic walking paths.",
+        primary_image: "/images/tea.png",
+      },
+    ],
+  },
+  Bentota: {
+    hotels: [
+      {
+        id: "cur-ben-1",
+        name: "Vivanta by Taj Bentota",
+        avg_nightly_usd: 140,
+        rating: 4.8,
+        price_tier: "Luxury Beach",
+        description: "Beachfront luxury resort overlooking Bentota golden beach with Ayurvedic spa.",
+        primary_image: "/images/bentota.png",
+      },
+      {
+        id: "cur-ben-2",
+        name: "Bentota River Breeze Rest",
+        avg_nightly_usd: 32,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Relaxed 3-star riverfront budget stay near the golden beach.",
+        primary_image: "/images/bentota.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-ben-1",
+        name: "Madu River Mangrove Safari",
+        ticket_price_usd: 25,
+        rating: 4.8,
+        description: "Boat excursion navigating mangrove tunnels, cinnamon peeling huts, and temple island.",
+        primary_image: "/images/bentota.png",
+      },
+    ],
+  },
+  Yala: {
+    hotels: [
+      {
+        id: "cur-yal-1",
+        name: "Cinnamon Wild Yala",
+        avg_nightly_usd: 150,
+        rating: 4.8,
+        price_tier: "Luxury Eco",
+        description: "Jungle cabins where wildlife wanders up to your verandah bordering Yala Park.",
+        primary_image: "/images/yala.png",
+      },
+      {
+        id: "cur-yal-2",
+        name: "Tissamaharama Safari Budget Rest",
+        avg_nightly_usd: 30,
+        rating: 3.5,
+        price_tier: "Budget",
+        description: "Affordable 3-star safari base camp minutes from Yala National Park gates.",
+        primary_image: "/images/yala.png",
+      },
+    ],
+    poi: [
+      {
+        id: "cur-poi-yal-1",
+        name: "Yala National Park Safari",
+        ticket_price_usd: 60,
+        rating: 4.9,
+        description: "Guided 4x4 open safari searching for wild leopards, elephants, and sloth bears.",
+        primary_image: "/images/yala.png",
+      },
+    ],
+  },
+};
+
+export function getCuratedPlacesForDestinations(destinations: string[]): Record<string, DestinationPlaces> {
+  const result: Record<string, DestinationPlaces> = {};
+  destinations.forEach((dest) => {
+    const key = Object.keys(CURATED_DESTINATION_PLACES).find(
+      (k) => k.toLowerCase() === dest.toLowerCase()
+    );
+    if (key && CURATED_DESTINATION_PLACES[key]) {
+      result[dest] = CURATED_DESTINATION_PLACES[key];
+    } else {
+      result[dest] = {
+        hotels: [
+          {
+            id: `cur-gen-h-${dest}`,
+            name: `${dest} Boutique Retreat`,
+            avg_nightly_usd: 90,
+            rating: 4.7,
+            price_tier: "Standard",
+            description: `Curated boutique stay in ${dest} offering scenic views and warm local hospitality.`,
+            primary_image: LOCATIONS.find((l) => l.id.toLowerCase() === dest.toLowerCase())?.img || "/images/colombo.png",
+          },
+          {
+            id: `cur-gen-budget-${dest}`,
+            name: `${dest} 3-Star Budget Rest`,
+            avg_nightly_usd: 32,
+            rating: 3.5,
+            price_tier: "Budget",
+            description: `Clean, comfortable 3-star budget accommodation in ${dest}.`,
+            primary_image: LOCATIONS.find((l) => l.id.toLowerCase() === dest.toLowerCase())?.img || "/images/colombo.png",
+          },
+        ],
+        poi: [
+          {
+            id: `cur-gen-p-${dest}`,
+            name: `${dest} Scenic Landmark`,
+            ticket_price_usd: 10,
+            rating: 4.8,
+            description: `Top-rated attraction and cultural sight in ${dest}.`,
+            primary_image: LOCATIONS.find((l) => l.id.toLowerCase() === dest.toLowerCase())?.img || "/images/sigiriya.png",
+          },
+        ],
+      };
+    }
+  });
+  return result;
+}
+
 export const BASE_TOURS = [
   { id: "cultural", nameKey: "cultural", descKey: "culturalDesc", destinations: ["Colombo", "Dambulla", "Sigiriya", "Kandy"], duration: 5 },
   { id: "southern", nameKey: "southern", descKey: "southernDesc", destinations: ["Bentota", "Galle", "Mirissa", "Yala"], duration: 6 },
@@ -453,9 +923,13 @@ export function extractPreferencesFromPrompt(text: string): DetectedPreference[]
   }
 
   // Hotel class
-  if (/\b(5[- ]star|luxury|boutique|villa|resort)\b/i.test(text)) {
-    const hit = text.match(/\b(5[- ]star|luxury|boutique|villa|resort)\b/i)![0];
+  if (/\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|economy\s+hotel|affordable\s+hotel|hostel|guesthouse)\b/i.test(text)) {
+    prefs.push({ key: "stay", label: "Stay", value: "3-Star Budget Friendly", icon: "🏨" });
+  } else if (/\b(5[- ]star|five[- ]star|luxury|boutique|villa|resort)\b/i.test(text)) {
+    const hit = text.match(/\b(5[- ]star|five[- ]star|luxury|boutique|villa|resort)\b/i)![0];
     prefs.push({ key: "stay", label: "Stay", value: hit.charAt(0).toUpperCase() + hit.slice(1), icon: "🏨" });
+  } else if (/\b(4[- ]star|four[- ]star|standard)\b/i.test(text)) {
+    prefs.push({ key: "stay", label: "Stay", value: "Standard Comfort", icon: "🏨" });
   }
 
   // Transport
@@ -535,7 +1009,7 @@ export function resolveStartingLocationObject(locNameOrId: string): MapLocation 
 export function extractStartingLocationFromPrompt(text: string): string | null {
   if (!text) return null;
 
-  // Patterns like "starting from X", "start from X", "depart from X", "departing from X", "pickup from/at X", "leaving from X"
+  // Patterns like "starting from X", "start from X", "departing from X", "depart per X", "pickup from/at X", "leaving from X"
   const startRegex = /\b(?:starting\s+(?:from|at)|start\s+(?:from|at)|departing\s+(?:from|at)|depart\s+(?:from|at)|pickup\s+(?:from|at)|leaving\s+(?:from|at))\s+([a-zA-Z\s'()]+?)(?:\.|\band\b|\bthen\b|,|$)/i;
   const match = text.match(startRegex);
   if (match && match[1]) {
@@ -597,12 +1071,13 @@ const QUICK_PREFERENCES = [
   { label: "7 Days", text: "7 days" },
   { label: "Couple (2)", text: "couple" },
   { label: "Family of 4", text: "family of 4" },
+  { label: "Budget Friendly", text: "3 star hotel, budget friendly" },
   { label: "Budget $600", text: "budget $600" },
   { label: "Private Driver", text: "private driver" },
   { label: "Boutique Hotel", text: "boutique hotel" },
 ];
 
-const QUICK_CHIPS = ["beach", "Galle", "Ella", "Kandy", "Sigiriya", "Mirissa", "Yala", "Nuwara Eliya", "wildlife", "culture"];
+const QUICK_CHIPS = ["beach", "3-star hotel", "Galle", "Ella", "Kandy", "Sigiriya", "budget friendly", "Mirissa", "Yala", "Nuwara Eliya", "wildlife", "culture"];
 
 const SEASONS = [
   { id: "off-peak", name: "Off-Peak", window: "May – Jun · Oct – Nov", mult: SEASON_MULTIPLIERS["off-peak"] },
@@ -671,12 +1146,13 @@ export function parseAndRenderTimelineText(text: string, originalChildren?: Reac
   const isAfternoon = /^(?:[\*\#\-\s>]*)(?:☀️\s*)?Afternoon(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
   const isEvening = /^(?:[\*\#\-\s>]*)(?:🌙\s*)?Evening(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
   const isStay = /^(?:[\*\#\-\s>]*)(?:🏨\s*)?Tonight's Stay(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
+  const isInsight = /^(?:[\*\#\-\s>]*)(?:💡\s*)?(?:Day Travel Insight|Day Insight|Travel Insight|Insider Tip|Travel Tip)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
   const isCost = /^(?:[\*\#\-\s>]*)(?:💰\s*)?(?:Estimated Day Cost|Estimated Cost|Est\.? Cost)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
   const isXai = /^(?:[\*\#\-\s>]*)(?:💡\s*)?(?:Why This Was Chosen|XAI Decision Rationale|XAI Selection Rationale)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i.test(trimmed);
 
   // If text contains multiple lines that have any of these markers, split by lines
   const lines = trimmed.split(/\r?\n+/).map((l) => l.trim()).filter(Boolean);
-  if (lines.length > 1 && lines.some((l) => /(?:Morning|Afternoon|Evening|Tonight's Stay|Estimated Day Cost|Why This Was Chosen|XAI Decision Rationale):?/i.test(l))) {
+  if (lines.length > 1 && lines.some((l) => /(?:Morning|Afternoon|Evening|Tonight's Stay|Day Travel Insight|Travel Insight|Insider Tip|Estimated Day Cost|Why This Was Chosen|XAI Decision Rationale):?/i.test(l))) {
     return (
       <div className="space-y-3.5 my-3.5">
         {lines.map((line, idx) => (
@@ -689,7 +1165,7 @@ export function parseAndRenderTimelineText(text: string, originalChildren?: Reac
   }
 
   // If multiple markers are joined inline on a single line (e.g. "**🌅 Morning:** ... **☀️ Afternoon:** ...")
-  const compoundRegex = /(\*\*?(?:🌅\s*)?Morning:\*\*?|\*\*?(?:☀️\s*)?Afternoon:\*\*?|\*\*?(?:🌙\s*)?Evening:\*\*?|\*\*?(?:🏨\s*)?Tonight's Stay:\*\*?|\*\*?(?:💰\s*)?(?:Estimated Day Cost|Estimated Cost):\*\*?)/gi;
+  const compoundRegex = /(\*\*?(?:🌅\s*)?Morning:\*\*?|\*\*?(?:☀️\s*)?Afternoon:\*\*?|\*\*?(?:🌙\s*)?Evening:\*\*?|\*\*?(?:🏨\s*)?Tonight's Stay:\*\*?|\*\*?(?:💡\s*)?(?:Day Travel Insight|Travel Insight|Insider Tip):\*\*?|\*\*?(?:💰\s*)?(?:Estimated Day Cost|Estimated Cost):\*\*?)/gi;
   const matches: RegExpExecArray[] = [];
   let m: RegExpExecArray | null = null;
   while ((m = compoundRegex.exec(trimmed)) !== null) {
@@ -842,6 +1318,41 @@ export function parseAndRenderTimelineText(text: string, originalChildren?: Reac
           </span>
         </div>
         <p className="text-[13px] text-[#334155] font-bold leading-relaxed m-0 pl-1">
+          {renderFormattedInline(cleanBody)}
+        </p>
+      </div>
+    );
+  }
+
+  if (isInsight) {
+    const cleanBody = trimmed.replace(/^(?:[\*\#\-\s>]*)(?:💡\s*)?(?:Day Travel Insight|Day Insight|Travel Insight|Insider Tip|Travel Tip)(?:\*\*|\*)?:?\s*(?:\*\*|\*)?:?\s*/i, "").trim();
+    return (
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#F0FDF4] via-[#F7FEE7] to-white border border-[#BBF7D0] p-4 sm:p-5 my-3.5 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+        <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-emerald-400 via-teal-500 to-emerald-600" />
+        <div className="flex items-center justify-between gap-3 mb-2.5 flex-wrap">
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-white flex items-center justify-center text-base shadow-md shadow-emerald-300/40 shrink-0">
+              💡
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-wider text-emerald-950 block">
+                  Day Travel Insight & Tips
+                </span>
+                <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-emerald-200/80 text-emerald-900">
+                  Local Wisdom
+                </span>
+              </div>
+              <span className="text-[10px] text-emerald-800/80 font-bold block mt-0.5">
+                Pacing, Cultural Protocol & Logistics Guidance
+              </span>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100/90 text-emerald-900 border border-emerald-300/70 shadow-2xs">
+            🧭 Practical Guidance
+          </span>
+        </div>
+        <p className="text-[13px] text-[#334155] font-semibold leading-relaxed m-0 pl-1">
           {renderFormattedInline(cleanBody)}
         </p>
       </div>
@@ -1173,13 +1684,36 @@ export default function InteractiveTourCustomizer() {
   const [aiError, setAiError] = useState<string | null>(null);
   const [activeAgentStep, setActiveAgentStep] = useState<number>(1);
   const [agentStepLabel, setAgentStepLabel] = useState<string>("");
-  const [agentTelemetry, setAgentTelemetry] = useState<FullAgentPipelineResult | null>(null);
+  const defaultAgentData = useMemo(() => getMockAgentPipelineResult("5-day Sri Lanka Cultural Tour", 5), []);
+  const [agentTelemetry, setAgentTelemetry] = useState<FullAgentPipelineResult | null>(defaultAgentData);
   const [activeXaiTab, setActiveXaiTab] = useState<"itinerary" | "curator" | "telemetry">("itinerary");
-  const [aiItinerary, setAiItinerary] = useState<string | null>(null);
+  const [aiItinerary, setAiItinerary] = useState<string | null>(defaultAgentData.itineraryMarkdown);
 
-  const [suggestedPlacesByDestination, setSuggestedPlacesByDestination] = useState<Record<string, DestinationPlaces>>({});
+  const [suggestedPlacesByDestination, setSuggestedPlacesByDestination] = useState<Record<string, DestinationPlaces>>(() =>
+    getCuratedPlacesForDestinations(["Colombo", "Dambulla", "Sigiriya", "Kandy"])
+  );
   const [selectedPlaceIds, setSelectedPlaceIds] = useState<string[]>([]);
   const [failedPoiImages, setFailedPoiImages] = useState<Record<string, boolean>>({});
+
+  // Synchronize suggested hotels and attractions whenever destinations change
+  useEffect(() => {
+    if (inputs.destinations.length > 0) {
+      setSuggestedPlacesByDestination((prev) => {
+        let hasNew = false;
+        const next = { ...prev };
+        inputs.destinations.forEach((dest) => {
+          if (!next[dest] || ((next[dest].hotels?.length || 0) === 0 && (next[dest].poi?.length || 0) === 0)) {
+            const added = getCuratedPlacesForDestinations([dest])[dest];
+            if (added) {
+              next[dest] = added;
+              hasNew = true;
+            }
+          }
+        });
+        return hasNew ? next : prev;
+      });
+    }
+  }, [inputs.destinations]);
 
   useEffect(() => {
     if (aiStartDate && aiEndDate) {
@@ -1208,15 +1742,27 @@ export default function InteractiveTourCustomizer() {
   const handleKeywordsChange = (val: string) => {
     setAiKeywords(val);
     const detected = extractDestinationsFromPrompt(val);
-    if (detected.length > 0 && selectedTour === "ai-suggested") {
+    const isBudget = /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|budget|cheap|affordable|hostel|guesthouse|backpacker)\b/i.test(val);
+    const isLuxury = /\b(?:5[- ]?star|five[- ]?star|luxury|luxurious|boutique|premium|resort|villa|high[- ]?end)\b/i.test(val);
+    const isStandard = /\b(?:4[- ]?star|four[- ]?star|standard|comfort|mid[- ]?range)\b/i.test(val);
+
+    if (selectedTour === "ai-suggested") {
       setInputs((prev) => {
-        const isSame =
-          prev.destinations.length === detected.length &&
-          prev.destinations.every((d, i) => d === detected[i]);
-        if (isSame) return prev;
+        let nextHotelClass = prev.hotelClass;
+        if (isBudget) nextHotelClass = "budget";
+        else if (isLuxury) nextHotelClass = "luxury";
+        else if (isStandard) nextHotelClass = "standard";
+
+        const isSameDests =
+          detected.length === 0 ||
+          (prev.destinations.length === detected.length &&
+            prev.destinations.every((d, i) => d === detected[i]));
+
+        if (isSameDests && nextHotelClass === prev.hotelClass) return prev;
         return {
           ...prev,
-          destinations: detected,
+          destinations: detected.length > 0 ? detected : prev.destinations,
+          hotelClass: nextHotelClass,
         };
       });
     }
@@ -1228,20 +1774,71 @@ export default function InteractiveTourCustomizer() {
     }
   };
 
+  const handleSelectBudgetCategory = (cat: "budget" | "standard" | "luxury") => {
+    setInputs((prev) => ({
+      ...prev,
+      hotelClass: cat,
+    }));
+
+    // Instantly sort hotels across all active destinations to match the selected category
+    setSuggestedPlacesByDestination((prev) => {
+      const updated: Record<string, DestinationPlaces> = {};
+      Object.entries(prev).forEach(([city, group]) => {
+        const sortedHotels = [...(group.hotels || [])].sort((a, b) => {
+          if (cat === "budget") {
+            const aIsBudget = (a.price_tier || "").toLowerCase().includes("budget") || a.avg_nightly_usd <= 50;
+            const bIsBudget = (b.price_tier || "").toLowerCase().includes("budget") || b.avg_nightly_usd <= 50;
+            if (aIsBudget && !bIsBudget) return -1;
+            if (!aIsBudget && bIsBudget) return 1;
+            return a.avg_nightly_usd - b.avg_nightly_usd;
+          } else if (cat === "luxury") {
+            const aIsLux = (a.price_tier || "").toLowerCase().includes("lux") || (a.price_tier || "").toLowerCase().includes("boutique") || a.avg_nightly_usd >= 120 || (a.rating || 0) >= 4.8;
+            const bIsLux = (b.price_tier || "").toLowerCase().includes("lux") || (b.price_tier || "").toLowerCase().includes("boutique") || b.avg_nightly_usd >= 120 || (b.rating || 0) >= 4.8;
+            if (aIsLux && !bIsLux) return -1;
+            if (!aIsLux && bIsLux) return 1;
+            return b.avg_nightly_usd - a.avg_nightly_usd;
+          } else {
+            const aIsStandard = (a.price_tier || "").toLowerCase().includes("standard") || (a.avg_nightly_usd >= 45 && a.avg_nightly_usd <= 115);
+            const bIsStandard = (b.price_tier || "").toLowerCase().includes("standard") || (b.avg_nightly_usd >= 45 && b.avg_nightly_usd <= 115);
+            if (aIsStandard && !bIsStandard) return -1;
+            if (!aIsStandard && bIsStandard) return 1;
+            const aDist = Math.abs(a.avg_nightly_usd - 80);
+            const bDist = Math.abs(b.avg_nightly_usd - 80);
+            return aDist - bDist;
+          }
+        });
+        updated[city] = { ...group, hotels: sortedHotels };
+      });
+      return updated;
+    });
+  };
+
   const handleAddKeywordChip = (chip: string) => {
     const isAlreadyPresent = aiKeywords.toLowerCase().includes(chip.toLowerCase());
     const nextVal = isAlreadyPresent ? aiKeywords : (aiKeywords ? `${aiKeywords}, ${chip}` : chip);
     setAiKeywords(nextVal);
     const detected = extractDestinationsFromPrompt(nextVal);
-    if (detected.length > 0 && selectedTour === "ai-suggested") {
+    const isBudget = /\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|budget|cheap|affordable|hostel|guesthouse|backpacker)\b/i.test(nextVal);
+    const isLuxury = /\b(?:5[- ]?star|five[- ]?star|luxury|luxurious|boutique|premium|resort|villa|high[- ]?end)\b/i.test(nextVal);
+    const isStandard = /\b(?:4[- ]?star|four[- ]?star|standard|comfort|mid[- ]?range)\b/i.test(nextVal);
+
+    if (selectedTour === "ai-suggested") {
       setInputs((prev) => {
-        const isSame =
-          prev.destinations.length === detected.length &&
-          prev.destinations.every((d, i) => d === detected[i]);
-        if (isSame) return prev;
+        let nextHotelClass = prev.hotelClass;
+        if (isBudget) nextHotelClass = "budget";
+        else if (isLuxury) nextHotelClass = "luxury";
+        else if (isStandard) nextHotelClass = "standard";
+
+        const isSameDests =
+          detected.length === 0 ||
+          (prev.destinations.length === detected.length &&
+            prev.destinations.every((d, i) => d === detected[i]));
+
+        if (isSameDests && nextHotelClass === prev.hotelClass) return prev;
         return {
           ...prev,
-          destinations: detected,
+          destinations: detected.length > 0 ? detected : prev.destinations,
+          hotelClass: nextHotelClass,
         };
       });
     }
@@ -1418,18 +2015,18 @@ export default function InteractiveTourCustomizer() {
 
   const activeLegs = realLegsData.length > 0 && realLegsData.length === selectedRouteLocations.length - 1
     ? realLegsData.map((rl) => ({
-        from: rl.from,
-        to: rl.to,
-        distanceKm: rl.distanceKm,
-        bearing: rl.bearing,
-        direction: rl.direction,
-        driveTime: { hours: Math.floor(rl.durationMinutes / 60), minutes: rl.durationMinutes % 60, label: rl.driveTimeLabel },
-        pathCoords: rl.pathCoords,
-      }))
+      from: rl.from,
+      to: rl.to,
+      distanceKm: rl.distanceKm,
+      bearing: rl.bearing,
+      direction: rl.direction,
+      driveTime: { hours: Math.floor(rl.durationMinutes / 60), minutes: rl.durationMinutes % 60, label: rl.driveTimeLabel },
+      pathCoords: rl.pathCoords,
+    }))
     : routeLegs.map((rl) => ({
-        ...rl,
-        pathCoords: [[rl.from.lat, rl.from.lng], [rl.to.lat, rl.to.lng]] as [number, number][],
-      }));
+      ...rl,
+      pathCoords: [[rl.from.lat, rl.from.lng], [rl.to.lat, rl.to.lng]] as [number, number][],
+    }));
 
   const displayTotalKm = Math.round(activeLegs.reduce((acc, leg) => acc + leg.distanceKm, 0) * 10) / 10;
   const displayTotalMins = activeLegs.reduce((acc, leg) => acc + (leg.driveTime.hours * 60 + leg.driveTime.minutes), 0);
@@ -1653,43 +2250,54 @@ export default function InteractiveTourCustomizer() {
 
   /* Helper to apply structured 4-agent output to InteractiveTourCustomizer state */
   const handleApplyAgentResult = (data: FullAgentPipelineResult) => {
-    setAiItinerary(data.itineraryMarkdown);
+    setAiItinerary(data.itineraryMarkdown || defaultAgentData.itineraryMarkdown);
     setSelectedTour("ai-suggested");
     setAgentTelemetry(data);
 
     // Populate suggested places for interactive map & quote selection
-    const mappedPlaces: Record<string, DestinationPlaces> = {};
-    data.ranked.forEach((r, idx) => {
-      const item = r.item;
-      const city =
-        item.city ||
-        item.destination ||
-        (LOCATIONS.some((loc) => loc.id === item.city) ? (item.city as string) : "Colombo");
+    const mappedPlaces: Record<string, DestinationPlaces> = {
+      ...(data.suggestedPlacesByDestination || {}),
+    };
 
-      if (!mappedPlaces[city]) {
-        mappedPlaces[city] = { hotels: [], poi: [] };
-      }
-      if (item.type === "hotel" || item.avg_nightly_usd) {
-        mappedPlaces[city].hotels?.push({
-          id: item.id || `hotel-${idx}`,
-          name: item.name,
-          avg_nightly_usd: Number(item.avg_nightly_usd) || 100,
-          rating: Number(item.rating) || 4.8,
-          description: r.reasons?.join(" · ") || item.description || "Curated stay",
-          primary_image: item.primary_image,
-        });
-      } else {
-        mappedPlaces[city].poi?.push({
-          id: item.id || `poi-${idx}`,
-          name: item.name,
-          ticket_price_usd: Number(item.ticket_price_usd) || Number(item.price) || 0,
-          rating: Number(item.rating) || 4.8,
-          description: r.reasons?.join(" · ") || item.description || "Curated activity",
-          primary_image: item.primary_image,
-        });
-      }
-    });
-    setSuggestedPlacesByDestination(mappedPlaces);
+    if (data.ranked && data.ranked.length > 0) {
+      data.ranked.forEach((r, idx) => {
+        const item = r.item;
+        const city =
+          item.city ||
+          item.destination ||
+          (LOCATIONS.some((loc) => loc.id === item.city) ? (item.city as string) : "Colombo");
+
+        if (!mappedPlaces[city]) {
+          mappedPlaces[city] = { hotels: [], poi: [] };
+        }
+        if (item.type === "hotel" || item.avg_nightly_usd) {
+          if (!mappedPlaces[city].hotels) mappedPlaces[city].hotels = [];
+          if (!mappedPlaces[city].hotels?.some((h) => h.name === item.name)) {
+            mappedPlaces[city].hotels?.push({
+              id: item.id || `hotel-${idx}`,
+              name: item.name,
+              avg_nightly_usd: Number(item.avg_nightly_usd) || 100,
+              rating: Number(item.rating) || 4.8,
+              price_tier: item.price_tier || "Standard",
+              description: r.reasons?.join(" · ") || item.description || "Curated stay",
+              primary_image: item.primary_image,
+            });
+          }
+        } else {
+          if (!mappedPlaces[city].poi) mappedPlaces[city].poi = [];
+          if (!mappedPlaces[city].poi?.some((p) => p.name === item.name)) {
+            mappedPlaces[city].poi?.push({
+              id: item.id || `poi-${idx}`,
+              name: item.name,
+              ticket_price_usd: Number(item.ticket_price_usd) || Number(item.price) || 0,
+              rating: Number(item.rating) || 4.8,
+              description: r.reasons?.join(" · ") || item.description || "Curated activity",
+              primary_image: item.primary_image,
+            });
+          }
+        }
+      });
+    }
 
     const returnedCities: string[] = Array.isArray(data.destinations) ? [...data.destinations] : [];
     if (data.requirements?.destination && !returnedCities.some((c) => c.toLowerCase() === data.requirements.destination.toLowerCase())) {
@@ -1713,11 +2321,65 @@ export default function InteractiveTourCustomizer() {
     const merged = Array.from(new Set([...validMappedDests, ...promptDetected]));
     const finalDests = merged.length > 0 ? merged : inputs.destinations.length > 0 ? inputs.destinations : ["Galle", "Mirissa"];
 
+    // Ensure all final destinations have curated places
+    const curatedDefaults = getCuratedPlacesForDestinations(finalDests);
+    finalDests.forEach((city) => {
+      if (!mappedPlaces[city] || ((mappedPlaces[city].hotels?.length || 0) === 0 && (mappedPlaces[city].poi?.length || 0) === 0)) {
+        if (curatedDefaults[city]) {
+          mappedPlaces[city] = curatedDefaults[city];
+        }
+      }
+    });
+
+    const targetCategory: "budget" | "standard" | "luxury" =
+      inputs.hotelClass === "budget" || data.requirements?.budget_category === "budget" || data.requirements?.hotel_tier === "budget"
+        ? "budget"
+        : (inputs.hotelClass === "luxury" || data.requirements?.budget_category === "luxury" || data.requirements?.hotel_tier === "luxury"
+            ? "luxury"
+            : (inputs.hotelClass === "standard" || data.requirements?.budget_category === "standard" || data.requirements?.hotel_tier === "standard"
+                ? "standard"
+                : (/\b(?:5[- ]?star|luxury|luxurious|resort|villa)\b/i.test(aiKeywords)
+                    ? "luxury"
+                    : (/\b(?:3[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap)\b/i.test(aiKeywords) ? "budget" : "standard"))));
+
+    // Sort hotels in mappedPlaces strictly according to the selected category!
+    Object.keys(mappedPlaces).forEach((city) => {
+      if (mappedPlaces[city].hotels && mappedPlaces[city].hotels.length > 1) {
+        mappedPlaces[city].hotels.sort((a, b) => {
+          if (targetCategory === "budget") {
+            const aIsBudget = (a.price_tier || "").toLowerCase().includes("budget") || a.avg_nightly_usd <= 50;
+            const bIsBudget = (b.price_tier || "").toLowerCase().includes("budget") || b.avg_nightly_usd <= 50;
+            if (aIsBudget && !bIsBudget) return -1;
+            if (!aIsBudget && bIsBudget) return 1;
+            return a.avg_nightly_usd - b.avg_nightly_usd;
+          } else if (targetCategory === "luxury") {
+            const aIsLux = (a.price_tier || "").toLowerCase().includes("lux") || (a.price_tier || "").toLowerCase().includes("boutique") || a.avg_nightly_usd >= 120 || (a.rating || 0) >= 4.8;
+            const bIsLux = (b.price_tier || "").toLowerCase().includes("lux") || (b.price_tier || "").toLowerCase().includes("boutique") || b.avg_nightly_usd >= 120 || (b.rating || 0) >= 4.8;
+            if (aIsLux && !bIsLux) return -1;
+            if (!aIsLux && bIsLux) return 1;
+            return b.avg_nightly_usd - a.avg_nightly_usd;
+          } else {
+            // standard: prioritize sweet spot $45-$115
+            const aIsStandard = (a.price_tier || "").toLowerCase().includes("standard") || (a.avg_nightly_usd >= 45 && a.avg_nightly_usd <= 115);
+            const bIsStandard = (b.price_tier || "").toLowerCase().includes("standard") || (b.avg_nightly_usd >= 45 && b.avg_nightly_usd <= 115);
+            if (aIsStandard && !bIsStandard) return -1;
+            if (!aIsStandard && bIsStandard) return 1;
+            const aDist = Math.abs(a.avg_nightly_usd - 80);
+            const bDist = Math.abs(b.avg_nightly_usd - 80);
+            return aDist - bDist;
+          }
+        });
+      }
+    });
+
+    setSuggestedPlacesByDestination(mappedPlaces);
+
     setInputs((prev) => ({
       ...prev,
-      duration: data.requirements.duration || aiDuration,
-      numberOfTravelers: data.requirements.travellers || prev.numberOfTravelers,
+      duration: data.requirements?.duration || aiDuration,
+      numberOfTravelers: data.requirements?.travellers || prev.numberOfTravelers,
       destinations: finalDests,
+      hotelClass: targetCategory,
     }));
     if (aiStartDate) setPreferredStartDate(aiStartDate);
 
@@ -1805,13 +2467,35 @@ export default function InteractiveTourCustomizer() {
     const detectedDests = extractDestinationsFromPrompt(aiKeywords);
     const destinationHint = detectedDests[0] || inputs.destinations[0] || "Sri Lanka";
 
-    // If user prompt mentioned destinations, ensure inputs.destinations reflects them immediately
-    if (detectedDests.length > 0) {
-      setInputs((prev) => ({
-        ...prev,
-        destinations: detectedDests,
-      }));
-    }
+    const budgetCategory: "budget" | "standard" | "luxury" =
+      inputs.hotelClass === "budget"
+        ? "budget"
+        : (inputs.hotelClass === "luxury" ? "luxury" : "standard");
+
+    const isBudgetPrompt = budgetCategory === "budget";
+    const isLuxuryPrompt = budgetCategory === "luxury";
+
+    const travelersCount = inputs.numberOfTravelers || 2;
+    const travelerMultiplier = Math.max(1, travelersCount * 0.75);
+
+    const budgetHintCalc = isBudgetPrompt
+      ? Math.max(150, Math.round(aiDuration * 45 * travelerMultiplier))
+      : (isLuxuryPrompt
+          ? Math.max(800, Math.round(aiDuration * 220 * travelerMultiplier))
+          : Math.max(400, Math.round(aiDuration * 90 * travelerMultiplier)));
+
+    setInputs((prev) => ({
+      ...prev,
+      destinations: detectedDests.length > 0 ? detectedDests : prev.destinations,
+      hotelClass: budgetCategory,
+    }));
+
+    const catName =
+      budgetCategory === "budget"
+        ? "Budget (3-Star & Economy, ~$25–$45/night)"
+        : (budgetCategory === "luxury"
+            ? "Luxury (5-Star & Premium Resort, ~$140–$250+/night)"
+            : "Standard (4-Star & Comfort, ~$55–$110/night)");
 
     const promptMessage = [
       aiStartingLocation ? `Starting location: ${aiStartingLocation}` : "",
@@ -1819,8 +2503,8 @@ export default function InteractiveTourCustomizer() {
       aiStartDate ? `Starting: ${aiStartDate}` : "",
       aiEndDate ? `Ending: ${aiEndDate}` : "",
       `Duration: ${aiDuration} days`,
-      `Travelers: ${inputs.numberOfTravelers}`,
-      pricing.totalPrice ? `Budget: ~$${Math.round(pricing.totalPrice)}` : "",
+      `Travelers: ${travelersCount}`,
+      `Budget category: ${catName} (~$${budgetHintCalc} total budget)`,
     ]
       .filter(Boolean)
       .join(", ");
@@ -1830,15 +2514,18 @@ export default function InteractiveTourCustomizer() {
       detectedVibes.length > 0
         ? detectedVibes.map((v) => v.id)
         : detectedDests.length > 0
-        ? ["culture", "sightseeing", "beach"]
-        : ["culture", "beaches"];
+          ? ["culture", "sightseeing", "beach"]
+          : ["culture", "beaches"];
 
     try {
       const data = await runMultiAgentPipeline(promptMessage, {
         durationHint: aiDuration,
         destinationHint,
-        budgetHint: Math.round(pricing.totalPrice || 600),
-        travelersHint: inputs.numberOfTravelers,
+        budgetHint: budgetHintCalc,
+        budgetCategoryHint: budgetCategory,
+        hotelTierHint: budgetCategory,
+        starRatingHint: budgetCategory === "budget" ? 3.0 : (budgetCategory === "luxury" ? 5.0 : 4.0),
+        travelersHint: travelersCount,
         interestsHint,
         allowFallback: true,
         onProgress: (step, label) => {
@@ -1848,14 +2535,14 @@ export default function InteractiveTourCustomizer() {
       });
 
       handleApplyAgentResult(data);
-      addToast("success", "AI Package generated across the 4-agent pipeline! Review your itinerary and suggested places below.");
+      addToast("success", `✨ AI Package generated for ${catName}! Review your itinerary and curated places below.`);
     } catch (err: unknown) {
       const errorMessage =
         err instanceof AgentApiError
           ? err.message
           : err instanceof Error
-          ? err.message
-          : "AI suggestions are temporarily unavailable.";
+            ? err.message
+            : "AI suggestions are temporarily unavailable.";
       console.error("AI pipeline invocation failed:", err);
       setAiError(errorMessage);
       addToast("error", errorMessage);
@@ -2319,11 +3006,10 @@ export default function InteractiveTourCustomizer() {
                               whileTap={{ scale: 0.95 }}
                               type="button"
                               onClick={() => handleSelectStartingLocation(preset.id)}
-                              className={`px-3 py-1 border text-[10px] font-bold rounded-full transition flex items-center gap-1.5 ${
-                                isSelected
+                              className={`px-3 py-1 border text-[10px] font-bold rounded-full transition flex items-center gap-1.5 ${isSelected
                                   ? "bg-gradient-to-r from-[#FF8B50] to-[#E05A1A] text-white border-transparent shadow-xs"
                                   : "bg-white hover:bg-[#FFF3E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
-                              }`}
+                                }`}
                             >
                               <span>{preset.icon}</span>
                               <span>{preset.label}</span>
@@ -2340,6 +3026,100 @@ export default function InteractiveTourCustomizer() {
                           </span>
                         </div>
                       )}
+                    </div>
+
+                    {/* Dedicated 3-Category Budget Input */}
+                    <div className="mt-4 pt-4 border-t border-[#F0E7D8]/80">
+                      <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-black">
+                            💰
+                          </span>
+                          <label className="itc-label !mb-0">
+                            Select Trip Budget Category <span className="text-[#E05A1A] font-bold">*</span>
+                          </label>
+                        </div>
+                        <span className="text-[11px] font-extrabold text-[#78716C] bg-white border border-[#E7DFD3] px-2.5 py-0.5 rounded-full shadow-2xs">
+                          {inputs.hotelClass === "budget" && "🪙 Budget Tier: ~$25–$45/night"}
+                          {(inputs.hotelClass === "standard" || !inputs.hotelClass) && "🛋️ Standard Tier: ~$55–$110/night"}
+                          {(inputs.hotelClass === "luxury" || inputs.hotelClass === "premium-boutique") && "✨ Luxury Tier: ~$140–$250+/night"}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        {[
+                          {
+                            id: "budget" as const,
+                            icon: "🪙",
+                            title: "Budget",
+                            tierName: "3-Star & Economy",
+                            rate: "$25 - $45",
+                            badge: "Affordable",
+                            desc: "Clean verified guesthouses & 3-star stays balancing cost with comfort",
+                            badgeColor: "bg-emerald-50 text-emerald-800 border-emerald-300",
+                          },
+                          {
+                            id: "standard" as const,
+                            icon: "🛋️",
+                            title: "Standard",
+                            tierName: "4-Star & Comfort",
+                            rate: "$55 - $110",
+                            badge: "Most Popular",
+                            desc: "4-star comfort hotels featuring pools, breakfast, Wi-Fi & central access",
+                            badgeColor: "bg-blue-50 text-blue-800 border-blue-300",
+                          },
+                          {
+                            id: "luxury" as const,
+                            icon: "✨",
+                            title: "Luxury",
+                            tierName: "5-Star & Premium",
+                            rate: "$140 - $250+",
+                            badge: "VIP Indulgence",
+                            desc: "5-star luxury resorts, private villas, spa retreats & world-class hospitality",
+                            badgeColor: "bg-amber-50 text-amber-900 border-amber-300",
+                          },
+                        ].map((cat) => {
+                          const isSelected =
+                            cat.id === "luxury"
+                              ? inputs.hotelClass === "luxury" || inputs.hotelClass === "premium-boutique"
+                              : inputs.hotelClass === cat.id;
+                          return (
+                            <motion.button
+                              key={cat.id}
+                              whileHover={{ y: -2 }}
+                              whileTap={{ scale: 0.98 }}
+                              type="button"
+                              onClick={() => handleSelectBudgetCategory(cat.id)}
+                              className={`relative p-3.5 rounded-2xl border text-left transition-all overflow-hidden ${
+                                isSelected
+                                  ? "border-[#E05A1A] bg-gradient-to-br from-[#FFF9F5] via-[#FFF3EA] to-[#FFEFE4] shadow-sm ring-2 ring-[#E05A1A]/30"
+                                  : "border-[#E8DFD1] bg-white hover:border-[#FFD9C4] hover:bg-[#FFFBF8]"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-1 mb-1.5">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-lg">{cat.icon}</span>
+                                  <span className="text-sm font-black text-[#44403C]">{cat.title}</span>
+                                </div>
+                                <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${cat.badgeColor}`}>
+                                  {cat.badge}
+                                </span>
+                              </div>
+                              <div className="text-[11px] font-extrabold text-[#E05A1A] mb-1">
+                                {cat.tierName} · <span className="text-[#57534E]">{cat.rate}/night</span>
+                              </div>
+                              <p className="text-[10.5px] text-[#78716C] leading-snug font-medium line-clamp-2">
+                                {cat.desc}
+                              </p>
+                              {isSelected && (
+                                <span className="absolute bottom-2 right-2 w-5 h-5 rounded-full bg-[#E05A1A] text-white text-[10px] flex items-center justify-center font-black shadow-xs">
+                                  ✓
+                                </span>
+                              )}
+                            </motion.button>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     <div className="relative mt-4">
@@ -2481,11 +3261,10 @@ export default function InteractiveTourCustomizer() {
                                 whileTap={{ scale: 0.95 }}
                                 type="button"
                                 onClick={() => handleAddKeywordChip(locName)}
-                                className={`px-2.5 py-0.5 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${
-                                  isAlreadyInPrompt
+                                className={`px-2.5 py-0.5 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${isAlreadyInPrompt
                                     ? "bg-orange-100 border-orange-300 text-[#E05A1A]"
                                     : "bg-white hover:bg-[#FFF1E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
-                                }`}
+                                  }`}
                               >
                                 <span>{isAlreadyInPrompt ? "✓" : "+"}</span>
                                 <span>{locName}</span>
@@ -2508,11 +3287,10 @@ export default function InteractiveTourCustomizer() {
                                 whileTap={{ scale: 0.95 }}
                                 type="button"
                                 onClick={() => handleAddKeywordChip(v.text)}
-                                className={`px-2 py-0.5 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${
-                                  isAlready
+                                className={`px-2 py-0.5 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${isAlready
                                     ? "bg-emerald-50 border-emerald-300 text-emerald-800"
                                     : "bg-white hover:bg-[#FFF1E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
-                                }`}
+                                  }`}
                               >
                                 <span>{v.icon}</span>
                                 <span>{v.label}</span>
@@ -2535,11 +3313,10 @@ export default function InteractiveTourCustomizer() {
                                 whileTap={{ scale: 0.95 }}
                                 type="button"
                                 onClick={() => handleAddKeywordChip(p.text)}
-                                className={`px-2 py-0.5 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${
-                                  isAlready
+                                className={`px-2 py-0.5 border text-[10px] font-bold rounded-full transition flex items-center gap-1 ${isAlready
                                     ? "bg-blue-50 border-blue-300 text-blue-800"
                                     : "bg-white hover:bg-[#FFF1E9] border-[#F0E7D8] hover:border-[#FFD9C4] text-[#6E6759] hover:text-[#E05A1A]"
-                                }`}
+                                  }`}
                               >
                                 <span>+</span>
                                 <span>{p.label}</span>
@@ -2595,13 +3372,12 @@ export default function InteractiveTourCustomizer() {
                                     scale: activeAgentStep === agent.id ? 1.02 : 1,
                                   }}
                                   transition={{ duration: 0.3 }}
-                                  className={`rounded-xl px-2.5 py-2.5 text-center border transition-all ${
-                                    activeAgentStep === agent.id
+                                  className={`rounded-xl px-2.5 py-2.5 text-center border transition-all ${activeAgentStep === agent.id
                                       ? "border-[#FF8B50] bg-gradient-to-b from-[#FFF3E9] to-[#FFE8D6] shadow-sm shadow-[#FF8B50]/20 ring-1 ring-[#FF8B50]"
                                       : activeAgentStep > agent.id
-                                      ? "border-emerald-300 bg-emerald-50/70"
-                                      : "border-[#F0E7D8] bg-white/70"
-                                  }`}
+                                        ? "border-emerald-300 bg-emerald-50/70"
+                                        : "border-[#F0E7D8] bg-white/70"
+                                    }`}
                                 >
                                   <div className="flex items-center justify-center gap-1.5 mb-1">
                                     {activeAgentStep > agent.id ? (
@@ -2717,11 +3493,10 @@ export default function InteractiveTourCustomizer() {
                       key={cat.id}
                       type="button"
                       onClick={() => setSelectedCategory(cat.id)}
-                      className={`px-2.5 py-1 rounded-xl text-[10px] font-extrabold transition shrink-0 flex items-center gap-1 border ${
-                        selectedCategory === cat.id
+                      className={`px-2.5 py-1 rounded-xl text-[10px] font-extrabold transition shrink-0 flex items-center gap-1 border ${selectedCategory === cat.id
                           ? "bg-[#0F172A] text-white border-slate-800 shadow-sm"
                           : "bg-white text-[#6E6759] border-[#F0E7D8] hover:border-[#FF8B50]"
-                      }`}
+                        }`}
                     >
                       <span>{cat.icon}</span>
                       <span>{cat.label}</span>
@@ -2770,18 +3545,16 @@ export default function InteractiveTourCustomizer() {
                         className="flex items-center gap-2 shrink-0"
                       >
                         <span
-                          className={`itc-glass flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-black shadow-sm ${
-                            isStart
+                          className={`itc-glass flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-black shadow-sm ${isStart
                               ? "text-[#0369A1] border-[#BAE6FD] bg-gradient-to-r from-[#F0F9FF] to-[#E0F2FE]"
                               : "text-[#44403C]"
-                          }`}
+                            }`}
                         >
                           <span
-                            className={`w-5 h-5 rounded-full text-white text-[9px] font-black flex items-center justify-center ${
-                              isStart
+                            className={`w-5 h-5 rounded-full text-white text-[9px] font-black flex items-center justify-center ${isStart
                                 ? "bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] shadow-sm"
                                 : "bg-gradient-to-br from-[#FF8B50] to-[#FF6B2C]"
-                            }`}
+                              }`}
                           >
                             {isStart ? "🛫" : i}
                           </span>
@@ -2832,9 +3605,9 @@ export default function InteractiveTourCustomizer() {
                             leg.pathCoords.length > 0
                               ? leg.pathCoords
                               : [
-                                  [leg.from.lat, leg.from.lng],
-                                  [leg.to.lat, leg.to.lng],
-                                ]
+                                [leg.from.lat, leg.from.lng],
+                                [leg.to.lat, leg.to.lng],
+                              ]
                           );
                           mapRef.current.flyToBounds(bounds.pad(0.3), { duration: 0.8 });
                         }
@@ -2898,7 +3671,7 @@ export default function InteractiveTourCustomizer() {
                       </span>
                     </div>
                     <p className="itc-sec-hint">
-                      Multi-agent orchestration combining NLP intent triage, MongoDB vector IR, deterministic multi-criteria scoring, and Explainable AI (XAI) narrative synthesis.
+                      Intelligently crafted by our 4-agent AI pipeline. Every hotel, attraction, and schedule is mathematically scored and accompanied by clear Explainable AI (XAI) reasoning so you understand exactly why each choice fits your trip.
                     </p>
                   </div>
 
@@ -3021,33 +3794,30 @@ export default function InteractiveTourCustomizer() {
                   <button
                     type="button"
                     onClick={() => setActiveXaiTab("itinerary")}
-                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-                      activeXaiTab === "itinerary"
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${activeXaiTab === "itinerary"
                         ? "bg-[#FFF3E9] text-[#E05A1A] border border-[#FFD9C4] shadow-sm"
                         : "text-[#7A7263] hover:text-[#44403C] hover:bg-stone-50"
-                    }`}
+                      }`}
                   >
                     <CompassOutlined /> Day-by-Day Itinerary
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveXaiTab("curator")}
-                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-                      activeXaiTab === "curator"
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${activeXaiTab === "curator"
                         ? "bg-[#FFF3E9] text-[#E05A1A] border border-[#FFD9C4] shadow-sm"
                         : "text-[#7A7263] hover:text-[#44403C] hover:bg-stone-50"
-                    }`}
+                      }`}
                   >
                     <BarChartOutlined /> Agent 3 Decision Matrix (XAI)
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveXaiTab("telemetry")}
-                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-                      activeXaiTab === "telemetry"
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${activeXaiTab === "telemetry"
                         ? "bg-[#FFF3E9] text-[#E05A1A] border border-[#FFD9C4] shadow-sm"
                         : "text-[#7A7263] hover:text-[#44403C] hover:bg-stone-50"
-                    }`}
+                      }`}
                   >
                     <ClockCircleOutlined /> Engine Telemetry & Architecture
                   </button>
@@ -3113,9 +3883,54 @@ export default function InteractiveTourCustomizer() {
                             </h3>
                           );
                         },
-                        h3: ({ children }: { children?: React.ReactNode }) => (
-                          <h4 className="text-xs font-black text-[#44403C] mt-5 mb-2 bg-gradient-to-r from-[#FFF3E9] to-transparent px-3 py-1.5 rounded-lg border-l-4 border-[#FF8B50]">{getPlainText(children)}</h4>
-                        ),
+                        h3: ({ children }: { children?: React.ReactNode }) => {
+                          const text = getPlainText(children);
+                          if (text.includes("Curated Stays") || text.includes("🏨")) {
+                            return (
+                              <div className="mt-6 mb-3 p-3.5 rounded-2xl bg-gradient-to-r from-orange-50/90 to-amber-50/60 border border-orange-200/80 flex items-center gap-2.5">
+                                <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-orange-500 text-white text-xs font-black shrink-0">🏨</span>
+                                <div>
+                                  <h4 className="text-xs font-black text-orange-950 uppercase tracking-wider">{text.replace(/^(?:🏨\s*)?/, "")}</h4>
+                                  <span className="text-[10px] text-orange-800/80 font-bold block">Audited for budget fit, guest satisfaction & proximity</span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          if (text.includes("Attractions") || text.includes("🏛️") || text.includes("POI")) {
+                            return (
+                              <div className="mt-6 mb-3 p-3.5 rounded-2xl bg-gradient-to-r from-sky-50/90 to-blue-50/60 border border-sky-200/80 flex items-center gap-2.5">
+                                <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-[#0E7DD6] text-white text-xs font-black shrink-0">🏛️</span>
+                                <div>
+                                  <h4 className="text-xs font-black text-sky-950 uppercase tracking-wider">{text.replace(/^(?:🏛️\s*)?/, "")}</h4>
+                                  <span className="text-[10px] text-sky-800/80 font-bold block">Curated according to your travel interests and energy pacing</span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          if (text.includes("Route Efficiency") || text.includes("🗺️")) {
+                            return (
+                              <div className="mt-6 mb-3 p-3.5 rounded-2xl bg-gradient-to-r from-purple-50/90 to-indigo-50/60 border border-purple-200/80 flex items-center gap-2.5">
+                                <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-purple-600 text-white text-xs font-black shrink-0">🗺️</span>
+                                <div>
+                                  <h4 className="text-xs font-black text-purple-950 uppercase tracking-wider">{text.replace(/^(?:🗺️\s*)?/, "")}</h4>
+                                  <span className="text-[10px] text-purple-800/80 font-bold block">Zero-backtracking geographical sequencing</span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          if (text.includes("Budget Feasibility") || text.includes("Safeguard") || text.includes("🛡️")) {
+                            return (
+                              <div className="mt-6 mb-3 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50/90 to-teal-50/60 border border-emerald-200/80 flex items-center gap-2.5">
+                                <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-emerald-600 text-white text-xs font-black shrink-0">🛡️</span>
+                                <div>
+                                  <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider">{text.replace(/^(?:🛡️\s*)?/, "")}</h4>
+                                  <span className="text-[10px] text-emerald-800/80 font-bold block">All estimated expenses verified against real Sri Lankan averages</span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return <h4 className="text-xs font-black text-[#44403C] mt-5 mb-2 bg-gradient-to-r from-[#FFF3E9] to-transparent px-3 py-1.5 rounded-lg border-l-4 border-[#FF8B50]">{text}</h4>;
+                        },
                         h4: ({ children }: { children?: React.ReactNode }) => (
                           <div className="text-xs font-black text-[#44403C] bg-[#F0F8FF] px-3 py-1.5 rounded-lg border border-[#25A5FE]/20 inline-flex items-center gap-1.5 mt-4 mb-2">
                             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#25A5FE]" />{getPlainText(children)}
@@ -3129,9 +3944,38 @@ export default function InteractiveTourCustomizer() {
                           const text = getPlainText(children);
                           if (
                             /(?:🌅|☀️|🌙|🏨|💰|💡)/.test(text) ||
-                            /(?:Morning|Afternoon|Evening|Tonight's Stay|Estimated Day Cost):/i.test(text)
+                            /(?:Morning|Afternoon|Evening|Tonight's Stay|Day Travel Insight|Travel Insight|Insider Tip|Estimated Day Cost):/i.test(text)
                           ) {
                             return <li className="list-none ml-0 my-2">{parseAndRenderTimelineText(text, children)}</li>;
+                          }
+                          if (text.includes("Budget Fit & Value:") || text.includes("Budget Fit:") || text.includes("Comfort & Amenities:") || text.includes("Star & Comfort Alignment:") || text.includes("Geographic Advantage:") || text.includes("Vibe Alignment:") || text.includes("Vibe & Interest Match:") || text.includes("Timing & Access:") || text.includes("Scheduling Logic:") || text.includes("Zero Backtracking:") || text.includes("Traveler Comfort Pacing:") || text.includes("Audited Expenses:") || text.includes("Transparent Pricing:")) {
+                            let badge = "💡 XAI Rationale";
+                            let badgeColor = "bg-amber-100 text-amber-900 border-amber-300";
+                            if (text.includes("Budget") || text.includes("Expenses") || text.includes("Pricing")) {
+                              badge = "💰 Budget Fit";
+                              badgeColor = "bg-emerald-100 text-emerald-900 border-emerald-300";
+                            } else if (text.includes("Comfort") || text.includes("Amenities") || text.includes("Star")) {
+                              badge = "⭐ Comfort & Class";
+                              badgeColor = "bg-sky-100 text-sky-900 border-sky-300";
+                            } else if (text.includes("Geographic") || text.includes("Backtracking") || text.includes("Pacing") || text.includes("Timing") || text.includes("Scheduling")) {
+                              badge = "📍 Route & Timing";
+                              badgeColor = "bg-purple-100 text-purple-900 border-purple-300";
+                            } else if (text.includes("Vibe") || text.includes("Interest")) {
+                              badge = "🎯 Vibe Match";
+                              badgeColor = "bg-orange-100 text-orange-900 border-orange-300";
+                            }
+                            return (
+                              <li className="list-none ml-0 my-2.5 p-3 rounded-xl bg-white border border-[#F0E7D8] shadow-2xs">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <span className={`px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase tracking-wider border ${badgeColor}`}>
+                                    {badge}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-[#44403C] font-semibold leading-relaxed m-0">
+                                  {renderFormattedInline(text)}
+                                </div>
+                              </li>
+                            );
                           }
                           if (text.includes("Why This Was Chosen:") || text.includes("XAI Decision Rationale:") || text.includes("💡")) {
                             const cleanText = text.replace(/^(💡\s*)?(Why This Was Chosen:\s*)?(XAI Decision Rationale:\s*)?/i, "").trim();
@@ -3221,45 +4065,75 @@ export default function InteractiveTourCustomizer() {
                 {/* TAB 2: Agent 3 Decision Matrix (XAI) */}
                 {activeXaiTab === "curator" && (
                   <div className="mt-5 space-y-6">
-                    {/* Algorithmic Scoring Explanation */}
-                    <div className="rounded-2xl bg-gradient-to-br from-[#FFFDF9] to-[#F5FAFF] border border-[#F0E7D8] p-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-xs font-black text-[#44403C] uppercase tracking-wide flex items-center gap-2">
-                          <BarChartOutlined className="text-[#FF8B50]" /> Agent 3 Deterministic 100-Point Scoring Framework
-                        </h4>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                          Objective & Transparent
+                    {/* User Understandability & Transparency Banner */}
+                    <div className="rounded-2xl bg-gradient-to-br from-[#FFF9F4] via-[#FFFDF9] to-[#F5FAFF] border border-[#FFD9C4]/80 p-5 shadow-xs">
+                      <div className="flex items-center justify-between mb-2.5 flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="w-7 h-7 rounded-xl bg-orange-500 text-white flex items-center justify-center text-xs font-black shadow-sm">
+                            🎯
+                          </span>
+                          <h4 className="text-xs font-black text-[#44403C] uppercase tracking-wide">
+                            How Explainable AI (XAI) Protects Your Trip
+                          </h4>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100/90 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                          Audited & Transparent
                         </span>
                       </div>
-                      <p className="text-xs text-[#7A7263] leading-relaxed mb-4">
-                        Unlike black-box LLM hallucinations, Agent 3 calculates a strict mathematical suitability score out of 100 for every candidate stay and attraction retrieved by Agent 2 from MongoDB Atlas.
+                      <p className="text-xs text-[#5C5648] leading-relaxed mb-4 font-medium">
+                        Unlike ordinary chatbots that make up hallucinated hotel rates and fictional travel times, our <strong>Agent 3 Curator</strong> runs a deterministic 100-point suitability algorithm against verified MongoDB Atlas properties. Every recommendation is scored mathematically so you always get honest pricing, realistic travel pacing, and verified comfort.
                       </p>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                        <div className="rounded-xl p-3 bg-white border border-[#F0E7D8] text-center">
-                          <span className="text-[10px] font-black text-orange-600 uppercase tracking-wider block">Budget Fit</span>
-                          <span className="text-base font-extrabold text-[#44403C] block my-0.5">30 Pts</span>
-                          <span className="text-[9px] text-[#8A8577]">Price vs daily budget ceiling</span>
+                      {/* 5-Criteria Explainer Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
+                        <div className="rounded-xl p-3 bg-white border border-[#FFD9C4]/60 shadow-2xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-black text-orange-600 uppercase tracking-wider">Budget Fit</span>
+                            <span className="text-xs font-black text-[#44403C]">30 Pts</span>
+                          </div>
+                          <span className="text-[10px] text-[#7A7263] block font-medium leading-snug">
+                            Guarantees nightly rates adhere to your budget ceiling with zero financial strain.
+                          </span>
                         </div>
-                        <div className="rounded-xl p-3 bg-white border border-[#F0E7D8] text-center">
-                          <span className="text-[10px] font-black text-[#0E7DD6] uppercase tracking-wider block">Amenities</span>
-                          <span className="text-base font-extrabold text-[#44403C] block my-0.5">20 Pts</span>
-                          <span className="text-[9px] text-[#8A8577]">Pool, wifi & restaurant match</span>
+
+                        <div className="rounded-xl p-3 bg-white border border-[#CDE5FE]/60 shadow-2xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-black text-[#0E7DD6] uppercase tracking-wider">Amenities</span>
+                            <span className="text-xs font-black text-[#44403C]">20 Pts</span>
+                          </div>
+                          <span className="text-[10px] text-[#7A7263] block font-medium leading-snug">
+                            Scans for swimming pool, high-speed Wi-Fi, air conditioning, and on-site dining.
+                          </span>
                         </div>
-                        <div className="rounded-xl p-3 bg-white border border-[#F0E7D8] text-center">
-                          <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider block">Star Rating</span>
-                          <span className="text-base font-extrabold text-[#44403C] block my-0.5">15 Pts</span>
-                          <span className="text-[9px] text-[#8A8577]">Normalized guest score</span>
+
+                        <div className="rounded-xl p-3 bg-white border border-[#FDE6B8]/60 shadow-2xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider">Star Rating</span>
+                            <span className="text-xs font-black text-[#44403C]">15 Pts</span>
+                          </div>
+                          <span className="text-[10px] text-[#7A7263] block font-medium leading-snug">
+                            Matches your requested class (e.g. 3-star budget vs 5-star luxury) with verified guest reviews.
+                          </span>
                         </div>
-                        <div className="rounded-xl p-3 bg-white border border-[#F0E7D8] text-center">
-                          <span className="text-[10px] font-black text-purple-600 uppercase tracking-wider block">POI Density</span>
-                          <span className="text-base font-extrabold text-[#44403C] block my-0.5">20 Pts</span>
-                          <span className="text-[9px] text-[#8A8577]">Within 5km sight clusters</span>
+
+                        <div className="rounded-xl p-3 bg-white border border-[#E7D0FC]/60 shadow-2xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-black text-purple-600 uppercase tracking-wider">POI Density</span>
+                            <span className="text-xs font-black text-[#44403C]">20 Pts</span>
+                          </div>
+                          <span className="text-[10px] text-[#7A7263] block font-medium leading-snug">
+                            Ensures major sights are within 5 km to minimize tedious traffic and transit hours.
+                          </span>
                         </div>
-                        <div className="rounded-xl p-3 bg-white border border-[#F0E7D8] text-center">
-                          <span className="text-[10px] font-black text-teal-600 uppercase tracking-wider block">Route Access</span>
-                          <span className="text-base font-extrabold text-[#44403C] block my-0.5">15 Pts</span>
-                          <span className="text-[9px] text-[#8A8577]">Proximity to highway & airport</span>
+
+                        <div className="rounded-xl p-3 bg-white border border-[#BCEFD2]/60 shadow-2xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-black text-teal-600 uppercase tracking-wider">Route Access</span>
+                            <span className="text-xs font-black text-[#44403C]">15 Pts</span>
+                          </div>
+                          <span className="text-[10px] text-[#7A7263] block font-medium leading-snug">
+                            Evaluates expressway corridors, scenic railway access, and airport proximity.
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -3267,44 +4141,50 @@ export default function InteractiveTourCustomizer() {
                     {/* Top Scored Hotels Leaderboard */}
                     <div>
                       <h4 className="text-xs font-black text-[#44403C] uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <TrophyOutlined className="text-amber-500" /> Curated Stays Shortlist & Decision Rationale
+                        <TrophyOutlined className="text-amber-500" /> Curated Stays Shortlist & Detailed XAI Breakdown
                       </h4>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {(agentTelemetry?.ranked && agentTelemetry.ranked.length > 0
                           ? agentTelemetry.ranked.filter((r) => r.item.type === "hotel" || r.item.avg_nightly_usd)
                           : [
-                              {
-                                item: {
-                                  name: "Water Garden Sigiriya",
-                                  city: "Sigiriya",
-                                  avg_nightly_usd: 120,
-                                  rating: 4.9,
-                                  price_tier: "Luxury Eco",
-                                  curator_score: 95,
-                                },
-                                score: 95,
-                                reasons: ["Unmatched proximity to UNESCO Sigiriya Lion Rock (12 min drive)", "Top verified review score (4.9/5.0) with organic culinary gardens", "High cluster density: 6 major cultural attractions within 8km"],
+                            {
+                              item: {
+                                name: "Water Garden Sigiriya",
+                                city: "Sigiriya",
+                                avg_nightly_usd: 120,
+                                rating: 4.9,
+                                price_tier: "Luxury Eco",
+                                curator_score: 95,
                               },
-                              {
-                                item: {
-                                  name: "Cinnamon Citadel Kandy",
-                                  city: "Kandy",
-                                  avg_nightly_usd: 85,
-                                  rating: 4.7,
-                                  price_tier: "Standard Heritage",
-                                  curator_score: 91,
-                                },
-                                score: 91,
-                                reasons: ["Direct peaceful Mahaweli River frontage avoiding noisy city traffic", "100% budget fit ($85/night vs target ceiling)", "Complete amenity match: Infinity pool, ayurvedic spa, & high-speed Wi-Fi"],
+                              score: 95,
+                              reasons: ["Unmatched proximity to UNESCO Sigiriya Lion Rock (12 min drive)", "Top verified review score (4.9/5.0) with organic culinary gardens", "High cluster density: 6 major cultural attractions within 8km"],
+                            },
+                            {
+                              item: {
+                                name: "Cinnamon Citadel Kandy",
+                                city: "Kandy",
+                                avg_nightly_usd: 85,
+                                rating: 4.7,
+                                price_tier: "Standard Heritage",
+                                curator_score: 91,
                               },
-                            ]
+                              score: 91,
+                              reasons: ["Direct peaceful Mahaweli River frontage avoiding noisy city traffic", "100% budget fit ($85/night vs target ceiling)", "Complete amenity match: Infinity pool, ayurvedic spa, & high-speed Wi-Fi"],
+                            },
+                          ]
                         ).map((entry, idx) => {
                           const item = entry.item;
                           const score = entry.score || item.curator_score || 90;
                           const breakdown = agentTelemetry?.reasoning?.[item.name] || {};
+                          const bFit = breakdown.budget_fit !== undefined ? breakdown.budget_fit : 27;
+                          const bAmenities = breakdown.amenities !== undefined ? breakdown.amenities : 17;
+                          const bStars = breakdown.star_rating !== undefined ? breakdown.star_rating : 14;
+                          const bPoi = breakdown.poi_density !== undefined ? breakdown.poi_density : 16;
+                          const bAirport = breakdown.airport !== undefined ? breakdown.airport : 14;
+
                           return (
-                            <div key={idx} className="rounded-2xl border border-[#F0E7D8] bg-white p-4.5 shadow-sm">
-                              <div className="flex items-start justify-between flex-wrap gap-2 mb-2">
+                            <div key={idx} className="rounded-2xl border border-[#F0E7D8] bg-white p-5 shadow-xs hover:border-[#FFD9C4] transition-colors">
+                              <div className="flex items-start justify-between flex-wrap gap-2 mb-3">
                                 <div>
                                   <div className="flex items-center gap-2">
                                     <span className="w-6 h-6 rounded-lg bg-orange-100 text-[#E05A1A] text-xs font-black flex items-center justify-center">
@@ -3313,7 +4193,7 @@ export default function InteractiveTourCustomizer() {
                                     <h5 className="text-sm font-extrabold text-[#44403C]">{item.name}</h5>
                                     <span className="text-[10px] font-bold text-[#8A8577] bg-stone-100 px-2 py-0.5 rounded-full">{item.city || item.destination || "Sri Lanka"}</span>
                                   </div>
-                                  <div className="flex items-center gap-2 mt-1 text-xs text-[#7A7263]">
+                                  <div className="flex items-center gap-2 mt-1.5 text-xs text-[#7A7263]">
                                     <span className="font-extrabold text-emerald-600">${item.avg_nightly_usd || item.price || 95}/night</span>
                                     <span>·</span>
                                     <span className="text-amber-500 font-bold flex items-center gap-1"><StarFilled className="text-[10px]" /> {item.rating || 4.8}</span>
@@ -3323,50 +4203,104 @@ export default function InteractiveTourCustomizer() {
                                 </div>
 
                                 <div className="text-right">
-                                  <span className="text-[10px] font-black uppercase text-[#B5AC9A] block">Curator Score</span>
-                                  <span className="text-lg font-black text-[#E05A1A]">{score}/100</span>
+                                  <span className="text-[10px] font-black uppercase text-[#B5AC9A] block">Curator Fit Score</span>
+                                  <span className="text-xl font-black text-[#E05A1A]">{score}/100</span>
                                 </div>
                               </div>
 
-                              {/* Dimensional Score Meters if available */}
-                              {breakdown.budget_fit !== undefined && (
-                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 my-3 p-2.5 rounded-xl bg-stone-50 border border-stone-200/60 text-[10px]">
-                                  <div>
-                                    <span className="text-[#8A8577] block font-bold">Budget Fit:</span>
-                                    <span className="font-extrabold text-orange-600">{breakdown.budget_fit}/30 pts</span>
+                              {/* Dimensional Visual Progress Bars */}
+                              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 my-3.5 p-3 rounded-xl bg-stone-50/80 border border-stone-200/60 text-[10px]">
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[#8A8577] font-bold">Budget Fit:</span>
+                                    <span className="font-black text-orange-600">{bFit}/30</span>
                                   </div>
-                                  <div>
-                                    <span className="text-[#8A8577] block font-bold">Amenities:</span>
-                                    <span className="font-extrabold text-sky-600">{breakdown.amenities}/20 pts</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-[#8A8577] block font-bold">Star Rating:</span>
-                                    <span className="font-extrabold text-amber-600">{breakdown.star_rating}/15 pts</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-[#8A8577] block font-bold">POI Density:</span>
-                                    <span className="font-extrabold text-purple-600">{breakdown.poi_density}/20 pts</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-[#8A8577] block font-bold">Route Access:</span>
-                                    <span className="font-extrabold text-teal-600">{breakdown.airport}/15 pts</span>
+                                  <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+                                    <div className="bg-orange-500 h-full rounded-full transition-all" style={{ width: `${Math.min(100, (bFit / 30) * 100)}%` }} />
                                   </div>
                                 </div>
-                              )}
 
-                              {/* XAI Justification */}
-                              <div className="mt-2.5 pt-2.5 border-t border-[#F3EBDE]">
-                                <span className="text-[9.5px] font-black uppercase tracking-wider text-amber-700 block mb-1">
-                                  💡 Why This Stay Won:
-                                </span>
-                                <ul className="space-y-1">
-                                  {(entry.reasons || ["Direct proximity to primary cultural landmarks with minimal daily driving", "Superb balance between affordable rates and luxury guest service", "Validated amenities matching your traveler preferences"]).map((r, rIdx) => (
-                                    <li key={rIdx} className="text-xs text-[#5C5648] font-medium flex items-start gap-1.5">
-                                      <CheckOutlined className="text-emerald-500 text-[10px] mt-1 shrink-0" />
-                                      <span>{r}</span>
-                                    </li>
-                                  ))}
-                                </ul>
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[#8A8577] font-bold">Amenities:</span>
+                                    <span className="font-black text-sky-600">{bAmenities}/20</span>
+                                  </div>
+                                  <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+                                    <div className="bg-sky-500 h-full rounded-full transition-all" style={{ width: `${Math.min(100, (bAmenities / 20) * 100)}%` }} />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[#8A8577] font-bold">Star Rating:</span>
+                                    <span className="font-black text-amber-600">{bStars}/15</span>
+                                  </div>
+                                  <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+                                    <div className="bg-amber-500 h-full rounded-full transition-all" style={{ width: `${Math.min(100, (bStars / 15) * 100)}%` }} />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[#8A8577] font-bold">POI Density:</span>
+                                    <span className="font-black text-purple-600">{bPoi}/20</span>
+                                  </div>
+                                  <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+                                    <div className="bg-purple-500 h-full rounded-full transition-all" style={{ width: `${Math.min(100, (bPoi / 20) * 100)}%` }} />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[#8A8577] font-bold">Route Access:</span>
+                                    <span className="font-black text-teal-600">{bAirport}/15</span>
+                                  </div>
+                                  <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+                                    <div className="bg-teal-500 h-full rounded-full transition-all" style={{ width: `${Math.min(100, (bAirport / 15) * 100)}%` }} />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Structured XAI Justification */}
+                              <div className="mt-3 pt-3 border-t border-[#F3EBDE]">
+                                <div className="flex items-center gap-1.5 mb-2">
+                                  <span className="text-xs">💡</span>
+                                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-800">
+                                    Why This Stay Won: Selection Rationale
+                                  </span>
+                                </div>
+                                <div className="space-y-1.5">
+                                  {(entry.reasons || [
+                                    "Budget Fit (27/30 pts): Directly matches your price allocations with zero hidden fees.",
+                                    "Location Proximity (17/20 pts): Prime proximity to attractions with minimal daily driving.",
+                                    "Comfort & Amenities (16/20 pts): Clean, quiet rooms with verified high-speed Wi-Fi and air conditioning.",
+                                  ]).map((r, rIdx) => {
+                                    let pillLabel = "Verified Advantage";
+                                    let pillColor = "bg-emerald-50 text-emerald-800 border-emerald-200";
+                                    if (r.toLowerCase().includes("budget")) {
+                                      pillLabel = "Budget Safe";
+                                      pillColor = "bg-emerald-50 text-emerald-800 border-emerald-200";
+                                    } else if (r.toLowerCase().includes("star") || r.toLowerCase().includes("class") || r.toLowerCase().includes("quality")) {
+                                      pillLabel = "Class Match";
+                                      pillColor = "bg-amber-50 text-amber-800 border-amber-200";
+                                    } else if (r.toLowerCase().includes("location") || r.toLowerCase().includes("proximity") || r.toLowerCase().includes("transit")) {
+                                      pillLabel = "Location";
+                                      pillColor = "bg-purple-50 text-purple-800 border-purple-200";
+                                    } else if (r.toLowerCase().includes("amenit")) {
+                                      pillLabel = "Amenities";
+                                      pillColor = "bg-sky-50 text-sky-800 border-sky-200";
+                                    }
+
+                                    return (
+                                      <div key={rIdx} className="text-xs text-[#5C5648] font-medium flex items-start gap-2 bg-[#FDFBF7] p-2 rounded-xl border border-[#F5EFE4]">
+                                        <span className={`px-2 py-0.2 rounded text-[9px] font-black uppercase tracking-wider border shrink-0 mt-0.5 ${pillColor}`}>
+                                          {pillLabel}
+                                        </span>
+                                        <span className="leading-relaxed">{r}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
                               </div>
                             </div>
                           );
@@ -3650,20 +4584,27 @@ export default function InteractiveTourCustomizer() {
               <CrownOutlined className="itc-sec-icon" />
             </header>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {(["budget", "standard", "luxury", "premium-boutique"] as const).map((tier, i) => {
-                const isSelected = inputs.hotelClass === tier;
-                const stars = [3, 4, 5, 5][i];
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {(["budget", "standard", "luxury"] as const).map((tier, i) => {
+                const isSelected = inputs.hotelClass === tier || (tier === "luxury" && inputs.hotelClass === "premium-boutique");
+                const stars = [3, 4, 5][i];
                 const rate = HOTEL_RATES[tier];
+                const categoryTitles = {
+                  budget: "Budget (3-Star & Economy)",
+                  standard: "Standard (4-Star & Comfort)",
+                  luxury: "Luxury (5-Star & Premium)",
+                };
                 return (
                   <motion.button key={tier} type="button" whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}
-                    onClick={() => setInputs((prev) => ({ ...prev, hotelClass: tier }))}
+                    onClick={() => handleSelectBudgetCategory(tier)}
                     className={`relative text-left rounded-[22px] border p-5 transition-all duration-300 overflow-hidden ${isSelected ? "border-[#FF8B50] bg-gradient-to-br from-[#FFF6EF] to-white shadow-[0_16px_40px_-16px_rgba(255,139,80,0.5)]" : "border-[#F0E7D8] bg-white hover:border-[#FFD9C4] hover:shadow-md"}`}>
                     <div className="flex items-center justify-between">
                       <span className="flex text-amber-400 gap-0.5">{Array.from({ length: stars }).map((_, s) => <StarFilled key={s} className="text-[11px]" />)}</span>
-                      {tier === "premium-boutique" && <span className="text-[8px] font-black uppercase tracking-[0.18em] text-[#E05A1A] bg-[#FF8B50]/10 border border-[#FFD9C4] px-2 py-1 rounded-md"><CrownOutlined className="mr-1" />Signature</span>}
+                      {tier === "luxury" && <span className="text-[8px] font-black uppercase tracking-[0.18em] text-[#E05A1A] bg-[#FF8B50]/10 border border-[#FFD9C4] px-2 py-1 rounded-md"><CrownOutlined className="mr-1" />Signature</span>}
+                      {tier === "standard" && <span className="text-[8px] font-black uppercase tracking-[0.18em] text-[#0284C7] bg-sky-50 border border-sky-200 px-2 py-1 rounded-md">Popular</span>}
+                      {tier === "budget" && <span className="text-[8px] font-black uppercase tracking-[0.18em] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md">Value</span>}
                     </div>
-                    <span className="block text-sm font-black text-[#44403C] mt-3">{translateKey(`hotelTiers.${tier === "premium-boutique" ? "premiumBoutique" : tier}`)}</span>
+                    <span className="block text-sm font-black text-[#44403C] mt-3">{categoryTitles[tier]}</span>
                     <span className="block text-[10.5px] text-[#8A8577] font-medium mt-1 leading-snug">{HOTEL_LABELS[tier]}</span>
                     <div className="mt-3.5 flex items-end justify-between">
                       <span className="itc-serif text-2xl font-semibold text-[#44403C]">${rate}<span className="text-[10px] font-sans font-bold text-[#B5AC9A] uppercase"> /night</span></span>

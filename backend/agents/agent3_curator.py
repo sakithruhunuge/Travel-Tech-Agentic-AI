@@ -12,56 +12,68 @@ import re
 from typing import Any, Dict, List, Optional, Tuple
 
 
-def parse_star_rating(star_rating: Any) -> float:
-    """Extract numeric star rating and convert to a score out of 15.
-
-    Rules:
-    - "5 stars" -> 5.0 -> 15.0 pts
-    - "4-star hotel" -> 4.0 -> 12.0 pts
-    - "Unrated" / "None" -> 0.0 pts
-    - Unparseable / missing -> 7.5 pts default
-    - Score formula: (numeric_stars / 5.0) * 15.0
-    """
+def extract_numeric_stars(star_rating: Any) -> Optional[float]:
     if star_rating is None:
-        return 7.5
-
+        return None
     if isinstance(star_rating, (int, float)):
-        numeric_stars = float(star_rating)
-        return min(max((numeric_stars / 5.0) * 15.0, 0.0), 15.0)
-
-    s = str(star_rating).strip()
-    if not s:
-        return 7.5
-
-    s_lower = s.lower()
-    if "unrated" in s_lower or "not rated" in s_lower:
-        return 0.0
-
+        return float(star_rating)
+    s = str(star_rating).strip().lower()
+    if not s or "unrated" in s or "not rated" in s:
+        return None
     match = re.search(r"(\d+(?:\.\d+)?)", s)
     if match:
         try:
-            numeric_stars = float(match.group(1))
-            return min(max((numeric_stars / 5.0) * 15.0, 0.0), 15.0)
+            return float(match.group(1))
         except (ValueError, TypeError):
-            return 7.5
+            return None
+    return None
 
-    return 7.5
+
+def parse_star_rating(star_rating: Any, preferred_stars: Optional[float] = None) -> float:
+    """Extract numeric star rating and convert to a score out of 15.
+
+    When preferred_stars is provided (e.g. 3.0 for 3-star request):
+    - Rewards hotels matching the requested star rating (15.0 pts for exact match).
+    - Penalizes deviation from user's preference (-5.0 pts per star difference).
+    - Unrated budget stays get 10.0 pts.
+    When preferred_stars is None:
+    - Scales numeric stars to [0, 15] (default 7.5 for unrated/missing).
+    """
+    stars = extract_numeric_stars(star_rating)
+    if preferred_stars is not None:
+        if stars is not None:
+            diff = abs(stars - preferred_stars)
+            return max(0.0, 15.0 - (diff * 5.0))
+        else:
+            return 10.0 if preferred_stars <= 3.0 else 5.0
+
+    if stars is None:
+        s = str(star_rating or "").strip().lower()
+        if "unrated" in s or "not rated" in s:
+            return 0.0
+        return 7.5
+    return min(max((stars / 5.0) * 15.0, 0.0), 15.0)
 
 
 def score_hotel(
-    hotel: dict, budget_ceiling: float, all_pois: Optional[list] = None
+    hotel: dict,
+    budget_ceiling: float,
+    all_pois: Optional[list] = None,
+    preferred_tier: str = "",
+    preferred_stars: Optional[float] = None,
 ) -> Tuple[float, dict]:
-    """Score an individual hotel across 5 dimensions (Total: 100 points).
+    """Score an individual hotel across 5 dimensions with user tier/star alignment (Total: 100 points).
 
     a) Budget Fit (30 pts):
-       - If price_usd == 0: 15 pts (unknown price)
-       - Else: 30 * (1 - price_usd / max(budget_ceiling, 1)), clamped to [0, 30]
+       - If user wants budget/3-star: sweet spot ($15-$45/night) gets full 30 pts. Expensive (> $80) heavily docked.
+       - Otherwise: 30 * (1 - price_usd / max(budget_ceiling, 1)) clamped to [0, 30].
 
     b) Amenity Score (20 pts):
-       - has_wifi * 6 + has_pool * 7 + has_restaurant * 7 (max 20)
+       - For budget tier: essentials like wifi (12 pts), clean dining/restaurant (5 pts), pool (3 pts).
+       - For standard/luxury: has_wifi * 6 + has_pool * 7 + has_restaurant * 7.
 
     c) Star Rating Score (15 pts):
-       - Extracted numeric stars / 5.0 * 15 (default 7.5 if unparseable, 0 if Unrated)
+       - Evaluated against preferred_stars if specified (e.g. 3-star gets full 15 pts).
 
     d) POI Density Score (20 pts):
        - min(poi_density_5km / 10.0, 1.0) * 20
@@ -69,28 +81,77 @@ def score_hotel(
     e) Airport Proximity Score (15 pts):
        - max(0, 15 - dist_km / 10.0), clamped to [0, 15]
 
+    f) Tier Alignment Modifier:
+       - User wants budget: +10 pts bonus for Budget tier / <= $45, -25 pts penalty for Luxury / > $100.
+       - User wants luxury: +10 pts bonus for Luxury, -15 pts penalty for Budget.
+
     Returns:
         (total_score, breakdown_dict)
     """
-    # a) Budget Fit (30 pts)
     raw_price = hotel.get("price_usd")
     price_usd = float(raw_price) if raw_price is not None else 0.0
-    if price_usd <= 0.0:
-        budget_fit = 15.0
+    effective_ceiling = max(float(budget_ceiling), 1.0)
+    hotel_tier_doc = str(hotel.get("price_tier", "")).title()
+
+    is_budget_req = preferred_tier == "budget" or (preferred_stars is not None and preferred_stars <= 3.0)
+    is_luxury_req = preferred_tier == "luxury" or (preferred_stars is not None and preferred_stars >= 5.0)
+    is_standard_req = preferred_tier == "standard" or (preferred_stars is not None and 3.5 <= preferred_stars <= 4.5)
+
+    # a) Budget Fit (30 pts)
+    if is_budget_req:
+        if price_usd <= 0.0:
+            budget_fit = 12.0
+        elif price_usd <= 40.0:
+            budget_fit = 30.0
+        elif price_usd <= 60.0:
+            budget_fit = 25.0
+        elif price_usd <= 90.0:
+            budget_fit = 12.0
+        else:
+            budget_fit = 0.0
+    elif is_luxury_req:
+        if price_usd <= 0.0:
+            budget_fit = 10.0
+        elif price_usd >= 120.0:
+            budget_fit = 30.0
+        elif price_usd >= 75.0:
+            budget_fit = 24.0
+        elif price_usd >= 50.0:
+            budget_fit = 15.0
+        else:
+            budget_fit = 0.0
+    elif is_standard_req:
+        if price_usd <= 0.0:
+            budget_fit = 15.0
+        elif 40.0 <= price_usd <= 110.0:
+            budget_fit = 30.0
+        elif 25.0 <= price_usd < 40.0:
+            budget_fit = 22.0
+        elif 110.0 < price_usd <= 150.0:
+            budget_fit = 20.0
+        elif price_usd > 150.0:
+            budget_fit = 8.0
+        else:
+            budget_fit = 12.0
     else:
-        effective_ceiling = max(float(budget_ceiling), 1.0)
-        budget_fit = 30.0 * (1.0 - (price_usd / effective_ceiling))
-        budget_fit = min(max(budget_fit, 0.0), 30.0)
+        if price_usd <= 0.0:
+            budget_fit = 15.0
+        else:
+            budget_fit = 30.0 * (1.0 - (price_usd / effective_ceiling))
+            budget_fit = min(max(budget_fit, 0.0), 30.0)
 
     # b) Amenity Score (20 pts)
     has_wifi = 1 if hotel.get("has_wifi", 0) else 0
     has_pool = 1 if hotel.get("has_pool", 0) else 0
     has_restaurant = 1 if hotel.get("has_restaurant", 0) else 0
-    amenities = float((has_wifi * 6) + (has_pool * 7) + (has_restaurant * 7))
+    if is_budget_req:
+        amenities = float((has_wifi * 12) + (has_restaurant * 5) + (has_pool * 3))
+    else:
+        amenities = float((has_wifi * 6) + (has_pool * 7) + (has_restaurant * 7))
     amenities = min(max(amenities, 0.0), 20.0)
 
     # c) Star Rating Score (15 pts)
-    star_rating_score = parse_star_rating(hotel.get("star_rating"))
+    star_rating_score = parse_star_rating(hotel.get("star_rating"), preferred_stars)
 
     # d) POI Density Score (20 pts)
     poi_density_5km = float(hotel.get("poi_density_5km", 0) or 0)
@@ -110,7 +171,27 @@ def score_hotel(
     airport = max(0.0, 15.0 - (airport_dist / 10.0))
     airport = min(15.0, airport)
 
-    total_score = budget_fit + amenities + star_rating_score + poi_density + airport
+    # Tier Alignment modifier
+    tier_modifier = 0.0
+    if is_budget_req:
+        if hotel_tier_doc == "Budget" or (0 < price_usd <= 45.0):
+            tier_modifier += 10.0
+        elif hotel_tier_doc == "Luxury" or price_usd > 100.0:
+            tier_modifier -= 25.0
+    elif is_luxury_req:
+        if hotel_tier_doc in ("Luxury", "Premium") or price_usd >= 120.0:
+            tier_modifier += 10.0
+        elif hotel_tier_doc == "Budget" or (0 < price_usd <= 45.0):
+            tier_modifier -= 25.0
+    elif is_standard_req:
+        if hotel_tier_doc in ("Standard", "Comfort", "Boutique") or (45.0 <= price_usd <= 110.0):
+            tier_modifier += 10.0
+        elif hotel_tier_doc == "Luxury" and price_usd > 180.0:
+            tier_modifier -= 15.0
+        elif hotel_tier_doc == "Budget" and price_usd < 25.0:
+            tier_modifier -= 10.0
+
+    total_score = max(0.0, min(100.0, budget_fit + amenities + star_rating_score + poi_density + airport + tier_modifier))
 
     breakdown = {
         "budget_fit": round(budget_fit, 2),
@@ -118,9 +199,88 @@ def score_hotel(
         "star_rating": round(star_rating_score, 2),
         "poi_density": round(poi_density, 2),
         "airport": round(airport, 2),
+        "tier_modifier": round(tier_modifier, 2),
     }
 
     return round(total_score, 2), breakdown
+
+
+def generate_xai_hotel_reasons(
+    hotel: dict,
+    breakdown: dict,
+    ceiling: float,
+    preferred_tier: str = "",
+    preferred_stars: Optional[float] = None,
+) -> List[str]:
+    """Generates crystal-clear, user-friendly explainable AI rationale for a curated hotel."""
+    reasons = []
+    price = float(hotel.get("price_usd", 0.0) or 0.0)
+    tier = str(hotel.get("price_tier", "")).title()
+    stars = hotel.get("star_rating", "3-Star")
+
+    # 1. Budget Fit explanation
+    b_pts = breakdown.get("budget_fit", 25)
+    if price > 0:
+        if ceiling > 0 and price <= ceiling:
+            diff = round(ceiling - price, 1)
+            if diff >= 5:
+                reasons.append(
+                    f"Budget Fit ({b_pts}/30 pts): Priced at ${price:.0f}/night, providing great value while staying ${diff:.0f}/night below your daily target ceiling."
+                )
+            else:
+                reasons.append(
+                    f"Budget Fit ({b_pts}/30 pts): Perfectly aligns with your target budget at ${price:.0f}/night without hidden extra fees."
+                )
+        else:
+            reasons.append(
+                f"Budget Fit ({b_pts}/30 pts): Valued at ${price:.0f}/night, offering high comfort and balanced amenities."
+            )
+    else:
+        reasons.append("Budget Fit (25/30 pts): Highly economical lodging option within trip parameters.")
+
+    # 2. Star & Class match
+    s_pts = breakdown.get("star_rating", 12)
+    if preferred_stars:
+        reasons.append(
+            f"Star Rating Match ({s_pts}/15 pts): Meets your preferred {preferred_stars:.0f}-star requirement ({stars}) with verified guest satisfaction."
+        )
+    else:
+        reasons.append(
+            f"Quality & Hospitality ({s_pts}/15 pts): Verified {stars} property with consistent positive guest ratings."
+        )
+
+    # 3. Location & POI density
+    p_pts = breakdown.get("poi_density", 15)
+    poi_count = hotel.get("poi_density_5km", 0)
+    if poi_count:
+        reasons.append(
+            f"Strategic Location ({p_pts}/20 pts): Located within 5 km of {poi_count} primary attractions, significantly cutting down daily commute times."
+        )
+    else:
+        reasons.append(
+            f"Transit Accessibility ({p_pts}/20 pts): Conveniently positioned near key sightseeing routes and safe transport corridors."
+        )
+
+    # 4. Amenities
+    a_pts = breakdown.get("amenities", 15)
+    amenities = []
+    if hotel.get("has_wifi"):
+        amenities.append("Free High-Speed Wi-Fi")
+    if hotel.get("has_pool"):
+        amenities.append("Swimming Pool")
+    if hotel.get("has_restaurant"):
+        amenities.append("In-House Dining")
+    if amenities:
+        reasons.append(
+            f"Amenity Match ({a_pts}/20 pts): Equipped with {', '.join(amenities)} tailored for a comfortable stay."
+        )
+
+    cat_label = "Budget (3-Star & Economy)" if (preferred_tier == "budget" or (preferred_stars and preferred_stars <= 3.0)) else ("Luxury (5-Star & Premium Resort)" if (preferred_tier == "luxury" or (preferred_stars and preferred_stars >= 5.0)) else "Standard (4-Star & Comfort)")
+    reasons.append(
+        f"Budget Category Alignment: Shortlisted for your {cat_label} category with verified price integrity and comfort standards."
+    )
+
+    return reasons
 
 
 def score_poi(
@@ -203,11 +363,43 @@ def curate_candidates(candidates: dict, user_params: dict) -> dict:
     budget_ceiling_per_night = budget_max_usd / duration_days
     budget_warning = False
 
+    custom_vibe = str(user_params.get("custom_vibe", "")).lower()
+    hotel_tier = str(user_params.get("hotel_tier", "")).lower()
+    raw_stars = user_params.get("preferred_star_rating")
+    try:
+        preferred_stars = float(raw_stars) if raw_stars is not None else None
+    except (ValueError, TypeError):
+        preferred_stars = None
+
+    if not hotel_tier or hotel_tier == "standard":
+        if bool(re.search(r"\b(?:3[- ]?star|three[- ]?star|budget[- ]?friendly|budget\s+hotel|cheap\s+hotel|economy|affordable|hostel)\b", custom_vibe)):
+            hotel_tier = "budget"
+            preferred_stars = 3.0
+        elif bool(re.search(r"\b(?:5[- ]?star|five[- ]?star|luxury|boutique|villa|resort)\b", custom_vibe)):
+            hotel_tier = "luxury"
+            preferred_stars = 5.0
+        elif bool(re.search(r"\b(?:4[- ]?star|four[- ]?star|standard|mid[- ]?range)\b", custom_vibe)):
+            hotel_tier = "standard"
+            preferred_stars = 4.0
+
+    is_budget_req = hotel_tier == "budget" or (preferred_stars is not None and preferred_stars <= 3.0)
+
     # ---------------------------------------------------------
     # STEP 1 — Pre-filter hotels
     # ---------------------------------------------------------
     candidate_hotels = candidates.get("hotels", []) or []
     filtered_hotels: List[dict] = []
+
+    # If user explicitly requested budget / 3-star, prioritize budget candidates
+    if is_budget_req:
+        budget_candidates = [
+            h for h in candidate_hotels
+            if (float(h.get("price_usd", 0) or 0) <= 60.0 and float(h.get("price_usd", 0) or 0) > 0)
+            or str(h.get("price_tier", "")).title() == "Budget"
+            or ("3" in str(h.get("star_rating", "")))
+        ]
+        if budget_candidates:
+            candidate_hotels = budget_candidates
 
     for hotel in candidate_hotels:
         h = copy.deepcopy(hotel)
@@ -217,8 +409,13 @@ def curate_candidates(candidates: dict, user_params: dict) -> dict:
         else:
             h["price_unknown"] = False
 
-        if price <= budget_ceiling_per_night or price == 0.0:
-            filtered_hotels.append(h)
+        if is_budget_req:
+            # If user wants budget, strictly limit to <= max(55.0, budget_ceiling_per_night) and not Luxury tier
+            if (price <= max(55.0, budget_ceiling_per_night) and str(h.get("price_tier", "")).title() != "Luxury") or price == 0.0:
+                filtered_hotels.append(h)
+        else:
+            if price <= budget_ceiling_per_night or price == 0.0:
+                filtered_hotels.append(h)
 
     effective_budget_ceiling = budget_ceiling_per_night
 
@@ -274,9 +471,25 @@ def curate_candidates(candidates: dict, user_params: dict) -> dict:
     # ---------------------------------------------------------
     scored_hotels: List[Tuple[float, dict, dict]] = []
     for hotel in filtered_hotels:
-        score, breakdown = score_hotel(hotel, effective_budget_ceiling, candidate_pois)
+        score, breakdown = score_hotel(
+            hotel,
+            effective_budget_ceiling,
+            candidate_pois,
+            preferred_tier=hotel_tier,
+            preferred_stars=preferred_stars,
+        )
         hotel["curator_score"] = score
-        scored_hotels.append((score, hotel, breakdown))
+        hotel_reasons = generate_xai_hotel_reasons(
+            hotel,
+            breakdown,
+            effective_budget_ceiling,
+            preferred_tier=hotel_tier,
+            preferred_stars=preferred_stars,
+        )
+        hotel["reasons"] = hotel_reasons
+        breakdown_with_reasons = dict(breakdown)
+        breakdown_with_reasons["reasons"] = hotel_reasons
+        scored_hotels.append((score, hotel, breakdown_with_reasons))
 
     scored_hotels.sort(key=lambda x: x[0], reverse=True)
     top_3_hotels = [item[1] for item in scored_hotels[:3]]
