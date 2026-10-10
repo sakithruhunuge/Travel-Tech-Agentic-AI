@@ -102,6 +102,14 @@ async def generate_itinerary(request: ItineraryRequest) -> ItineraryResponse:
     """Generates a complete multi-day itinerary using the 4-agent pipeline."""
     # Prioritize user prompt in custom_vibe so Agent 1 can parse user intent accurately
     category = getattr(request, "budget_category", None) or request.hotel_tier or "standard"
+    if request.custom_vibe:
+        vibe_check = parse_user_query(request.custom_vibe)
+        if vibe_check.get("error") in ("invalid_query", "off_topic"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Security rejection: {vibe_check.get('error')} in custom vibe prompt.",
+            )
+
     if request.custom_vibe and len(request.custom_vibe.strip()) > 8:
         prompt = request.custom_vibe.strip()
         # Append hints only if not already mentioned in prompt

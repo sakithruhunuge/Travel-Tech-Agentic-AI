@@ -22,6 +22,19 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.database import Database
 from pymongo.collection import Collection
+
+# Ensure dnspython can reliably resolve mongodb+srv records even on slow/restrictive local router DNS
+try:
+    import dns.resolver
+    _default_resolver = dns.resolver.get_default_resolver()
+    for _ns in ["8.8.8.8", "1.1.1.1", "8.8.4.4"]:
+        if _ns not in _default_resolver.nameservers:
+            _default_resolver.nameservers.append(_ns)
+    _default_resolver.timeout = 5.0
+    _default_resolver.lifetime = 8.0
+except Exception:
+    pass
+
 ENV_CANDIDATES = [
     PROJECT_ROOT / ".env",
     CURRENT_DIR.parent / ".env",
@@ -44,17 +57,25 @@ if not WEBSCRAPE_URI:
 if not MONGODB_URI:
     raise ValueError("Missing 'MONGODB_URI' in environment variables / .env file.")
 
-# MongoDB Clients
-# Client for raw scraping cluster
-scraper_client = MongoClient(WEBSCRAPE_URI, serverSelectionTimeoutMS=10000)
-scraper_db: Database = scraper_client["webscrape_travel_raw_data"]
-
-# Client for production / staging cluster
-main_client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=10000)
+# MongoDB Clients with resilient timeouts
 try:
-    main_db: Database = main_client.get_default_database() or main_client["travel-tech"]
-except Exception:
-    main_db: Database = main_client["travel-tech"]
+    scraper_client = MongoClient(WEBSCRAPE_URI, serverSelectionTimeoutMS=8000, connectTimeoutMS=8000)
+    scraper_db: Database = scraper_client["webscrape_travel_raw_data"]
+except Exception as _e:
+    print(f"[WARN] Failed to initialize scraper_client: {_e}")
+    scraper_client = None
+    scraper_db = None
+
+try:
+    main_client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=8000, connectTimeoutMS=8000)
+    try:
+        main_db: Database = main_client.get_default_database() or main_client["travel-tech"]
+    except Exception:
+        main_db: Database = main_client["travel-tech"]
+except Exception as _e:
+    print(f"[WARN] Failed to initialize main_client: {_e}")
+    main_client = None
+    main_db = None
 
 
 def get_collection(db: Database, name: str) -> Collection:
@@ -71,17 +92,19 @@ def ping_connections() -> Tuple[bool, bool]:
     scraper_ok = False
     main_ok = False
 
-    try:
-        scraper_client.admin.command("ping")
-        scraper_ok = True
-    except Exception as e:
-        print(f"[ERROR] Failed to ping scraper_db: {e}")
+    if scraper_client is not None:
+        try:
+            scraper_client.admin.command("ping")
+            scraper_ok = True
+        except Exception as e:
+            print(f"[ERROR] Failed to ping scraper_db: {e}")
 
-    try:
-        main_client.admin.command("ping")
-        main_ok = True
-    except Exception as e:
-        print(f"[ERROR] Failed to ping main_db: {e}")
+    if main_client is not None:
+        try:
+            main_client.admin.command("ping")
+            main_ok = True
+        except Exception as e:
+            print(f"[ERROR] Failed to ping main_db: {e}")
 
     return scraper_ok, main_ok
 

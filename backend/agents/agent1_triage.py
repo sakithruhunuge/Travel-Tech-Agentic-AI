@@ -2,6 +2,7 @@ import os
 import re
 import json
 from pathlib import Path
+from typing import Optional
 from dotenv import load_dotenv
 
 # Load environment variables from root .env or backend/.env
@@ -321,23 +322,38 @@ def _normalize_output(data: dict) -> dict:
     return data
 
 
+INJECTION_PATTERNS = [
+    r"ignore\s+(all\s+)?previous",
+    r"disregard\s+(all\s+)?instructions",
+    r"you\s+are\s+now",
+    r"\bact\s+as\s+(?:a|an)?\s*",
+    r"\bpretend\s+(?:to\s+be|you\s+are)",
+    r"\bsimulate\s+(?:a|an)?\s*",
+    r"\broleplay\s+(?:as)?\s*",
+    r"\bjailbreak\b",
+    r"reveal\s+.*(system\s+prompt|prompt|instructions)",
+    r"system\s+prompt",
+    r"api\s*key",
+    r"(?:linux|bash|cmd|powershell)\s+terminal",
+]
+
+def _check_injection(text: str) -> Optional[dict]:
+    """Scans text for adversarial prompt injection or jailbreak patterns."""
+    text_lower = (text or "").lower()
+    for pattern in INJECTION_PATTERNS:
+        if re.search(pattern, text_lower):
+            return {"error": "invalid_query"}
+    return None
+
+
 def _rule_based_fallback(raw_prompt: str) -> dict:
     """Deterministic fallback parser for when LLM is unavailable or unconfigured."""
     text = raw_prompt.strip().lower()
 
     # 1. Security / adversarial injection checks
-    injection_patterns = [
-        r"ignore\s+(all\s+)?previous",
-        r"disregard\s+(all\s+)?instructions",
-        r"you\s+are\s+now",
-        r"jailbreak",
-        r"reveal\s+.*(system\s+prompt|prompt|instructions)",
-        r"system\s+prompt",
-        r"api\s*key",
-    ]
-    for pattern in injection_patterns:
-        if re.search(pattern, text):
-            return {"error": "invalid_query"}
+    injection_err = _check_injection(text)
+    if injection_err:
+        return injection_err
 
     # 2. Off-topic check
     travel_keywords = [
@@ -532,6 +548,11 @@ def parse_user_query(raw_prompt: str) -> dict:
     cleaned_prompt = (raw_prompt or "").strip()
     if not cleaned_prompt:
         return {"error": "invalid_query"}
+
+    # 0. Pre-LLM Security & adversarial injection firewall
+    injection_err = _check_injection(cleaned_prompt)
+    if injection_err:
+        return injection_err
 
     try:
         raw_output = chain.invoke({"input": cleaned_prompt})
